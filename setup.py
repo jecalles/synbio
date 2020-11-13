@@ -1,5 +1,7 @@
 import setuptools
 import os
+
+print("codes: redefining utils_definitions.py")
 os.system('python res/utils_definitions.py')
 
 with open('README.md', 'r') as handle:
@@ -9,7 +11,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setuptools.setup(
-    name='codes',
+    name='codes-jecalles',
     version='0.0.1',
     author='Jonathan Calles',
     author_email='jecalles@stanford.edu',
