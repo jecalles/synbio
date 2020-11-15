@@ -3,6 +3,8 @@ from collections import UserDict
 from .utils import definitions
 from .utils import functions
 
+from . import sequences
+
 class Code(UserDict):
     ''' A class used to represent genetic codes. '''
 
@@ -50,6 +52,7 @@ class Code(UserDict):
         self.data = table
         self.ambiguous = ambiguous
         self.one_to_one = one_to_one
+        self.codon_length = len(table['AUG'])
 
     def __repr__(self):
         table = self.table()
@@ -77,23 +80,43 @@ class Code(UserDict):
 
         return out
 
-    def reverse_translate(self, prot_seq, stop_codon='uga'):
-        '''a method used to translate a given protein sequence, assuming the
-        genetic code is one-to-one. raises an error otherwise
+    def translate(self, gene):
+        '''
+        A method used to translate a DNA/RNA sequence into its corresponding
+        protein sequence. Raises an error if the input sequence length is not
+        divisible by the codon length.
 
         Parameters
         ----------
-            str prot_seq: string representing amino acid sequence to translate
-            str stop_codon: stop codon to use for goi (default to uga)
+            str gene: string representing translated amino acid sequence
 
         Returns
         -------
-            str gene: string representing translated amino acid sequence
+            str prot_seq: string representing translated amino acid sequence
+        '''
+        mRNA = sequences.transcribe(gene)
+        codons = sequences.get_codons(mRNA)
+        return ''.join(
+            [self.data[c] for c in codons]
+        )
+
+    def reverse_translate(self, prot_seq, stop_codon='uga'):
+        '''
+        A method used to reverse translate a given protein sequence, assuming
+        the genetic code is one-to-one. Raises an error otherwise
+
+        Parameters
+        ----------
+            str prot_seq: string representing amino acid sequence
+
+        Returns
+        -------
+            str gene: string representing reverse translated gene sequence
         '''
         # handle error if table is not one-to-one
         if not self.one_to_one:
             raise TypeError(
-                'cannot translate sequence. genetic code is not one-to-one')
+                'cannot reverse translate sequence. genetic code is not one-to-one')
         # otherwise, create reverse translation dictionary
         rev_dict = {aa: codon for codon, aa in self.data.items()}
         rev_dict['*'] = stop_codon
