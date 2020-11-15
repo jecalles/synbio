@@ -6,22 +6,21 @@ import random
 from collections import deque
 from copy import copy
 
-#####################
-# define properties #
-#####################
+# define scope of package
 __all__ = [
     "dNTPs", "rNTPs", "residues", "triplet_codons", "triplet_mut_pairs",
     "quadruplet_codons", "quadruplet_mut_pairs", "PRS", "kdHydrophobicity",
     "unrestricted_block", "standard_block", "natural_block", "basepair_WC",
-    "wobble_WC", "standard_code", "colorado_code"
+    "wobble_WC", "standard_code", "colorado_code", "RED20", "RED15"
 ]
 def __dir__():
     default = [key for key in globals().keys() if key[:2] == '__']
     return default + __all__
 
-# define path to file directory
+#####################
+# define properties #
+#####################
 path = os.path.dirname(os.path.abspath(__file__))
-# unpickle additional class properties
 with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
     un_pickled = pickle.load(handle)
     [
@@ -32,7 +31,7 @@ with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
         basepair_WC, wobble_WC,
         standard_code, colorado_code
     ] = un_pickled
-# unpickle RED15 and RED20 tables
+
 with open(path + '/res/RED20.pickle', 'rb') as handle:
     RED20 = pickle.load(handle)
 with open(path + '/res/RED15.pickle', 'rb') as handle:

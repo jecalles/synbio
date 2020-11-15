@@ -1,7 +1,9 @@
+from collections import UserDict
+
 from .utils import definitions
 from .utils import functions
 
-class Code:
+class Code(UserDict):
     ''' A class used to represent genetic codes. '''
 
     def __init__(self, table=None):
@@ -13,11 +15,10 @@ class Code:
 
         Parameters
         ----------
-        - dict table=None: a python dict representing a genetic code, optionally
-            takes a string 'random' to assign a random table
+            dict table=None: a python dict representing a genetic code, optionally takes a string 'random' to assign a random table
         Returns
         -------
-        Code obj: returns a Code object '''
+            Code obj: returns a Code object '''
         # optionally generate a random table, or load a preset table
         if type(table) == str:
             table_options = {
@@ -46,7 +47,7 @@ class Code:
         one_to_one = functions.is_one_to_one(table)
 
         # Assign assign instance attributes
-        self.dict = table
+        self.data = table
         self.ambiguous = ambiguous
         self.one_to_one = one_to_one
 
@@ -70,7 +71,7 @@ class Code:
         '''a method used to represent a genetic code as a 4x4x4 array
         '''
         rNTPs = definitions.rNTPs
-        out = [ [ [c1+c2+c3 + ':' + self.dict[c1+c2+c3] for c2 in rNTPs]
+        out = [ [ [c1+c2+c3 + ':' + self.data[c1+c2+c3] for c2 in rNTPs]
                         for c3 in rNTPs]
                             for c1 in rNTPs]
 
@@ -80,21 +81,21 @@ class Code:
         '''a method used to translate a given protein sequence, assuming the
         genetic code is one-to-one. raises an error otherwise
 
-        parameters
+        Parameters
         ----------
-        - str prot_seq: string representing amino acid sequence to translate
-        - str stop_codon: stop codon to use for goi (default to uga)
+            str prot_seq: string representing amino acid sequence to translate
+            str stop_codon: stop codon to use for goi (default to uga)
 
-        returns
+        Returns
         -------
-        str gene: string representing translated amino acid sequence
+            str gene: string representing translated amino acid sequence
         '''
         # handle error if table is not one-to-one
         if not self.one_to_one:
             raise TypeError(
                 'cannot translate sequence. genetic code is not one-to-one')
         # otherwise, create reverse translation dictionary
-        rev_dict = {aa: codon for codon, aa in self.dict.items()}
+        rev_dict = {aa: codon for codon, aa in self.data.items()}
         rev_dict['*'] = stop_codon
         # translate gene and return
         gene = ''

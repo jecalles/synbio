@@ -1,42 +1,22 @@
-''' A module used to package useful definitions and functions when
-manipulating codon tables. Class attributes are listed below.
-
-Attributes
-----------------
-- dict standard_code: a dict representing the Standard Table
-- dict colorado_code: a dict representing the optimized code from Pines et
-    al 2017
-- dict RED20: a dict representing RED20
-- dict RED15: a dict representing RED15
-- list(str) dNTPs: a list of strings representing the DNA NTPs
-- list(str) rNTPs: a list of strings representing the RNA NTPs
-- list(str) triplet_codons: a list of string representing the set of rNTP
-    codons
-- set tuples(str) triplet_mut_pairs: a set of tuples of string representing
-    pairs of triplet rNTP codons one mutation away
-- list(str) quadruplet_codons: a list of string representing the set of rNTP
-    codons
-- set tuples(str) quadruplet_mut_pairs: a set of tuples of string representing
-    pairs of quadruplet rNTP codons one mutation away
-- dict PRS: a dict representing the Polar Requirement Scale
-- dict kd_hydropathy: a dict representing Kyte Doolittle hydropath
-- dict unrestricted_block: a dict representing a completely unfettered block
-    structure; used in simulations where wobble rule is ignored
-- dict standard_block: a dict representing the most biologically permissive
-    block structure (48 blocks)
-- dict natural_block: a dict representing the block structure of the Standard
-    Table (25 blocks). More restrictive than other defined block structures
-'''
-# import necessary modules
 from math import comb as binomial
 import pickle
 import random
 from collections import deque
 from copy import copy
 
-# import defintions from utils.defitions
 from codes.utils.definitions import *
 
+# define scope of package
+__all__ = [
+    "get_aa_counts", "get_block_counts", "is_ambiguous", "is_promiscuous",
+    "is_one_to_one", "get_codon_connectivity", "get_resi_connectivity",
+    "get_codon_neighbors", "table_to_blocks", "blocks_to_table", "check_block",
+    "random_code", "num_codes", "silencicity", "mutability", "promiscuity",
+    "mut_pair_num", "get_mut_pairs", "order_NTPs",
+]
+def __dir__():
+    default = [key for key in globals().keys() if key[:2] == '__']
+    return default + __all__
 
 def get_aa_counts(table):
     ''' A function that takes a Code and finds the counts of each
@@ -191,13 +171,13 @@ def get_codon_connectivity(table):
         # declare neighbors list
         neighbors = []
         # use connect_recurse to map connectivity
-        dist_dict[codon] = __connect_recurse(codon, 1, table,
+        dist_dict[codon] = _connect_recurse(codon, 1, table,
                                                    neighbors, codon_deque, cache)
     # return codon_dist
     return dist_dict
 
 
-def __connect_recurse(codon, level, table, neighbors, codon_deque, cache):
+def _connect_recurse(codon, level, table, neighbors, codon_deque, cache):
     ''' A recursive helper function that finds all of a codon's nearest
     neighbors and how far away they are. Returns a list of tuples
     representing the codons and their distances away.
@@ -245,7 +225,7 @@ def __connect_recurse(codon, level, table, neighbors, codon_deque, cache):
         # get next codon to search
         c, newlevel = codon_deque.pop()
         # append results to neighbors list
-        neighbors = __connect_recurse(c, newlevel + 1, table,
+        neighbors = _connect_recurse(c, newlevel + 1, table,
                                             neighbors, codon_deque, cache)
     # return resulting list
     return neighbors
@@ -679,7 +659,6 @@ def order_NTPs(sortable, nucleic_acid='RNA'):
         # raise error
         sorted_obj = False
     return sorted_obj
-
 
 if __name__ == '__main__':
     pass
