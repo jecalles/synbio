@@ -1,6 +1,5 @@
-# import necessary modules
-from . import utils
-
+from .utils import definitions
+from .utils import functions
 
 class Code:
     ''' A class used to represent genetic codes. '''
@@ -22,11 +21,11 @@ class Code:
         # optionally generate a random table, or load a preset table
         if type(table) == str:
             table_options = {
-                'STANDARD': utils.standard_code,
-                'COLORADO': utils.colorado_code,
-                'RED20': utils.RED20,
-                'RED15': utils.RED15,
-                'RANDOM': utils.random_code()
+                'STANDARD': definitions.standard_code,
+                'COLORADO': definitions.colorado_code,
+                'RED20': definitions.RED20,
+                'RED15': definitions.RED15,
+                'RANDOM': functions.random_code()
             }
             try:
                 table = table_options[table.upper()]
@@ -38,13 +37,13 @@ class Code:
                 )
         # default to standard table if not specified or wrong datatype
         elif table == None or not type(table) == dict:
-            table = utils.standard_code
+            table = definitions.standard_code
 
         # determine table ambiguity
-        ambiguous = utils.is_promiscuous(table)
+        ambiguous = functions.is_promiscuous(table)
 
         # determine if table is one-to=one
-        one_to_one = utils.is_one_to_one(table)
+        one_to_one = functions.is_one_to_one(table)
 
         # Assign assign instance attributes
         self.dict = table
@@ -55,7 +54,7 @@ class Code:
         table = self.table()
 
         crossline = '-'*25 + '\n'
-        
+
         out = object.__repr__(self) + '\n'
         for col in table:
             out += crossline
@@ -65,17 +64,18 @@ class Code:
                     out += (elem + '|')
                 out +='\n'
         out += crossline[:-1]
-        return out        
+        return out
 
     def table(self):
         '''a method used to represent a genetic code as a 4x4x4 array
         '''
-        out = [ [ [c1+c2+c3 + ':' + self.dict[c1+c2+c3] for c2 in utils.rNTPs] 
-                        for c3 in utils.rNTPs]
-                            for c1 in utils.rNTPs]
-            
+        rNTPs = definitions.rNTPs
+        out = [ [ [c1+c2+c3 + ':' + self.dict[c1+c2+c3] for c2 in rNTPs]
+                        for c3 in rNTPs]
+                            for c1 in rNTPs]
+
         return out
-            
+
     def reverse_translate(self, prot_seq, stop_codon='uga'):
         '''a method used to translate a given protein sequence, assuming the
         genetic code is one-to-one. raises an error otherwise
@@ -101,9 +101,3 @@ class Code:
         for aa in prot_seq:
             gene += rev_dict[aa]
         return gene
-
-
-# test script
-if __name__ == '__main__':
-    x = Code()
-    print(x)

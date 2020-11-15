@@ -28,37 +28,14 @@ Attributes
     Table (25 blocks). More restrictive than other defined block structures
 '''
 # import necessary modules
-import os
 from math import comb as binomial
 import pickle
 import random
 from collections import deque
 from copy import copy
 
-# define path to file directory
-path = os.path.dirname(os.path.abspath(__file__))
-
-#####################
-# define properties #
-#####################
-
-# define standard table
-# unpickle additional class properties
-with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
-    un_pickled = pickle.load(handle)
-    [
-        dNTPs, rNTPs, residues, triplet_codons, triplet_mut_pairs,
-        quadruplet_codons, quadruplet_mut_pairs,
-        PRS, kdHydrophobicity, 
-        unrestricted_block, standard_block, natural_block,
-        basepair_WC, wobble_WC,
-        standard_code, colorado_code
-    ] = un_pickled
-# unpickle RED15 and RED20 tables
-with open(path + '/res/RED20.pickle', 'rb') as handle:
-    RED20 = pickle.load(handle)
-with open(path + '/res/RED15.pickle', 'rb') as handle:
-    RED15 = pickle.load(handle)
+# import defintions from utils.defitions
+from codes.utils.definitions import *
 
 
 def get_aa_counts(table):
@@ -671,7 +648,7 @@ def get_mut_pairs(table):
 
 
 def order_NTPs(sortable, nucleic_acid='RNA'):
-    '''A function used to sort iterables by standard order of NTPs. 
+    '''A function used to sort iterables by standard order of NTPs.
     For RNA, U-C-A-G. For DNA, T-C-A-G. Returns sorted object.
 
     Parameters
@@ -705,14 +682,4 @@ def order_NTPs(sortable, nucleic_acid='RNA'):
 
 
 if __name__ == '__main__':
-    table = {
-        'UUU': 'F',
-        'UCA': 'S',
-        'UCG': 'L',
-        'AUG': 'M',
-    }
-    newtable = promiscuity(table, allow_ambiguous=True)
-    
-
-    new_code = CodonTable(newtable)
-    new_code.codon_dict
+    pass
