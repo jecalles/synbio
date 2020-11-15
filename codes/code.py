@@ -100,7 +100,7 @@ class Code(UserDict):
             [self.data[c] for c in codons]
         )
 
-    def reverse_translate(self, prot_seq, stop_codon='uga'):
+    def reverse_translate(self, prot_seq, stop_codon='UGA'):
         '''
         A method used to reverse translate a given protein sequence, assuming
         the genetic code is one-to-one. Raises an error otherwise
@@ -125,3 +125,23 @@ class Code(UserDict):
         for aa in prot_seq:
             gene += rev_dict[aa]
         return gene
+
+    def recode(self, gene, encoding=None):
+        '''
+        A method used to recode an input sequence, given an initial genetic code, into an RNA sequence in this genetic code.
+
+        Parameters
+        ----------
+            str gene: input gene sequence (DNA or RNA)
+            Code encoding: genetic code used to encode input gene (default:
+                Standard Code). Note: input must be valid input to Code()
+                constructor
+
+        Returns
+        -------
+            str out: output gene sequence (RNA) in this genetic code
+        '''
+        in_code = type(self)(encoding)
+        mRNA = sequences.transcribe(gene)
+        protein = in_code.translate(mRNA)
+        return self.reverse_translate(protein)
