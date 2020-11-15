@@ -365,14 +365,14 @@ def check_block(table, block_struct):
     # if function reaches this point, return True
     return True
 
-def random_code(wobble_rule='standard'):
+def random_code(block_structure='standard'):
     '''A function used to generate a random codon table, optionally
     defining the block structure. Will guarantee each amino acid be
     represented by at least one block in the table.
 
     Parameters
     ----------
-    str wobble_rule = 'standard': a string telling the simulator which
+    str block_structure = 'standard': a string telling the simulator which
         wobble rules to follow for accepting new tables
 
     Acceptable inputs:
@@ -390,7 +390,13 @@ def random_code(wobble_rule='standard'):
         'preserve_block': natural_block,
         'unrestricted': unrestricted_block
     }
-    block_struct = copy(block_choices[wobble_rule])
+    try:
+        block_struct = copy(block_choices[block_structure])
+    except:
+        raise ValueError(
+            'block_structure string not recognized. Use one of the following options: {0}'.format(
+                set(block_choices.keys())
+        )
     # get blocks to assign
     blocks = list(block_struct.keys())
     random.shuffle(blocks)

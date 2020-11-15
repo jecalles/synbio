@@ -8,7 +8,7 @@ from . import sequences
 class Code(UserDict):
     ''' A class used to represent genetic codes. '''
 
-    def __init__(self, table=None):
+    def __init__(self, code=None):
         '''Automatically loads object with a Code and a
         comparison function between amino acids "ordering". bool norm is used
         to tell dict_to_graph whether or not to set node values based on
@@ -17,13 +17,13 @@ class Code(UserDict):
 
         Parameters
         ----------
-            dict table=None: a python dict representing a genetic code, optionally takes a string 'random' to assign a random table
+            dict code=None: a python dict representing a genetic code, optionally takes a string 'random' to assign a random code
         Returns
         -------
             Code obj: returns a Code object '''
-        # optionally generate a random table, or load a preset table
-        if type(table) == str:
-            table_options = {
+        # optionally generate a random code, or load a preset code
+        if type(code) == str:
+            code_options = {
                 'STANDARD': definitions.standard_code,
                 'COLORADO': definitions.colorado_code,
                 'RED20': definitions.RED20,
@@ -31,36 +31,46 @@ class Code(UserDict):
                 'RANDOM': functions.random_code()
             }
             try:
-                table = table_options[table.upper()]
+                code = code_options[code.upper()]
             except:
                 raise ValueError(
-                    'Table string not recognized. Use one of the following options: {0}'.format(
-                        set(table_options.keys())
+                        'Code string not recognized. Use one of the following options: {0}'.format(
+                            set(code_options.keys())
                     )
                 )
-        # default to standard table if not specified or wrong datatype
-        elif table == None or not type(table) == dict:
-            table = definitions.standard_code
+        # default to standard code
+        elif code is None:
+            code = definitions.standard_code
+        # else, try and cast input to a dict
+        else:
+            try:
+                code = dict(code)
+            except:
+                raise ValueError(
+                    'Code input parameter not recognized. Pass in a dictionary, Code object, or one of the following strings: {0}'.format(
+                        set(code_options.keys())
+                    )
+                )
 
-        # determine table ambiguity
-        ambiguous = functions.is_promiscuous(table)
+        # determine code ambiguity
+        ambiguous = functions.is_promiscuous(code)
 
-        # determine if table is one-to=one
-        one_to_one = functions.is_one_to_one(table)
+        # determine if code is one-to=one
+        one_to_one = functions.is_one_to_one(code)
 
         # Assign assign instance attributes
-        self.data = table
+        self.data = code
         self.ambiguous = ambiguous
         self.one_to_one = one_to_one
-        self.codon_length = len(table['AUG'])
+        self.codon_length = len(code['AUG'])
 
     def __repr__(self):
-        table = self.table()
+        code = self.code()
 
         crossline = '-'*25 + '\n'
 
         out = object.__repr__(self) + '\n'
-        for col in table:
+        for col in code:
             out += crossline
             for row in col:
                 out += '|'
@@ -113,7 +123,7 @@ class Code(UserDict):
         -------
             str gene: string representing reverse translated gene sequence
         '''
-        # handle error if table is not one-to-one
+        # handle error if code is not one-to-one
         if not self.one_to_one:
             raise TypeError(
                 'cannot reverse translate sequence. genetic code is not one-to-one')
