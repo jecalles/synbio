@@ -320,13 +320,13 @@ def blocks_to_table(blocks, block_struct):
 
     Parameters
     ----------
-    - dict blocks: a python dict representing the codon table in block form
-    - dict block_struct: a python dict representing the table block structure
+        dict blocks: a python dict representing the codon table in block form
+        dict block_struct: a python dict representing the table block structure
 
     Returns
     -------
-    - dict table: a python dict representing the codon table
-    - bool False: an "exception" if input table does not match block_struct
+        dict table: a python dict representing the codon table
+        bool False: an "exception" if input table does not match block_struct
     '''
     # declare table to return
     table = {}
@@ -396,6 +396,7 @@ def random_code(block_structure='standard'):
         raise ValueError(
             'block_structure string not recognized. Use one of the following options: {0}'.format(
                 set(block_choices.keys())
+            )
         )
     # get blocks to assign
     blocks = list(block_struct.keys())
@@ -409,7 +410,7 @@ def random_code(block_structure='standard'):
         AA = random.choice(residues)
         block_struct[block] = AA
     # convert block_struct to table and return
-    return blocks_to_table(block_struct, block_choices[wobble_rule])
+    return blocks_to_table(block_struct, block_choices[block_structure])
 
 
 def num_codes(l_aa, b):

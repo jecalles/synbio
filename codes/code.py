@@ -65,7 +65,7 @@ class Code(UserDict):
         self.codon_length = len(code['AUG'])
 
     def __repr__(self):
-        code = self.code()
+        code = self.table()
 
         crossline = '-'*25 + '\n'
 
