@@ -202,8 +202,8 @@ standard_code = {
     'ACG':'T',
     'AAU':'N',
     'AAC':'N',
-    'AAA':'A',
-    'AAG':'A',
+    'AAA':'K',
+    'AAG':'K',
     'AGU':'S',
     'AGC':'S',
     'AGA':'R',
@@ -301,11 +301,11 @@ if __name__ == '__main__':
                 unrestricted_block, standard_block, natural_block,
                 basepair_WC, wobble_WC,
                 standard_code, colorado_code]
-    with open('res/utils_definitions.pickle', 'wb') as handle:
+    with open('./utils_definitions.pickle', 'wb') as handle:
         pickle.dump(toDump, handle)
 
     # test the pickle
-    with open('res/utils_definitions.pickle', 'rb') as handle:
+    with open('./utils_definitions.pickle', 'rb') as handle:
         unDumped = pickle.load(handle)
     # taste the pickle
     if (toDump == unDumped) :
