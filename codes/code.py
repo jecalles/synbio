@@ -90,6 +90,26 @@ class Code(UserDict):
 
         return out
 
+    def rmap(self):
+        '''
+        A method used to generate the reverse map of a genetic code. Returns an amino acid -> set(codon) dictionary.
+
+        Parameters
+        ----------
+            None
+
+        Returns
+        -------
+            dict rmap
+        '''
+        rmap = {}
+        for c, aa in self.data.items():
+            codons = rmap.get(aa, [])
+            codons.append(c)
+            rmap.update({aa:codons})
+
+        return rmap
+
     def translate(self, gene):
         '''
         A method used to translate a DNA/RNA sequence into its corresponding

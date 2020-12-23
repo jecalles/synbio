@@ -1,9 +1,6 @@
 import setuptools
 import os
 
-print("codes: redefining utils_definitions.py")
-os.system('python res/utils_definitions.py')
-
 with open('README.md', 'r') as handle:
     long_description = handle.read()
 
@@ -25,7 +22,7 @@ setuptools.setup(
         'Licence :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>3.6',
+    python_requires='>3.8',
     install_requires=requirements,
     package_data={'codes':['res/*']}
 )
