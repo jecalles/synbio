@@ -1,11 +1,9 @@
-from collections import UserDict
-
 from .utils import definitions
 from .utils import functions
 
 from . import sequences
 
-class Code(UserDict):
+class Code(dict):
     ''' A class used to represent genetic codes. '''
 
     def __init__(self, code=None):
@@ -52,17 +50,13 @@ class Code(UserDict):
                     )
                 )
 
-        # determine code ambiguity
-        ambiguous = functions.is_promiscuous(code)
+        # finally, call super() for init
+        super().__init__(code)
 
-        # determine if code is one-to=one
-        one_to_one = functions.is_one_to_one(code)
-
-        # Assign assign instance attributes
-        self.data = code
-        self.ambiguous = ambiguous
-        self.one_to_one = one_to_one
-        self.codon_length = len(code['AUG'])
+        # Assign additional attributes
+        self.ambiguous = functions.is_promiscuous(code)
+        self.one_to_one = functions.is_one_to_one(code)
+        self.codon_length = len(next(iter(self)))
 
     def __repr__(self):
         code = self.table()
@@ -84,7 +78,7 @@ class Code(UserDict):
         '''a method used to represent a genetic code as a 4x4x4 array
         '''
         rNTPs = definitions.rNTPs
-        out = [ [ [c1+c2+c3 + ':' + self.data[c1+c2+c3] for c2 in rNTPs]
+        out = [ [ [c1+c2+c3 + ':' + self[c1+c2+c3] for c2 in rNTPs]
                         for c3 in rNTPs]
                             for c1 in rNTPs]
 
@@ -103,7 +97,7 @@ class Code(UserDict):
             dict rmap
         '''
         rmap = {}
-        for c, aa in self.data.items():
+        for c, aa in self.items():
             codons = rmap.get(aa, [])
             codons.append(c)
             rmap.update({aa:codons})
@@ -127,7 +121,7 @@ class Code(UserDict):
         mRNA = sequences.transcribe(gene)
         codons = sequences.get_codons(mRNA)
         return ''.join(
-            [self.data[c] for c in codons]
+            [self[c] for c in codons]
         )
 
     def reverse_translate(self, prot_seq, stop_codon='UGA'):
@@ -148,7 +142,7 @@ class Code(UserDict):
             raise TypeError(
                 'cannot reverse translate sequence. genetic code is not one-to-one')
         # otherwise, create reverse translation dictionary
-        rev_dict = {aa: codon for codon, aa in self.data.items()}
+        rev_dict = {aa: codon for codon, aa in self.items()}
         rev_dict['*'] = stop_codon
         # translate gene and return
         gene = ''
