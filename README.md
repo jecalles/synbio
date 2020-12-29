@@ -1,2 +1,16 @@
-# codes: a simple package for desgining and manipulating genetic codes
-This is a refactored, more usable version of code written for Calles _et al._ 2019, "Fail-safe genetic codes designed to intrinsically contain engineered organisms" (doi: 10.1093/nar/gkz745). This code is actively in development in mid alpha. Hic Sunct Dracones.
+# synbio: a simple python package for doing synthetic biology
+This is a homebrewed package for doing synthetic biology. It provides Python classes representing common primitives in biology.
+
+## Documentation
+There is none, yet. Email me (callesjonathan@gmail.com) if you have questions
+
+## Dependencies
+There are none, yet. The goal is to keep this package written in pure Python for simplicity.
+
+## Installation
+Run the following commands
+
+```bash
+git clone https://github.com/jecalles/synbio.git
+pip install ./synbio
+```
