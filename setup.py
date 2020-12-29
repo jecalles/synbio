@@ -8,14 +8,14 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setuptools.setup(
-    name='codes-jecalles',
+    name='synbio-jecalles',
     version='0.0.1',
     author='Jonathan Calles',
-    author_email='jecalles@stanford.edu',
-    description='Tools for engineering genetic codes.',
+    author_email='callesjonathan@gmail.com',
+    description='Tools for doing synthetic biology',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/EndyLab/codon-tables/tree/package',
+    url='https://github.com/jecalles/synbio',
     packages=setuptools.find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3',

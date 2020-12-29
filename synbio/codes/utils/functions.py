@@ -4,7 +4,7 @@ import random
 from collections import deque
 from copy import copy
 
-from codes.utils.definitions import *
+from synbio.codes.utils.definitions import *
 
 # define scope of package
 __all__ = [
