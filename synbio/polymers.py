@@ -15,17 +15,20 @@ class Polymer(str):
     def alphabet(cls):
         raise NotImplementedError(f"{cls.__name__} is an abstract class!")
 
+
 class DNA(Polymer):
     @classmethod
     def alphabet(cls):
         # TODO: implement using utils.dNTPs, but first you gotta refactor, oof
         pass
 
+
 class RNA(Polymer):
     @classmethod
     def alphabet(cls):
         # TODO: implement using utils.rNTPs, but first you gotta refactor, oof
         pass
+
 
 class Protein(Polymer):
     @classmethod

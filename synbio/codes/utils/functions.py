@@ -14,9 +14,12 @@ __all__ = [
     "random_code", "num_codes", "silencicity", "mutability", "promiscuity",
     "mut_pair_num", "get_mut_pairs", "order_NTPs",
 ]
+
+
 def __dir__():
     default = [key for key in globals().keys() if key[:2] == '__']
     return default + __all__
+
 
 def get_aa_counts(table):
     ''' A function that takes a Code and finds the counts of each
@@ -171,8 +174,10 @@ def get_codon_connectivity(table):
         # declare neighbors list
         neighbors = []
         # use connect_recurse to map connectivity
-        dist_dict[codon] = _connect_recurse(codon, 1, table,
-                                                   neighbors, codon_deque, cache)
+        dist_dict[codon] = _connect_recurse(
+            codon, 1, table, neighbors,
+            codon_deque, cache
+        )
     # return codon_dist
     return dist_dict
 
@@ -202,7 +207,8 @@ def _connect_recurse(codon, level, table, neighbors, codon_deque, cache):
     for i, base in enumerate(codon):
         for nt in rNTPs:
             # handle if nt is the same as base
-            if nt == base: continue
+            if nt == base:
+                continue
             # if not, generate new codon
             c_new = codon[:i] + nt + codon[i + 1:]
             # Base case: c_new already found
@@ -226,7 +232,7 @@ def _connect_recurse(codon, level, table, neighbors, codon_deque, cache):
         c, newlevel = codon_deque.pop()
         # append results to neighbors list
         neighbors = _connect_recurse(c, newlevel + 1, table,
-                                            neighbors, codon_deque, cache)
+                                     neighbors, codon_deque, cache)
     # return resulting list
     return neighbors
 
@@ -364,6 +370,7 @@ def check_block(table, block_struct):
             return False
     # if function reaches this point, return True
     return True
+
 
 def random_code(block_structure='standard'):
     '''A function used to generate a random codon table, optionally
@@ -546,7 +553,8 @@ def promiscuity(table, allow_ambiguous=False):
     # loop over codons to reassign
     for codon, AA in table.items():
         # skip assignments to STOP
-        if AA == '0': continue
+        if AA == '0':
+            continue
         # get codons that would be decoded in reality
         wobble = wobble_WC[basepair_WC[codon[-1]]]
         codons = [codon[:2] + nt3 for nt3 in wobble]
@@ -666,6 +674,7 @@ def order_NTPs(sortable, nucleic_acid='RNA'):
         # raise error
         sorted_obj = False
     return sorted_obj
+
 
 if __name__ == '__main__':
     pass

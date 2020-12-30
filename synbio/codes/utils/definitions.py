@@ -13,9 +13,12 @@ __all__ = [
     "unrestricted_block", "standard_block", "natural_block", "basepair_WC",
     "wobble_WC", "standard_code", "colorado_code", "RED20", "RED15"
 ]
+
+
 def __dir__():
     default = [key for key in globals().keys() if key[:2] == '__']
     return default + __all__
+
 
 #####################
 # define properties #

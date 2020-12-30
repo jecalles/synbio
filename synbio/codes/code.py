@@ -3,6 +3,7 @@ from .utils import functions
 
 from . import sequences
 
+
 class Code(dict):
     ''' A class used to represent genetic codes. '''
 
@@ -32,8 +33,8 @@ class Code(dict):
                 code = code_options[code.upper()]
             except:
                 raise ValueError(
-                        'Code string not recognized. Use one of the following options: {0}'.format(
-                            set(code_options.keys())
+                    'Code string not recognized. Use one of the following options: {0}'.format(
+                        set(code_options.keys())
                     )
                 )
         # default to standard code
@@ -70,7 +71,7 @@ class Code(dict):
                 out += '|'
                 for elem in row:
                     out += (elem + '|')
-                out +='\n'
+                out += '\n'
         out += crossline[:-1]
         return out
 
@@ -78,9 +79,9 @@ class Code(dict):
         '''a method used to represent a genetic code as a 4x4x4 array
         '''
         rNTPs = definitions.rNTPs
-        out = [ [ [c1+c2+c3 + ':' + self[c1+c2+c3] for c2 in rNTPs]
-                        for c3 in rNTPs]
-                            for c1 in rNTPs]
+        out = [[[c1+c2+c3 + ':' + self[c1+c2+c3] for c2 in rNTPs]
+                for c3 in rNTPs]
+               for c1 in rNTPs]
 
         return out
 
@@ -100,7 +101,7 @@ class Code(dict):
         for c, aa in self.items():
             codons = rmap.get(aa, [])
             codons.append(c)
-            rmap.update({aa:codons})
+            rmap.update({aa: codons})
 
         return rmap
 
