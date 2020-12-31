@@ -1,30 +1,24 @@
-def transcribe(dna_seq):
-    '''
-    A function that converts a DNA sequence into an RNA sequence
+import os
+import pickle
 
-    Parameters
-    ----------
-        str dna_seq: string representing DNA sequence
+# define scope of package
+__all__ = [
+    "dNTPs", "rNTPs", "aminoacids", "triplet_codons", "triplet_mut_pairs",
+    "quadruplet_codons", "quadruplet_mut_pairs", "PRS", "kdHydrophobicity",
+]
 
-    Returns
-    -------
-        str rna_seq: string representting RNA sequence
-    '''
-    return dna_seq.upper().replace('T', 'U')
+path = os.path.dirname(os.path.abspath(__file__))
+with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
+    un_pickled = pickle.load(handle)
+    [
+        dNTPs, rNTPs, aminoacids, triplet_codons, triplet_mut_pairs,
+        quadruplet_codons, quadruplet_mut_pairs, PRS, kdHydrophobicity,
+    ] = un_pickled
 
-def reverse_transcribe(rna_seq):
-    '''
-    A function that converts an RNA sequence into a DNA sequence
+#############
+# functions #
+#############
 
-    Parameters
-    ----------
-        str rna_seq: string representting RNA sequence
-
-    Returns
-    -------
-        str dna_seq: string representing DNA sequence
-    '''
-    return rna_seq.upper().replace('U', 'T')
 
 def get_codons(seq, n=3):
     '''

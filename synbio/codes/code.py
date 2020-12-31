@@ -1,7 +1,6 @@
-from .utils import definitions
-from .utils import functions
-
-from . import sequences
+# TODO: refactor code, now that utils has been split up
+from synbio.codes import utils as codeutils
+from synbio import utils
 
 
 class Code(dict):
@@ -23,11 +22,11 @@ class Code(dict):
         # optionally generate a random code, or load a preset code
         if type(code) == str:
             code_options = {
-                'STANDARD': definitions.standard_code,
-                'COLORADO': definitions.colorado_code,
-                'RED20': definitions.RED20,
-                'RED15': definitions.RED15,
-                'RANDOM': functions.random_code()
+                'STANDARD': codeutils.definitions.standard_code,
+                'COLORADO': codeutils.definitions.colorado_code,
+                'RED20': codeutils.definitions.RED20,
+                'RED15': codeutils.definitions.RED15,
+                'RANDOM': codeutils.functions.random_code()
             }
             try:
                 code = code_options[code.upper()]
@@ -39,7 +38,7 @@ class Code(dict):
                 )
         # default to standard code
         elif code is None:
-            code = definitions.standard_code
+            code = codeutils.definitions.standard_code
         # else, try and cast input to a dict
         else:
             try:
@@ -55,8 +54,8 @@ class Code(dict):
         super().__init__(code)
 
         # Assign additional attributes
-        self.ambiguous = functions.is_promiscuous(code)
-        self.one_to_one = functions.is_one_to_one(code)
+        self.ambiguous = codeutils.functions.is_promiscuous(code)
+        self.one_to_one = codeutils.functions.is_one_to_one(code)
         self.codon_length = len(next(iter(self)))
 
     def __repr__(self):
@@ -78,7 +77,7 @@ class Code(dict):
     def table(self):
         '''a method used to represent a genetic code as a 4x4x4 array
         '''
-        rNTPs = definitions.rNTPs
+        rNTPs = utils.rNTPs
         out = [[[c1+c2+c3 + ':' + self[c1+c2+c3] for c2 in rNTPs]
                 for c3 in rNTPs]
                for c1 in rNTPs]
@@ -105,22 +104,21 @@ class Code(dict):
 
         return rmap
 
-    def translate(self, gene):
+    def translate(self, seq):
         '''
-        A method used to translate a DNA/RNA sequence into its corresponding
-        protein sequence. Raises an error if the input sequence length is not
-        divisible by the codon length.
+        A method used to translate a RNA sequence into its corresponding
+        Protein sequence. Raises an error if the input sequence length is not
+        divisible by the codon length, or if the sequence is not RNA.
 
         Parameters
         ----------
-            str gene: string representing translated amino acid sequence
+            str seq: string representing gene to translate
 
         Returns
         -------
-            str prot_seq: string representing translated amino acid sequence
+            Protein prot_seq: Protein obj representing translated input sequence
         '''
-        mRNA = sequences.transcribe(gene)
-        codons = sequences.get_codons(mRNA)
+        codons = utils.get_codons(seq, self.codon_length)
         return ''.join(
             [self[c] for c in codons]
         )
@@ -146,14 +144,13 @@ class Code(dict):
         rev_dict = {aa: codon for codon, aa in self.items()}
         rev_dict['*'] = stop_codon
         # translate gene and return
-        gene = ''
-        for aa in prot_seq:
-            gene += rev_dict[aa]
-        return gene
+        return ''.join(
+            [rev_dict[aa] for aa in prot_seq]
+        )
 
     def recode(self, gene, encoding=None):
         '''
-        A method used to recode an input sequence, given an initial genetic code, into an RNA sequence in this genetic code.
+        A method used to recode an input sequence, given an initial genetic code, into an RNA sequence in this genetic code. Note: requires input sequence to be in RNA
 
         Parameters
         ----------
@@ -166,7 +163,6 @@ class Code(dict):
         -------
             str out: output gene sequence (RNA) in this genetic code
         '''
-        in_code = type(self)(encoding)
-        mRNA = sequences.transcribe(gene)
-        protein = in_code.translate(mRNA)
+        in_code = Code(encoding)
+        protein = in_code.translate(gene)
         return self.reverse_translate(protein)

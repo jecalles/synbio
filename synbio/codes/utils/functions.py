@@ -4,6 +4,7 @@ import random
 from collections import deque
 from copy import copy
 
+from synbio.utils import *
 from synbio.codes.utils.definitions import *
 
 # define scope of package
@@ -63,7 +64,7 @@ def get_block_counts(blocks):
     '''
     # initialize dict of counts and populate keys
     block_counts = {}
-    for AA in residues:
+    for AA in aminoacids:
         block_counts[AA] = 0
     # increment counts
     for AA in blocks.values():
@@ -351,8 +352,8 @@ def check_block(table, block_struct):
 
     Parameters
     ----------
-    - dict table: a python dict representing the codon table
-    - dict block_struct: a python dict representing the table block structure
+        dict table: a python dict representing the codon table
+        dict block_struct: a python dict representing the table block structure
 
     Returns
     -------
@@ -409,12 +410,12 @@ def random_code(block_structure='standard'):
     blocks = list(block_struct.keys())
     random.shuffle(blocks)
     # randomly assign one block to each residue
-    for AA in residues:
+    for AA in aminoacids:
         block = blocks.pop()
         block_struct[block] = AA
     # randomly assign values to the remaining blocks
     for block in blocks:
-        AA = random.choice(residues)
+        AA = random.choice(aminoacids)
         block_struct[block] = AA
     # convert block_struct to table and return
     return blocks_to_table(block_struct, block_choices[block_structure])
