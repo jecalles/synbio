@@ -1,38 +1,70 @@
+from collections import abc
 from synbio import utils
 from synbio.codes import Code
 
 
-class Polymer(str):
-    def __new__(cls, value):
-        if not cls._alphabet_check(value):
-            raise ValueError(f"input value not in {cls.__name__} alphabet")
-        else:
-            return super().__new__(cls, value.upper())
+class Polymer(abc.MutableSequence):
+
+    def __init__(self, seq=''):
+        self.seq = self._seq_check(seq)
 
     def __repr__(self):
         # truncate representation if too long
         if len(self) > 160:
-            seq = f"{self[:20]}...{str(self[-20:])}"
+            seq = f"{self.seq[:20]}...{self.seq[-20:]}"
         else:
-            seq = str(self)
+            seq = self.seq
         return f"{self.__class__.__name__}({seq})"
 
-    @classmethod
-    def _alphabet_check(cls, value):
-        str_value = str(value).upper()
-        return all([item in cls.alphabet() for item in str_value])
+        # truncate representation if too long
+        if len(self) > 160:
+            seq = f"{self.seq[:20]}...{self.seq[-20:]}"
+        else:
+            seq = self.seq
+        return f"{self.__class__.__name__}({seq})"
 
-    @classmethod
-    def alphabet(cls):
-        raise NotImplementedError(f"{cls.__name__} is an abstract class!")
+    def __len__(self):
+        return self.seq.__len__()
+
+    def __getitem__(self, key):
+        return self.seq.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        seqlist = list(self.seq)
+        seqlist.__setitem__(key, self._seq_check(value))
+        self.seq = ''.join(seqlist)
+
+    def __delitem__(self, key):
+        seqlist = list(self.seq)
+        seqlist.__delitem__(key)
+        self.seq = ''.join(seqlist)
+
+    def insert(self, key, value):
+        seqlist = list(self.seq)
+        seqlist.insert(key, self._seq_check(value))
+        self.seq = ''.join(seqlist)
+
+    def _seq_check(self, value):
+        # handle different input types
+        if isinstance(value, Polymer):
+            seq = value.seq
+        else:
+            seq = str(value)
+        # check if input sequence has appropriate alphabet
+        bool_array = [item in self.alphabet() for item in seq.upper()]
+        if not all(bool_array):
+            raise ValueError(f"input value not in {self.__class__.__name__} alphabet")
+        return seq
+
+    def alphabet(self):
+        raise NotImplementedError
 
 
 class NucleicAcid(Polymer):
-    def __new__(cls, seq, annotation=None):
-        return super().__new__(cls, seq)
 
-    def __init__(self, seq, annotation=None):
-        self.annotation = annotation
+    def __init__(self, seq, annotations=None):
+        super().__init__(seq)
+        self.annotations = annotations
 
     def transcribe(self):
         raise NotImplementedError
@@ -45,8 +77,7 @@ class NucleicAcid(Polymer):
 
 
 class DNA(NucleicAcid):
-    @classmethod
-    def alphabet(cls):
+    def alphabet(self):
         return utils.dNTPs
 
     def transcribe(self):
@@ -61,8 +92,7 @@ class DNA(NucleicAcid):
 
 
 class RNA(NucleicAcid):
-    @ classmethod
-    def alphabet(cls):
+    def alphabet(self):
         return utils.rNTPs
 
     def transcribe(self):
@@ -76,6 +106,5 @@ class RNA(NucleicAcid):
 
 
 class Protein(Polymer):
-    @ classmethod
-    def alphabet(cls):
+    def alphabet(self):
         return utils.aminoacids

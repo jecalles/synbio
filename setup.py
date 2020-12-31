@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setuptools.setup(
-    name='synbio-jecalles',
+    name='synbio-tooling',
     version='0.0.1',
     author='Jonathan Calles',
     author_email='callesjonathan@gmail.com',
@@ -17,9 +17,9 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/jecalles/synbio',
     packages=setuptools.find_packages(),
+    license='MIT',
     classifiers=[
         'Programming Language :: Python :: 3',
-        'Licence :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
     python_requires='>3.8',
