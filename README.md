@@ -1,4 +1,5 @@
 # synbio: a simple python package for doing synthetic biology
+![GitHub](https://img.shields.io/github/license/jecalles/synbio)
 This is a homebrewed package for doing synthetic biology. It provides Python classes representing common primitives in biology.
 
 ## Documentation
