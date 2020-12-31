@@ -81,7 +81,7 @@ class DNA(NucleicAcid):
         return utils.dNTPs
 
     def transcribe(self):
-        return RNA(self.replace('T', 'U'))
+        return RNA(self.seq.replace('T', 'U'))
 
     def reverse_transcribe(self):
         return self
@@ -99,7 +99,7 @@ class RNA(NucleicAcid):
         return self
 
     def reverse_transcribe(self):
-        return DNA(self.replace('U', 'T'))
+        return DNA(self.seq.replace('U', 'T'))
 
     def translate(self, code=Code()):
         return Code(code).translate(self)
