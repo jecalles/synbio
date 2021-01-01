@@ -1,5 +1,4 @@
-from codes import Code
-from codes.utils import definitions
-from codes.utils import functions
+from synbio.codes import Code
+from synbio.codes.utils import definitions, functions
 
 print(functions.__dir__())
