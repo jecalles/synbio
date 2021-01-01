@@ -9,19 +9,7 @@ class Polymer(abc.MutableSequence):
         self.seq = self._seq_check(seq)
 
     def __repr__(self):
-        # truncate representation if too long
-        if len(self) > 160:
-            seq = f"{self.seq[:20]}...{self.seq[-20:]}"
-        else:
-            seq = self.seq
-        return f"{self.__class__.__name__}({seq})"
-
-        # truncate representation if too long
-        if len(self) > 160:
-            seq = f"{self.seq[:20]}...{self.seq[-20:]}"
-        else:
-            seq = self.seq
-        return f"{self.__class__.__name__}({seq})"
+        return f"{self.__class__.__name__}({self.seq})"
 
     def __len__(self):
         return self.seq.__len__()
