@@ -1,4 +1,10 @@
 from synbio.codes import Code
 
-standard_code = Code()
-print(standard_code)
+
+class TestCode:
+    # TODO: write tests for all methods
+
+    def test_init(self):
+        # TODO: this test is kinda wimpy; beef it up
+        standard_code = Code()
+        print(standard_code)
