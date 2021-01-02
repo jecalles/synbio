@@ -70,18 +70,17 @@ for nt1 in rNTPs:
                 quadruplet_codons.append(nt1+nt2+nt3+nt4)
 
 # define Watson Crick Wobbling Rules
-basepair_WC = {
+dna_basepair_WC = {
+    'T': 'A',
+    'C': 'G',
+    'A': 'T',
+    'G': 'C'
+}
+rna_basepair_WC = {
     'U': 'A',
     'C': 'G',
     'A': 'U',
     'G': 'C'
-}
-wobble_WC = {
-    'U': ['A', 'G'],
-    'C': ['G'],
-    'A': ['U', 'C'],
-    'G': ['U', 'C'],
-    'I': ['A', 'C', 'U']
 }
 
 # define all pairs of codons 1 mutation away
@@ -115,6 +114,7 @@ if __name__ == '__main__':
     toDump = [
         dNTPs, rNTPs, aminoacids, triplet_codons, triplet_mut_pairs,
         quadruplet_codons, quadruplet_mut_pairs,
+        dna_basepair_WC, rna_basepair_WC,
         PRS, kdHydrophobicity
     ]
     path = os.path.dirname(os.path.abspath(__file__))

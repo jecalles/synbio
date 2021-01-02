@@ -3,8 +3,12 @@ import pickle
 
 # define scope of package
 __all__ = [
+    # definitions
     "dNTPs", "rNTPs", "aminoacids", "triplet_codons", "triplet_mut_pairs",
+    "dna_basepair_WC", "rna_basepair_WC",
     "quadruplet_codons", "quadruplet_mut_pairs", "PRS", "kdHydrophobicity",
+    # functions
+    "get_codons", "reverse_complement"
 ]
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +16,9 @@ with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
     un_pickled = pickle.load(handle)
     [
         dNTPs, rNTPs, aminoacids, triplet_codons, triplet_mut_pairs,
-        quadruplet_codons, quadruplet_mut_pairs, PRS, kdHydrophobicity,
+        quadruplet_codons, quadruplet_mut_pairs,
+        dna_basepair_WC, rna_basepair_WC,
+        PRS, kdHydrophobicity
     ] = un_pickled
 
 #############
@@ -45,3 +51,9 @@ def get_codons(seq, n=3):
     ]
 
     return codons
+
+
+def reverse_complement(seq, complement=dna_basepair_WC):
+    return ''.join(
+        [complement[nt] for nt in seq[::-1]]
+    )

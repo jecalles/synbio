@@ -52,13 +52,14 @@ natural_block = {
 }
 
 # define Watson Crick Wobbling Rules
-basepair_WC = {
-    'U': 'A',
-    'C': 'G',
-    'A': 'U',
-    'G': 'C'
+dna_wobble_WC = {
+    'T': ['A', 'G'],
+    'C': ['G'],
+    'A': ['T', 'C'],
+    'G': ['T', 'C'],
+    'I': ['A', 'C', 'T']
 }
-wobble_WC = {
+rna_wobble_WC = {
     'U': ['A', 'G'],
     'C': ['G'],
     'A': ['U', 'C'],
@@ -205,7 +206,7 @@ if __name__ == '__main__':
     # time to pickle!
     toDump = [
         unrestricted_block, standard_block, natural_block,
-        basepair_WC, wobble_WC,
+        dna_wobble_WC, rna_wobble_WC,
         standard_code, colorado_code
     ]
     path = os.path.dirname(os.path.abspath(__file__))

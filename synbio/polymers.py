@@ -15,19 +15,23 @@ class Polymer(abc.MutableSequence):
         return self.seq.__len__()
 
     def __getitem__(self, key):
+        # TODO: implement compatibility with Location objects
         return self.seq.__getitem__(key)
 
     def __setitem__(self, key, value):
+        # TODO: implement compatibility with Location objects
         seqlist = list(self.seq)
         seqlist.__setitem__(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
     def __delitem__(self, key):
+        # TODO: implement compatibility with Location objects
         seqlist = list(self.seq)
         seqlist.__delitem__(key)
         self.seq = ''.join(seqlist)
 
     def insert(self, key, value):
+        # TODO: implement compatibility with Location objects
         seqlist = list(self.seq)
         seqlist.insert(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
@@ -63,6 +67,9 @@ class NucleicAcid(Polymer):
     def translate(self):
         raise NotImplementedError
 
+    def reverse_complement(self):
+        raise NotImplementedError
+
 
 class DNA(NucleicAcid):
     def alphabet(self):
@@ -78,6 +85,11 @@ class DNA(NucleicAcid):
         mRNA = self.transcribe()
         return mRNA.translate(code)
 
+    def reverse_complement(self):
+        return DNA(
+            utils.reverse_complement(self, utils.dna_basepair_WC)
+        )
+
 
 class RNA(NucleicAcid):
     def alphabet(self):
@@ -91,6 +103,11 @@ class RNA(NucleicAcid):
 
     def translate(self, code=Code()):
         return Code(code).translate(self)
+
+    def reverse_complement(self):
+        return RNA(
+            utils.reverse_complement(self, utils.rna_basepair_WC)
+        )
 
 
 class Protein(Polymer):

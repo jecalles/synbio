@@ -557,7 +557,7 @@ def promiscuity(table, allow_ambiguous=False):
         if AA == '0':
             continue
         # get codons that would be decoded in reality
-        wobble = wobble_WC[basepair_WC[codon[-1]]]
+        wobble = rna_wobble_WC[rna_basepair_WC[codon[-1]]]
         codons = [codon[:2] + nt3 for nt3 in wobble]
         # determine if there is ambiguity
         acceptable = [AA, '0']
