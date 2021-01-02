@@ -1,6 +1,7 @@
 from collections import abc
 from synbio import utils
 from synbio.codes import Code
+from synbio.annotations import Location
 
 
 class Polymer(abc.MutableSequence):
@@ -18,23 +19,19 @@ class Polymer(abc.MutableSequence):
         return self.seq.__len__()
 
     def __getitem__(self, key):
-        # TODO: implement compatibility with Location objects
         return self.seq.__getitem__(key)
 
     def __setitem__(self, key, value):
-        # TODO: implement compatibility with Location objects
         seqlist = list(self.seq)
         seqlist.__setitem__(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
     def __delitem__(self, key):
-        # TODO: implement compatibility with Location objects
         seqlist = list(self.seq)
         seqlist.__delitem__(key)
         self.seq = ''.join(seqlist)
 
     def insert(self, key, value):
-        # TODO: implement compatibility with Location objects
         seqlist = list(self.seq)
         seqlist.insert(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
@@ -61,6 +58,59 @@ class NucleicAcid(Polymer):
         super().__init__(seq)
         self.annotations = annotations
 
+    def __getitem__(self, key):
+        # TODO: implement compatibility with Location objects
+        if type(key) == Location:
+            slice = key.to_slice()
+
+            # shortcircuit - if REV strand, return rev comp
+            if key.strand == "REV":
+                return utils.reverse_complement(
+                    self.seq.__getitem__(slice), self.basepairing
+                )
+        else:
+            slice = key
+
+        return super().__getitem__(slice)
+
+    def __setitem__(self, key, value):
+        value = self._seq_check(value)
+
+        if type(key) == Location:
+            slice = key.to_slice()
+
+            if key.strand == "REV":
+                value = utils.reverse_complement(
+                    value, self.basepairing
+                )
+
+        else:
+            slice = key
+
+        return super().__setitem__(slice, value)
+
+    def __delitem__(self, key):
+        if type(key) == Location:
+            slice = key.to_slice()
+
+        return super().__delitem__(slice, value)
+
+    def insert(self, key, value):
+        value = self._seq_check(value)
+
+        if type(key) == Location:
+            slice = key.to_slice()
+
+            if key.strand == "REV":
+                value = utils.reverse_complement(
+                    value, self.basepairing
+                )
+
+        else:
+            slice = key
+
+        return super().insert(slice, value)
+
     def transcribe(self):
         raise NotImplementedError
 
@@ -75,6 +125,8 @@ class NucleicAcid(Polymer):
 
 
 class DNA(NucleicAcid):
+    basepairing = utils.dna_basepair_WC
+
     def alphabet(self):
         return utils.dNTPs
 
@@ -95,6 +147,8 @@ class DNA(NucleicAcid):
 
 
 class RNA(NucleicAcid):
+    basepairing = utils.rna_basepair_WC
+
     def alphabet(self):
         return utils.rNTPs
 
