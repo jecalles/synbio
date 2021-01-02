@@ -11,6 +11,9 @@ class Polymer(abc.MutableSequence):
     def __repr__(self):
         return f"{self.__class__.__name__}({self.seq})"
 
+    def __eq__(self, other):
+        return self.seq == other
+
     def __len__(self):
         return self.seq.__len__()
 
