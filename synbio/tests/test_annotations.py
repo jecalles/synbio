@@ -80,9 +80,10 @@ class TestLocation:
 
     # TODO: write test for to_slice()
     def test_to_slice(self):
-        raise NotImplementedError
+        assert 1 == 2
 
 
 class TestPart:
     # TODO: write tests for Part obj
-    raise NotImplementedError
+    def test_dummy(self):
+        assert 1 == 2
