@@ -29,26 +29,34 @@ class TestLocation:
         assert x != z
 
     def test_lt(self):
-        a = self.a
         b = self.b
         c = self.c
+        e = self.e
 
         assert (b < c) == False
         assert (c < b) == True
 
-        assert (a < b) == False
-        assert (a < c) == False
+        assert (b < e) == False
+        assert (c < e) == True
 
     def test_gt(self):
-        a = self.a
+        ##################
+        # Test locations #
+        ##################
+        # a: ----------
+        # b:     ----
+        # c: ----
+        # d:           ----------
+        # e:      ----------
         b = self.b
         c = self.c
+        e = self.e
 
         assert (b > c) == True
         assert (c > b) == False
 
-        assert (a > b) == False
-        assert (a > c) == False
+        assert (e > b) == False
+        assert (e > c) == True
 
     def test_contains(self):
         a = self.a
