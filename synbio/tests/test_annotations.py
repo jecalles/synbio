@@ -1,89 +1,50 @@
+from synbio.utils import Location
 from synbio.annotations import *
-
-
-class TestLocation:
-    ##################
-    # Test locations #
-    ##################
-    # a: ----------
-    # b:     ----
-    # c: ----
-    # d:           ----------
-    # e:      ----------
-    a = Location(0, 10)
-    b = Location(4, 7)
-    c = Location(0, 4)
-    d = Location(10, 20)
-    e = Location(5, 15)
-
-    def test_contains(self):
-        a = self.a
-        b = self.b
-        c = self.c
-        d = self.d
-        e = self.e
-
-        # testing contains on self should return True
-        assert Location.contains(a, a) == True
-
-        # Truly contained should return True ...
-        assert Location.contains(a, b) == True
-        # ... even with the same start index
-        assert Location.contains(a, c) == True
-        # ... but not vice versa (order matters!!)
-        assert Location.contains(b, a) == False
-        assert Location.contains(c, a) == False
-
-        # Overlaped, but not contained, should return False
-        assert Location.contains(a, e) == False
-        assert Location.contains(e, a) == False
-
-        # No overlap at all should return False
-        assert Location.contains(a, d) == False
-        assert Location.contains(d, a) == False
-
-    def test_overlaps(self):
-        a = self.a
-        b = self.b
-        c = self.c
-        d = self.d
-        e = self.e
-
-        # same location should overlap
-        assert Location.overlaps(a, a) == True
-
-        # sequential locations should not overlap
-        assert Location.overlaps(a, d) == False
-        assert Location.overlaps(d, a) == False
-
-        # overlapping locations should return True
-        assert Location.overlaps(a, e) == True
-        assert Location.overlaps(e, a) == True
-
-        # contained location should return True ...
-        assert Location.overlaps(a, b) == True
-        assert Location.overlaps(b, a) == True
-        # ... even with the same start index
-        assert Location.overlaps(a, c) == True
-        assert Location.overlaps(c, a) == True
-
-    def test_find_overlaps(self):
-        locations = [self.a, self.b, self.c, self.d, self.e]
-
-        assert Location.find_overlaps(locations) == [
-            [1, 1, 1, 0, 1],
-            [1, 1, 0, 0, 1],
-            [1, 0, 1, 0, 0],
-            [0, 0, 0, 1, 1],
-            [1, 1, 0, 1, 1],
-        ]
-
-    # TODO: write test for to_slice()
-    def test_to_slice(self):
-        assert 1 == 2
+from synbio.polymers import DNA
 
 
 class TestPart:
-    # TODO: write tests for Part obj
-    def test_dummy(self):
+    def test_DNA_integration(self):
+        dna = DNA("ATCGAATTCCGG")
+        part1 = Part(seq=dna, location=Location(0, 4))
+        part2 = Part(seq=dna, location=Location(4, 8))
+        part3 = Part(seq=dna, location=Location(8, 12))
+
+        # test indexing
+        assert part1.seq == "ATCG"
+        assert part2.seq == "AATT"
+        assert part3.seq == "CCGG"
+
+        # test reassignment from DNA obj
+        dna[4:8] = "AT"
+        assert part1.seq == "ATCG"
+        assert part1.location == Location(0, 4)
+
+        assert part2.seq == "AT"
+        assert part2.location == Location(4, 6)
+
+        assert part3.seq == "CCGG"
+        assert part3.location == Location(6, 10)
+
+        # test reassignment from Part
+        part2.seq[4:6] = "AATT"
+        assert part1.seq == "ATCG"
+        assert part1.location == Location(0, 4)
+
+        assert part2.seq == "AATT"
+        assert part2.location == Location(4, 8)
+
+        assert part3.seq == "CCGG"
+        assert part3.location == Location(8, 12)
+
+    def test_initialization(self):
+        assert 1 == 2
+
+    def test_concatenation(self):
+        assert 1 == 2
+
+    def test_subparts(self):
+        assert 1 == 2
+
+    def test_parent(self):
         assert 1 == 2

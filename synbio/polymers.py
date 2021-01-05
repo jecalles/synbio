@@ -1,7 +1,7 @@
 from collections import abc
 from synbio import utils
 from synbio.codes import Code
-from synbio.annotations import Location
+from synbio.utils import Location
 
 
 class Polymer(abc.MutableSequence):
@@ -54,12 +54,10 @@ class Polymer(abc.MutableSequence):
 
 class NucleicAcid(Polymer):
 
-    def __init__(self, seq, annotations=None):
+    def __init__(self, seq):
         super().__init__(seq)
-        self.annotations = annotations
 
     def __getitem__(self, key):
-        # TODO: implement compatibility with Location objects
         if type(key) == Location:
             slice = key.to_slice()
 
