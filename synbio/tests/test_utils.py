@@ -1,4 +1,5 @@
 from synbio.utils import *
+from synbio.utils import Location
 
 
 class TestLocation:
@@ -26,6 +27,28 @@ class TestLocation:
         assert w == x
         assert x != y
         assert x != z
+
+    def test_lt(self):
+        a = self.a
+        b = self.b
+        c = self.c
+
+        assert (b < c) == False
+        assert (c < b) == True
+
+        assert (a < b) == False
+        assert (a < c) == False
+
+    def test_gt(self):
+        a = self.a
+        b = self.b
+        c = self.c
+
+        assert (b > c) == True
+        assert (c > b) == False
+
+        assert (a > b) == False
+        assert (a > c) == False
 
     def test_contains(self):
         a = self.a
@@ -91,4 +114,5 @@ class TestLocation:
 
     # TODO: write test for to_slice()
     def test_to_slice(self):
-        assert 1 == 2
+        loc = self.b
+        assert loc.to_slice() == slice(4, 7, 1)

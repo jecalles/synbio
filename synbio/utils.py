@@ -1,6 +1,7 @@
 import os
 import pickle
 import itertools
+from functools import wraps
 
 # define scope of package
 __all__ = [
@@ -9,9 +10,16 @@ __all__ = [
     "dna_basepair_WC", "rna_basepair_WC",
     "quadruplet_codons", "quadruplet_mut_pairs", "PRS", "kdHydrophobicity",
     # functions
-    "get_codons", "reverse_complement"
+    "get_codons", "reverse_complement",
+    # wrappers
+    "compare_same_type",
+    # classes
+    "Location"
 ]
 
+#############
+#definitions#
+#############
 path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
     un_pickled = pickle.load(handle)
@@ -22,6 +30,19 @@ with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
         PRS, kdHydrophobicity
     ] = un_pickled
 
+#############
+# wrappers  #
+#############
+
+
+def compare_same_type(func):
+    @wraps(func)
+    def wrapper(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Cannot compare {self.__class__.__name__} with {type(other)}")
+        else:
+            return func(self, other)
+    return wrapper
 #############
 #  classes  #
 #############
@@ -48,11 +69,17 @@ class Location:
     def __repr__(self):
         return f"{self.__class__.__name__}({self.start}, {self.end}, {self.strand})"
 
+    @compare_same_type
     def __eq__(self, other):
-        if not isinstance(other, Location):
-            raise TypeError(f"cannot compare Location to {type(other)}")
-
         return self.start == other.start and self.end == other.end and self.strand == other.strand
+
+    @compare_same_type
+    def __lt__(self, other):
+        return self.end <= other.start
+
+    @compare_same_type
+    def __gt__(self, other):
+        return self.start >= other.end
 
     @staticmethod
     def contains(outer_loc, inner_loc):
