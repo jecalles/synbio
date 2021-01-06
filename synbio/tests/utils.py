@@ -1,10 +1,19 @@
-def raises(callable, arg_list, kwarg_list, exc_list):
-    iterator = zip(arg_list, kwarg_list, exc_list)
-    for (w, kw, Exc) in iterator:
-        try:
-            callable(*w, **kw)
-            raise AssertionError(f"{callable.__name__} passed with args={w}, kwargs={kw}")
+def raises(callable, args, kwargs):
+    """
+    A function that returns whatever exception is raised by a Callable. Returns None if no exception is raised
 
-        except Exception as raised:
-            if not isinstance(raised, Exc):
-                raise AssertionError(f"{raised}")
+    Parameters
+    ----------
+        Callable callable: any callable (e.g., function, class, etc.)
+        list args: list of positional arguments to pass to callable
+        list kwargs: list of keyword arguments to pass to callable
+
+    Returns
+    -------
+        Optional[Exception]: exception raised by callable (None if exits cleanly)
+    """
+    try:
+        callable(*args, **kwargs)
+        return None
+    except Exception as raised:
+        return raised

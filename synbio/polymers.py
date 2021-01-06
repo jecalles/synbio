@@ -1,7 +1,9 @@
 from collections import abc
+from copy import copy
+
 from synbio import utils
 from synbio.codes import Code
-from synbio.utils import Location
+from synbio.annotations import Location, Part
 
 
 class Polymer(abc.MutableSequence):
@@ -54,60 +56,96 @@ class Polymer(abc.MutableSequence):
 
 class NucleicAcid(Polymer):
 
-    def __init__(self, seq):
+    def __init__(self, seq, annotations=[]):
+        # assert annotations is of type Part
+        if not all([isinstance(part, Part) for part in annotations]):
+            raise TypeError("annotation must be a Part")
         super().__init__(seq)
+        self.annotations = annotations
 
     def __getitem__(self, key):
-        if type(key) == Location:
-            slice = key.to_slice()
+        if isinstance(key, Location):
+            slice_ = key.to_slice()
 
             # shortcircuit - if REV strand, return rev comp
             if key.strand == "REV":
                 return utils.reverse_complement(
-                    self.seq.__getitem__(slice), self.basepairing
+                    self.seq.__getitem__(slice_), self.basepairing
                 )
         else:
-            slice = key
+            slice_ = key
 
-        return super().__getitem__(slice)
+        return super().__getitem__(slice_)
 
     def __setitem__(self, key, value):
+        length_change = len(value) - len(self.__getitem__(key))
+
         value = self._seq_check(value)
+        if isinstance(key, Location):
+            loc = copy(key)
+            key = key.to_slice()
 
-        if type(key) == Location:
-            slice = key.to_slice()
-
-            if key.strand == "REV":
+            if loc.strand == "REV":
                 value = utils.reverse_complement(
                     value, self.basepairing
                 )
 
-        else:
-            slice = key
+        elif isinstance(key, slice):
+            loc = Location.from_slice(key)
 
-        return super().__setitem__(slice, value)
+        elif isinstance(key, int):
+            loc = Location(key, key+1)
+
+        else:
+            raise TypeError("could not convert key into Location")
+
+        super().__setitem__(key, value)
+
+        if self.annotations is not None:
+            for part in self.annotations:
+                part.update_location(loc, length_change)
 
     def __delitem__(self, key):
-        if type(key) == Location:
-            slice = key.to_slice()
+        length_change = -len(self.__getitem__(key))
 
-        return super().__delitem__(slice, value)
+        if isinstance(key, Location):
+            loc = copy(key)
+            key = key.to_slice()
 
-    def insert(self, key, value):
-        value = self._seq_check(value)
+        elif isinstance(key, slice):
+            loc = Location.from_slice(key)
 
-        if type(key) == Location:
-            slice = key.to_slice()
-
-            if key.strand == "REV":
-                value = utils.reverse_complement(
-                    value, self.basepairing
-                )
+        elif isinstance(key, int):
+            loc = Location(key, key+1)
 
         else:
-            slice = key
+            raise TypeError("could not convert key into Location")
 
-        return super().insert(slice, value)
+        super().__delitem__(key)
+
+        if self.annotations is not None:
+            for part in self.annotations:
+                part.update_location(loc, length_change)
+
+    def insert(self, key, value):
+        """
+        Please, don't use this method. Mkay? There are more idiomatic ways to work with NucleicAcids.
+
+        Note: key may only be an int representing the index at which value will be added
+        """
+        # TODO: write a better docstring
+        if not isinstance(key, int):
+            raise TypeError("key must be of type int")
+
+        length_change = len(value)
+        value = self._seq_check(value)
+        loc = Location(key, key+1)
+
+        super().insert(key, value)
+
+        if self.annotations is not None:
+            for part in self.annotations:
+                part.update_location(loc, length_change)
 
     def transcribe(self):
         raise NotImplementedError
@@ -120,6 +158,16 @@ class NucleicAcid(Polymer):
 
     def reverse_complement(self):
         raise NotImplementedError
+
+    @ staticmethod
+    def _location_savy(func):
+        @ wrapps(func)
+        def wrapper(self, key, value):
+
+            out = func(key, value)
+
+            return out
+        return wrapper
 
 
 class DNA(NucleicAcid):
