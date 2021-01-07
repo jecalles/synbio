@@ -8,6 +8,9 @@ from synbio.codes import Code
 
 
 class Polymer(abc.MutableSequence, utils.ComparableMixin):
+    """
+    # TODO: write docstring
+    """
     _comparables = ['seq']
 
     def __init__(self, seq=''):
@@ -65,7 +68,15 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
     basepairing = None
 
     def __init__(self, seq, annotations=None):
-        # assert annotations is of type Part
+        """
+        Parameters
+        ----------
+        seq
+        annotations
+        """
+        # TODO: write docstring
+
+        # handle annotations input
         if annotations is None:
             annotations = set()
         elif not all(
@@ -163,15 +174,39 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
                 part.update_location(loc, length_change)
 
     def transcribe(self):
+        """
+        # TODO: write docstring
+        Returns
+        -------
+
+        """
         raise NotImplementedError
 
     def reverse_transcribe(self):
+        """
+        # TODO: write docstring
+        Returns
+        -------
+
+        """
         raise NotImplementedError
 
     def translate(self):
+        """
+        # TODO: write docstring
+        Returns
+        -------
+
+        """
         raise NotImplementedError
 
     def reverse_complement(self):
+        """
+        # TODO: write docstring
+        Returns
+        -------
+
+        """
         raise NotImplementedError
 
 

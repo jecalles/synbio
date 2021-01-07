@@ -1,8 +1,10 @@
 from functools import partial
 from typing import Iterable
 
+from synbio import utils
 from synbio.annotations import Part
 from synbio.polymers import DNA, Polymer
+from synbio.codes import Code
 
 
 class Library(Part):
@@ -42,3 +44,54 @@ class Library(Part):
 
     def __iter__(self):
         yield from self.variance
+
+
+def single_synonymous(seq, code=None):
+    # handle code input
+    if code is None:
+        code = Code()
+    elif isinstance(code, dict):
+        code = Code(code)
+    else:
+        raise TypeError("code must be a dict or dict-like obj")
+
+    # get codons from transcript
+    mRNA = DNA(seq).transcribe()
+    codon_list = utils.get_codons(mRNA)
+    # define function that gets all synonymous codons for a given codon
+    def get_synonymous_codons(codon): return code.rmap()[code[codon]]
+    # define a generator that returns all single synonymous_variants
+    variants = (
+        ''.join(codon_list[:pos] + list(synonym) + codon_list[pos+1:])
+        for pos, codon in enumerate(codon_list)
+        for synonym in get_synonymous_codons(codon)
+    )
+    return variants
+
+
+def double_synonymous(seq, code=None):
+    if code is None:
+        code = Code()
+    elif isinstance(code, dict):
+        code = Code(code)
+    else:
+        raise TypeError("code must be a dict or dict-like obj")
+
+    # get codons from transcript
+    mRNA = DNA(seq).transcribe()
+    codon_list = utils.get_codons(mRNA)
+    # define function that gets all synonymous codons for a given codon
+    def get_synonymous_codons(codon): return code.rmap()[code[codon]]
+    # define a generator that returns double synonymous_variants
+    variants = (
+        ''.join(
+            codon_list[:ix1] + list(syn1)
+            + codon_list[ix1+1:ix1+ix2+1] + list(syn2)
+            + codon_list[ix1+ix2+2:]
+        )
+        for ix1, codon1 in enumerate(codon_list)
+        for ix2, codon2 in enumerate(codon_list[ix1+1:])
+        for syn1 in get_synonymous_codons(codon1)
+        for syn2 in get_synonymous_codons(codon2)
+    )
+    return variants

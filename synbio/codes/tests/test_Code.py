@@ -9,5 +9,3 @@ class TestCode:
         standard_code = Code()
         print(standard_code)
 
-    def test_dummy(self):
-        assert 1 == 2
