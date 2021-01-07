@@ -1,5 +1,6 @@
 import os
 import pickle
+
 from synbio.utils import rNTPs
 
 # define block structures

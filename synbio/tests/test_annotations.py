@@ -110,33 +110,6 @@ class TestPart:
         assert part3.seq == "CCGG"
         assert part4.seq == "CGAATTCC"
 
-        # test reassignment from DNA obj
-        dna[4:8] = "AT"
-        assert part1.seq == "ATCG"
-        assert part1.location == Location(0, 4)
-
-        assert part2.seq == "AT"
-        assert part2.location == Location(4, 6)
-
-        assert part3.seq == "CCGG"
-        assert part3.location == Location(6, 10)
-
-        assert part4.seq == "CGATCC"
-        assert part4.location == Location(2, 8)
-
-        dna[Location(4, 6)] = "AATT"
-        assert part1.seq == "ATCG"
-        assert part1.location == Location(0, 4)
-
-        assert part2.seq == "AATT"
-        assert part2.location == Location(4, 8)
-
-        assert part3.seq == "CCGG"
-        assert part3.location == Location(8, 12)
-
-        assert part4.seq == "CGAATTCC"
-        assert part4.location == Location(2, 10)
-
         # test reassignment from Part
         part2.seq = "AT"
         assert part1.seq == "ATCG"
@@ -163,3 +136,7 @@ class TestPart:
 
         assert part4.seq == "CGAATTCC"
         assert part4.location == Location(2, 10)
+
+
+if __name__ == '__main__':
+    TestPart().test_DNA_integration()

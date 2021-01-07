@@ -1,6 +1,6 @@
 # TODO: refactor code, now that utils has been split up
-from synbio.codes import utils as codeutils
 from synbio import utils
+from synbio.codes import utils as codeutils
 
 
 class Code(dict):
@@ -120,7 +120,7 @@ class Code(dict):
         '''
         codons = utils.get_codons(seq, self.codon_length)
         return ''.join(
-            [self[c] for c in codons]
+            self[c] for c in codons
         )
 
     def reverse_translate(self, prot_seq, stop_codon='UGA'):
@@ -145,7 +145,7 @@ class Code(dict):
         rev_dict['*'] = stop_codon
         # translate gene and return
         return ''.join(
-            [rev_dict[aa] for aa in prot_seq]
+            rev_dict[aa] for aa in prot_seq
         )
 
     def recode(self, gene, encoding=None):

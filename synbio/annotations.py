@@ -1,4 +1,5 @@
 import itertools
+
 from synbio.utils import compare_same_type
 
 
@@ -103,12 +104,11 @@ class Part:
     '''
     '''
 
-    def __init__(self, name=None, kind=None, seq="", location=None,  metadata={}):
-        # assign self as annotation to seq; fails if seq is str (thats okay)
-        try:
-            seq.annotations.append(self)
-        except:
-            pass
+    _comparables = [
+        'seq', 'location', 'name', 'kind', 'metadata'
+    ]
+
+    def __init__(self, seq="", location=None,  name=None, kind=None, metadata={}):
 
         # initialize location if appropriate
         if location is None:
@@ -119,15 +119,32 @@ class Part:
             kind = self.__class__.__name__
 
         # TODO: are all these attributes necessary?
-        self.name = name
-        self.kind = kind
         self._seq_reference = seq
         self.location = location
+        self.name = name
+        self.kind = kind
         self.metadata = metadata
 
-    def __add__(self, other):
-        # TODO: implement Part concatenation
-        raise NotImplementedError
+        # assign self as annotation to seq; fails if seq is str (thats okay)
+        try:
+            seq.annotations.add(self)
+        except:
+            pass
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.name}, {self.kind}, {self.location})"
+
+    def __hash__(self):
+        return hash(
+            (getattr(self, comp) for comp in self._comparables)
+        )
+
+    @compare_same_type
+    def __eq__(self, other):
+        return all(
+            getattr(self, comp) == getattr(other, comp)
+            for comp in self._comparables
+        )
 
     @property
     def seq(self):

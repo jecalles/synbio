@@ -75,5 +75,5 @@ def get_codons(seq, n=3):
 
 def reverse_complement(seq, complement=dna_basepair_WC):
     return ''.join(
-        [complement[nt] for nt in seq[::-1]]
+        complement[nt] for nt in seq[::-1]
     )

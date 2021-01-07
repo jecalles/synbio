@@ -1,11 +1,10 @@
-from math import comb as binomial
-import pickle
 import random
 from collections import deque
 from copy import copy
+from math import comb as binomial
 
-from synbio.utils import *
 from synbio.codes.utils.definitions import *
+from synbio.utils import *
 
 # define scope of package
 __all__ = [

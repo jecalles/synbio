@@ -2,8 +2,8 @@ from collections import abc
 from copy import copy
 
 from synbio import utils
-from synbio.codes import Code
 from synbio.annotations import Location, Part
+from synbio.codes import Code
 
 
 class Polymer(abc.MutableSequence):
@@ -56,10 +56,13 @@ class Polymer(abc.MutableSequence):
 
 class NucleicAcid(Polymer):
 
-    def __init__(self, seq, annotations=[]):
+    def __init__(self, seq, annotations=set()):
         # assert annotations is of type Part
-        if not all([isinstance(part, Part) for part in annotations]):
+        if not all(
+                isinstance(part, Part)
+                for part in annotations):
             raise TypeError("annotation must be a Part")
+
         super().__init__(seq)
         self.annotations = annotations
 

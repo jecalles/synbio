@@ -1,7 +1,6 @@
-from synbio.tests import utils as testutils
-
-from synbio.polymers import DNA, RNA
 from synbio.libraries import Library
+from synbio.polymers import DNA, RNA
+from synbio.tests import utils as testutils
 
 
 class TestLibrary:
@@ -39,3 +38,6 @@ class TestLibrary:
                 Library, [], {'base_seq': dna_str, 'SeqType': str}
             ), TypeError
         )
+
+    def test_variance(self):
+        assert 1 == 2

@@ -3,6 +3,7 @@ from random import choice
 from .code import Code
 from .utils import definitions
 
+
 def red20():
     '''
     A generator that randomly generates a stream of RED20 codes as python dictionaries without yielding repeated codes

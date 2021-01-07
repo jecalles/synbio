@@ -1,5 +1,3 @@
-from synbio.utils import *
-
 # TODO: write test code for utils functions
 
 
