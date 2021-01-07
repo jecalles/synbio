@@ -61,7 +61,7 @@ class Code(dict):
     def __repr__(self):
         code = self.table()
 
-        crossline = '-'*25 + '\n'
+        crossline = '-' * 25 + '\n'
 
         out = object.__repr__(self) + '\n'
         for col in code:
@@ -78,7 +78,7 @@ class Code(dict):
         '''a method used to represent a genetic code as a 4x4x4 array
         '''
         rNTPs = utils.rNTPs
-        out = [[[c1+c2+c3 + ':' + self[c1+c2+c3] for c2 in rNTPs]
+        out = [[[c1 + c2 + c3 + ':' + self[c1 + c2 + c3] for c2 in rNTPs]
                 for c3 in rNTPs]
                for c1 in rNTPs]
 

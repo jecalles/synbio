@@ -1,2 +1,1 @@
-from . import definitions
-from . import functions
+from . import definitions, functions

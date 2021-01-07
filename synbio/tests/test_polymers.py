@@ -1,4 +1,3 @@
-from synbio.annotations import Location
 from synbio.polymers import *
 
 

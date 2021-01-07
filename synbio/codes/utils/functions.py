@@ -443,8 +443,9 @@ def num_codes(l_aa, b):
     - str num: n, represented in scientific notation as a string
     '''
     # calculate n
-    n = l_aa**b + np.array(
-        [(-1)**i * binomial(l_aa,  i) * (l_aa - i)**b for i in range(1, l_aa)]
+    n = l_aa ** b + np.array(
+        [(-1) ** i * binomial(l_aa, i) * (l_aa - i) ** b for i in
+         range(1, l_aa)]
     ).sum()
     # handle string processing
     mag = -1
@@ -564,7 +565,8 @@ def promiscuity(table, allow_ambiguous=False):
             if promiscuous[c] not in acceptable:
                 # raise error if allow_ambiguous = False
                 if not allow_ambiguous:
-                    raise ValueError('input code generates ambiguous code upon promiscuization')
+                    raise ValueError(
+                        'input code generates ambiguous code upon promiscuization')
                 else:
                     # else, package all nonstop codons as tuple
                     AAs = tuple(
@@ -662,7 +664,8 @@ def order_NTPs(sortable, nucleic_acid='RNA'):
     }
     # raise error if nucleic_acid flag invalid
     if nucleic_acid.upper() not in orderdict:
-        raise ValueError('nucleic_acid flag set to invalid option (use DNA or RNA)')
+        raise ValueError(
+            'nucleic_acid flag set to invalid option (use DNA or RNA)')
     # attempt sorting
     try:
         order = orderdict[nucleic_acid.upper()]

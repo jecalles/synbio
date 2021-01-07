@@ -9,7 +9,7 @@ count = 0
 for c1 in rNTPs:
     for c2 in rNTPs:
         for c3 in rNTPs:
-            unrestricted_block[count] = [c1+c2+c3]
+            unrestricted_block[count] = [c1 + c2 + c3]
             count += 1
 
 standard_block = {}
@@ -20,7 +20,7 @@ count = 0
 for c1 in rNTPs:
     for c2 in rNTPs:
         for c3 in rNTPs:
-            standard_block[count].append(c1+c2+c3)
+            standard_block[count].append(c1 + c2 + c3)
             if (c3 != 'U'):
                 count += 1
 

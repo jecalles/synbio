@@ -11,11 +11,13 @@ __all__ = [
     # functions
     "get_codons", "reverse_complement",
     # wrappers
-    "compare_same_type"
+    "compare_same_type",
+    # Mixins
+    "ComparableMixin"
 ]
 
 #############
-#definitions#
+# definitions#
 #############
 path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
@@ -27,6 +29,7 @@ with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
         PRS, kdHydrophobicity
     ] = un_pickled
 
+
 #############
 # wrappers  #
 #############
@@ -36,14 +39,17 @@ def compare_same_type(func):
     @wraps(func)
     def wrapper(self, other):
         if not isinstance(other, type(self)):
-            raise TypeError(f"Cannot compare {self.__class__.__name__} with {type(other)}")
+            raise TypeError(
+                f"Cannot compare {self.__class__.__name__} with {type(other)}")
         else:
             return func(self, other)
+
     return wrapper
 
-    #############
-    # functions #
-    #############
+
+#############
+# functions #
+#############
 
 
 def get_codons(seq, n=3):
@@ -67,7 +73,7 @@ def get_codons(seq, n=3):
 
     num_codons = int(len(seq) / n)
     codons = [
-        seq[n*i:n*(i+1)] for i in range(num_codons)
+        seq[n * i:n * (i + 1)] for i in range(num_codons)
     ]
 
     return codons
@@ -77,3 +83,25 @@ def reverse_complement(seq, complement=dna_basepair_WC):
     return ''.join(
         complement[nt] for nt in seq[::-1]
     )
+
+
+#############
+#  Mixins   #
+#############
+class ComparableMixin:
+    '''
+    A Mixin class that automatically provides some comparison dunder methods,
+    given a class attribute _comparables
+    '''
+
+    def __hash__(self):
+        return hash(
+            (getattr(self, comp) for comp in self._comparables)
+        )
+
+    @compare_same_type
+    def __eq__(self, other):
+        return all(
+            getattr(self, comp) == getattr(other, comp)
+            for comp in self._comparables
+        )

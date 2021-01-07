@@ -20,7 +20,7 @@ def red20():
     cache = set()
 
     while True:
-        code = {codon:"0" for codon in definitions.triplet_codons}
+        code = {codon: "0" for codon in definitions.triplet_codons}
         choices = [(choice(c_set), aa) for aa, c_set in rmap.items()]
         code.update(choices)
         hashed = hash(str(code))

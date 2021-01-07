@@ -1,17 +1,20 @@
 import itertools
 
-from synbio.utils import compare_same_type
+from synbio.utils import ComparableMixin
 
 
-class Location:
+class Location(ComparableMixin):
     # TODO: write docstring
     '''
     '''
 
+    _comparables = ['start', 'end', 'strand']
+
     def __init__(self, start, end, strand="FWD"):
         # check that start and end positions are valid
         if not start <= end:
-            raise ValueError(f"start position ({start}) comes after end position ({end})")
+            raise ValueError(
+                f"start position ({start}) comes after end position ({end})")
 
         # check that strand input is valid
         strand = strand.upper()
@@ -23,31 +26,31 @@ class Location:
         self.strand = strand
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.start}, {self.end}, {self.strand})"
-
-    @compare_same_type
-    def __eq__(self, other):
-        return self.start == other.start and self.end == other.end and self.strand == other.strand
+        return f"{self.__class__.__name__}({self.start}, " \
+               f"{self.end}, {self.strand})"
 
     @staticmethod
     def contains(outer_loc, inner_loc):
         '''
-        A static method that compares two locations, determining if the inner_loc is completely contained by the outer location.
+        A static method that compares two locations, determining if the
+        inner_loc is completely contained by the outer location.
         '''
-        return (outer_loc.start <= inner_loc.start) and (inner_loc.end <= outer_loc.end)
+        return (outer_loc.start <= inner_loc.start) \
+               and (inner_loc.end <= outer_loc.end)
 
     @staticmethod
     def overlaps(loc1, loc2):
         '''
         # TODO: write docstring for this method
         '''
-        # TODO: implement lol
-        return (loc1.start <= loc2.start and loc1.end > loc2.start) or (loc2.start <= loc1.start and loc2.end > loc1.start)
+        return (loc1.start <= loc2.start < loc1.end) or (
+                loc2.start <= loc1.start < loc2.end)
 
-    @ staticmethod
+    @staticmethod
     def find_overlaps(locations):
         '''
-        A static method that, given a list of Location objects, constructs a graph representing all Location objects that overlap with each other.
+        A static method that, given a list of Location objects, constructs a
+        graph representing all Location objects that overlap with each other.
 
         E.g., suppose our Locations are the following:
 
@@ -82,14 +85,14 @@ class Location:
         # reshape array to square matrix
         n = len(locations)
         bool_matrix = [
-            bool_array[i*n: (i+1)*n] for i in range(n)
+            bool_array[i * n: (i + 1) * n] for i in range(n)
         ]
         return bool_matrix
 
     @classmethod
-    def from_slice(cls, slice):
-        start = 0 if slice.start is None else slice.start
-        end = slice.stop
+    def from_slice(cls, slice_):
+        start = 0 if slice_.start is None else slice_.start
+        end = slice_.stop
         return cls(start, end)
 
     def to_slice(self):
@@ -99,7 +102,7 @@ class Location:
         return slice(self.start, self.end, 1)
 
 
-class Part:
+class Part(ComparableMixin):
     # TODO: write docstring
     '''
     '''
@@ -108,7 +111,8 @@ class Part:
         'seq', 'location', 'name', 'kind', 'metadata'
     ]
 
-    def __init__(self, seq="", location=None,  name=None, kind=None, metadata={}):
+    def __init__(self, seq="", location=None, name=None, kind=None,
+                 metadata={}):
 
         # initialize location if appropriate
         if location is None:
@@ -125,49 +129,36 @@ class Part:
         self.kind = kind
         self.metadata = metadata
 
-        # assign self as annotation to seq; fails if seq is str (thats okay)
+        # assign self as annotation to seq; fails if seq is str (that's okay)
         try:
             seq.annotations.add(self)
-        except:
+        except AttributeError:
             pass
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.name}, {self.kind}, {self.location})"
-
-    def __hash__(self):
-        return hash(
-            (getattr(self, comp) for comp in self._comparables)
-        )
-
-    @compare_same_type
-    def __eq__(self, other):
-        return all(
-            getattr(self, comp) == getattr(other, comp)
-            for comp in self._comparables
-        )
+        return f"{self.__class__.__name__}({self.name}, " \
+               f"{self.kind}, {self.location})"
 
     @property
     def seq(self):
         try:
-            # prefer slicing directly with location, if seq is strand savy
+            # prefer slicing directly with location, if seq is strand savvy
             return self._seq_reference[self.location]
-        except:
+        except TypeError:
             # default to using .to_slice()
             return self._seq_reference[self.location.to_slice()]
 
     @seq.setter
     def seq(self, value):
-        length_change = len(value) - len(self.seq)
-
         try:
-            # prefer slicing directly with location, if seq is strand savy
+            # prefer slicing directly with location, if seq is strand savvy
             self._seq_reference.__setitem__(self.location, value)
-        except:
+        except AttributeError:
             # default to using .to_slice()
             self._seq_reference.__setitem__(self.location.to_slice(),
                                             value)
 
-    def update_location(self, update_loc, length_change, skip_parent=False):
+    def update_location(self, update_loc, length_change):
         # if update is fully upstream of Part, update both start and end
         if update_loc.end <= self.location.start:
             self.location.start += length_change
@@ -176,7 +167,8 @@ class Part:
         elif Location.contains(self.location, update_loc):
             self.location.end += length_change
         # if update overlaps with one end of Part, truncate Part
-        elif Location.overlaps(self.location, update_loc) and length_change != 0:
+        elif Location.overlaps(self.location, update_loc) \
+                and length_change != 0:
             if update_loc.start < self.location.start:
                 self.location.end = update_loc.start
             else:

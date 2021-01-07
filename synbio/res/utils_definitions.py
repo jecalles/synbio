@@ -65,9 +65,9 @@ quadruplet_codons = []
 for nt1 in rNTPs:
     for nt2 in rNTPs:
         for nt3 in rNTPs:
-            triplet_codons.append(nt1+nt2+nt3)
+            triplet_codons.append(nt1 + nt2 + nt3)
             for nt4 in rNTPs:
-                quadruplet_codons.append(nt1+nt2+nt3+nt4)
+                quadruplet_codons.append(nt1 + nt2 + nt3 + nt4)
 
 # define Watson Crick Wobbling Rules
 dna_basepair_WC = {
@@ -92,7 +92,7 @@ for codon in triplet_codons:
             if nt == base:
                 continue
             # if not, generate new codon
-            c_new = codon[:i] + nt + codon[i+1:]
+            c_new = codon[:i] + nt + codon[i + 1:]
             # add to set
             triplet_mut_pairs.add((codon, c_new))
 
@@ -105,7 +105,7 @@ for codon in quadruplet_codons:
             if nt == base:
                 continue
             # if not, generate new codon
-            c_new = codon[:i] + nt + codon[i+1:]
+            c_new = codon[:i] + nt + codon[i + 1:]
             # add to set
             quadruplet_mut_pairs.add((codon, c_new))
 

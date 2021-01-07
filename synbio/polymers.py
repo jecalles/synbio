@@ -47,7 +47,8 @@ class Polymer(abc.MutableSequence):
         # check if input sequence has appropriate alphabet
         bool_array = [item in self.alphabet() for item in seq.upper()]
         if not all(bool_array):
-            raise ValueError(f"input value not in {self.__class__.__name__} alphabet")
+            raise ValueError(
+                f"input value not in {self.__class__.__name__} alphabet")
         return seq
 
     def alphabet(self):
@@ -97,7 +98,7 @@ class NucleicAcid(Polymer):
             loc = Location.from_slice(key)
 
         elif isinstance(key, int):
-            loc = Location(key, key+1)
+            loc = Location(key, key + 1)
 
         else:
             raise TypeError("could not convert key into Location")
@@ -119,7 +120,7 @@ class NucleicAcid(Polymer):
             loc = Location.from_slice(key)
 
         elif isinstance(key, int):
-            loc = Location(key, key+1)
+            loc = Location(key, key + 1)
 
         else:
             raise TypeError("could not convert key into Location")
@@ -142,7 +143,7 @@ class NucleicAcid(Polymer):
 
         length_change = len(value)
         value = self._seq_check(value)
-        loc = Location(key, key+1)
+        loc = Location(key, key + 1)
 
         super().insert(key, value)
 
@@ -162,14 +163,14 @@ class NucleicAcid(Polymer):
     def reverse_complement(self):
         raise NotImplementedError
 
-    @ staticmethod
+    @staticmethod
     def _location_savy(func):
-        @ wrapps(func)
+        @wrapps(func)
         def wrapper(self, key, value):
-
             out = func(key, value)
 
             return out
+
         return wrapper
 
 

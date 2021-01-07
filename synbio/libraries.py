@@ -7,6 +7,7 @@ from synbio.polymers import Polymer, DNA
 class Library(Part):
     """
     """
+
     # TODO: write docstring
 
     def __init__(self, base_seq="", location=None, name=None, SeqType=DNA,
@@ -17,7 +18,7 @@ class Library(Part):
             raise TypeError(
                 f"SeqType must be a subclass of Polymer (type(SeqType) == {type(SeqType)})")
 
-            # convert input seq to Polymer if necessary
+        # convert input seq to Polymer if necessary
         if not isinstance(base_seq, Polymer):
             base_seq = SeqType(base_seq)
 
