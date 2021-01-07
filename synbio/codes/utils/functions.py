@@ -22,7 +22,7 @@ def __dir__():
 
 
 def get_aa_counts(table):
-    ''' A function that takes a Code and finds the counts of each
+    """ A function that takes a Code and finds the counts of each
     AA. Returns a dictionary mapping AA to their respective counts.
 
     Parameters
@@ -32,7 +32,7 @@ def get_aa_counts(table):
     Returns
     -------
     dict AA_count: a python dict mapping amino acids to degeneracy
-    '''
+    """
     # declare dictionary of AA counts
     AA_count = {}
     # iterate over key and value pairs in self.table
@@ -49,7 +49,7 @@ def get_aa_counts(table):
 
 
 def get_block_counts(blocks):
-    ''' A function that takes a Code represented in block structure
+    """ A function that takes a Code represented in block structure
     form and finds the number of blocks encoding each AA. Returns a
     dictionary mapping AA to their respective counts.
 
@@ -60,7 +60,7 @@ def get_block_counts(blocks):
     Returns
     -------
     dict block_counts: a python dict mapping amino acids to degeneracy
-    '''
+    """
     # initialize dict of counts and populate keys
     block_counts = {}
     for AA in aminoacids:
@@ -73,7 +73,8 @@ def get_block_counts(blocks):
 
 
 def is_ambiguous(table):
-    '''A staticmethod that takes a codon table as a dictionary and returns True if it is ambiguous and False if not.
+    """A staticmethod that takes a codon table as a dictionary and returns True
+    if it is ambiguous and False if not.
 
     Parameters
     ----------
@@ -82,18 +83,20 @@ def is_ambiguous(table):
     Returns
     -------
     bool ambiguous: boolean representing the ambiguity of the table
-    '''
+    """
     # use promiscuity method to determine ambiguity
     try:
         __ = promiscuity(table, allow_ambiguous=False)  # fails if ambiguous
         ambiguous = False
-    except:
+    except ValueError:
         ambiguous = True
     return ambiguous
 
 
 def is_promiscuous(table):
-    '''A staticmethod that takes a codon table as a dictionary and returns True if it represents a promiscuous table and False if not.
+    """
+    A staticmethod that takes a codon table as a dictionary and returns True
+    if it represents a promiscuous table and False if not.
 
     Parameters
     ----------
@@ -102,14 +105,15 @@ def is_promiscuous(table):
     Returns
     -------
     bool ambiguous: boolean representing the promiscuity of the table
-    '''
-    # this is a one liner, but a tad obfuscated. Checks to see if each codon encodes for only one AA (thus is type str).
-    # returns true if any of the elements are not strings
-    return sum(type(AA) != str for AA in table.values()) > 0
+    """
+    return any(
+            type(AA) != str
+            for AA in table.values()
+        )
 
 
 def is_one_to_one(table):
-    '''A staticmethod that takes a codon table as a dictionary and returns
+    """A staticmethod that takes a codon table as a dictionary and returns
         True if it represents a One-To-One genetic code and False otherwise.
 
         A one-to-one code is defined as a code in which every amino acid is
@@ -123,7 +127,7 @@ def is_one_to_one(table):
     Returns
     -------
     bool one2one: boolean; True if One-To-One, and False otherwise
-    '''
+    """
     # declare storage dict to count amino acid number
     aa_set = set(aa for aa in table.values())
     aa_counts = {aa: 0 for aa in aa_set}
@@ -143,7 +147,7 @@ def is_one_to_one(table):
 
 
 def get_codon_connectivity(table):
-    '''get_codon_connectivity(dict table) a function that takes a codon table
+    """get_codon_connectivity(dict table) a function that takes a codon table
     and finds the graph distance between codon pairs. Connectivity is
     defined as follows: two codons c and c' are as connected if a series of
     point mutations can convert c to c' changing which amino acid it
@@ -162,16 +166,13 @@ def get_codon_connectivity(table):
     -------
     dict dist_dict: a python dictionary representing the adjacency matrix of
         a codon table with respect to codon neighbors.
-    '''
+    """
     # declare dictionary of distances
     dist_dict = {}
     # loop through all possible codons
     for codon in table.keys():
-        # declare temporary cache to hold discovered codons; store first codon in there
         cache = set(codon)
-        # declare queue of codons to check
         codon_deque = deque()
-        # declare neighbors list
         neighbors = []
         # use connect_recurse to map connectivity
         dist_dict[codon] = _connect_recurse(
@@ -183,7 +184,7 @@ def get_codon_connectivity(table):
 
 
 def _connect_recurse(codon, level, table, neighbors, codon_deque, cache):
-    ''' A recursive helper function that finds all of a codon's nearest
+    """ A recursive helper function that finds all of a codon's nearest
     neighbors and how far away they are. Returns a list of tuples
     representing the codons and their distances away.
 
@@ -201,7 +202,7 @@ def _connect_recurse(codon, level, table, neighbors, codon_deque, cache):
     Returns
     -------
     list neighbors: returns updated neighbors list
-    '''
+    """
     # import ipdb; ipdb.set_trace()
     # loop through every codon one mutation away
     for i, base in enumerate(codon):
@@ -238,10 +239,10 @@ def _connect_recurse(codon, level, table, neighbors, codon_deque, cache):
 
 
 def get_resi_connectivity(table):
-    ''' get_resi_connectivity(dict table): a function that takes a dictionary
+    """ get_resi_connectivity(dict table): a function that takes a dictionary
     representing a codon table and outputs a dictionary mapping amino acids
     to their respective neighbors, along with number of mutations away.
-    '''
+    """
     # call get_codon_connectivity
     codon_dist_dict = get_codon_connectivity(table)
     # declare dict to return
@@ -266,7 +267,7 @@ def get_resi_connectivity(table):
 
 
 def get_codon_neighbors(codon):
-    '''A function used to get all codons one mutation away from the given codon.
+    """A function used to get all codons one mutation away from the given codon.
 
     Parameters
     ----------
@@ -275,7 +276,7 @@ def get_codon_neighbors(codon):
     Returns
     -------
     list<str> neighbors: a list of codons one mutation away
-    '''
+    """
     # declare list of neighbors
     neighbors = []
     # generate nearest neighbors by looping over codon positions
@@ -293,7 +294,7 @@ def get_codon_neighbors(codon):
 
 
 def table_to_blocks(table, block_struct):
-    '''A function that takes a codon table and returns the
+    """A function that takes a codon table and returns the
     representation as blocks of codons (individual tRNAs) as opposed to
     individual codons.
 
@@ -306,9 +307,9 @@ def table_to_blocks(table, block_struct):
     -------
     - dict blocks: a python dict representing the codon table in block form
     - bool False: an "exception" if input table does not match block_struct
-    '''
+    """
     # run check_block to confirm proper block structure, returns False if not
-    if check_block(table, block_struct) != True:
+    if not check_block(table, block_struct):
         return False
     # declare dictionary to return
     blocks = {}
@@ -320,7 +321,7 @@ def table_to_blocks(table, block_struct):
 
 
 def blocks_to_table(blocks, block_struct):
-    '''A function that takes a codon table represented in block
+    """A function that takes a codon table represented in block
     structure form and returns the representation as a traditional codon
     table
 
@@ -333,7 +334,7 @@ def blocks_to_table(blocks, block_struct):
     -------
         dict table: a python dict representing the codon table
         bool False: an "exception" if input table does not match block_struct
-    '''
+    """
     # declare table to return
     table = {}
     # loop over blocks in block_struct and assign to table using blocks
@@ -346,7 +347,7 @@ def blocks_to_table(blocks, block_struct):
 
 
 def check_block(table, block_struct):
-    '''A function used to check whether a given codon table conforms
+    """A function used to check whether a given codon table conforms
     to the given block structure
 
     Parameters
@@ -357,7 +358,7 @@ def check_block(table, block_struct):
     Returns
     -------
     bool valid: true->table conforms to block structure; false otherwise
-    '''
+    """
     # loop over codons in each block; return false if they code for
     # different residues
     for codon_list in block_struct.values():
@@ -373,7 +374,7 @@ def check_block(table, block_struct):
 
 
 def random_code(block_structure='standard'):
-    '''A function used to generate a random codon table, optionally
+    """A function used to generate a random codon table, optionally
     defining the block structure. Will guarantee each amino acid be
     represented by at least one block in the table.
 
@@ -390,7 +391,7 @@ def random_code(block_structure='standard'):
     Returns
     -------
     dict table: a python dict representing the codon table to return
-    '''
+    """
     # determine block structure based on wobble rule
     block_choices = {
         'standard': standard_block,
@@ -399,9 +400,10 @@ def random_code(block_structure='standard'):
     }
     try:
         block_struct = copy(block_choices[block_structure])
-    except:
+    except KeyError:
         raise ValueError(
-            'block_structure string not recognized. Use one of the following options: {0}'.format(
+            'block_structure string not recognized. '
+            'Use one of the following options: {0}'.format(
                 set(block_choices.keys())
             )
         )
@@ -421,36 +423,37 @@ def random_code(block_structure='standard'):
 
 
 def num_codes(l_aa, b):
-    '''A function used to calculate the number of codon tables
+    """A function used to calculate the number of codon tables
     realizable given a number of amino acids to include, length of the
     codon, and number of blocks. Relies on an inclusion/exclusion criterion
     (i.e. count the total number of codon tables, minus the number that do
     not include one AA, plus the number that do not include two AAs...)
 
     l_aa = length of amino acid alphabet (20 + 1 stop)
-    b = number of blocks to assign (triplet most permissive = 48, quadruplet most permissive = 192)
+    b = number of blocks to assign (triplet most permissive = 48, quadruplet
+        most permissive = 192)
 
     n = l_aa^b + Sum_i^(l_aa-1) [(-1)^i * binomial(l_aa, i) * (l_aa - i)^b]
 
     Parameters
     ----------
-    - int l_aa: the number of amino acids + Stop to encode
-    - int b: the number of blocks in the codon table
+        int l_aa: the number of amino acids + Stop to encode
+        int b: the number of blocks in the codon table
 
     Returns
     -------
-    - int n: the number of possible tables
-    - str num: n, represented in scientific notation as a string
-    '''
+        int n: the number of possible tables
+        str num: n, represented in scientific notation as a string
+    """
     # calculate n
-    n = l_aa ** b + np.array(
-        [(-1) ** i * binomial(l_aa, i) * (l_aa - i) ** b for i in
-         range(1, l_aa)]
-    ).sum()
+    n = l_aa ** b + sum(
+        (-1) ** i * binomial(l_aa, i) * (l_aa - i) ** b
+        for i in range(1, l_aa)
+    )
     # handle string processing
     mag = -1
     temp_n = n
-    while (temp_n > 0):
+    while temp_n > 0:
         # increment mag for each order of magnitude
         temp_n = temp_n // 10
         mag += 1
@@ -461,7 +464,7 @@ def num_codes(l_aa, b):
 
 
 def silencicity(table):
-    '''A function used to calculate the silencicity of a codon table.
+    """A function used to calculate the silencicity of a codon table.
     Silencicity is a lab defined metric calculating the fraction of all
     mutations that are synonymous out of all possible ones.
 
@@ -472,21 +475,21 @@ def silencicity(table):
     Returns
     -------
     float silencicity: a float representing the silencicity metric
-    '''
+    """
     # initialize counter and get mutation pairs
     syn_mut = 0
     mut_pairs = get_mut_pairs(table)
     total_mut = len(mut_pairs)
     # loop over mutation pairs and increment for synonymous mutations
     for (c1, c2) in mut_pairs:
-        if (table[c1] == table[c2]):
+        if table[c1] == table[c2]:
             syn_mut += 1
     # return fraction of synonymous mutations
     return syn_mut / total_mut
 
 
 def mutability(table):
-    '''A function used to calculate the average chemical variability
+    """A function used to calculate the average chemical variability
     of single point mutations in a given genetic code. For each
     nonsynonymous single point mutation, it calculates the chemical
     distance between the previously encoded amino acid and its replacement
@@ -494,19 +497,18 @@ def mutability(table):
 
     Parameters
     ----------
-    dict table: a python dict representing the codon table to analyze
+        dict table: a python dict representing the codon table to analyze
 
     Returns
     -------
-    float mutability: a float representing the silencicity metric
-    '''
+        float mut: a float representing the silencicity metric
+    """
     # initialize counter and running metric, and get mutation pairs
     nonsyn_mut = 0
     metric = 0
     mut_pairs = get_mut_pairs(table)
-    total_mut = len(mut_pairs)
     # get Kyte-Doolittle hydropathy metric
-    kd = kd_hydropathy
+    kd = kdHydrophobicity
     # loop over mutation pairs
     for (c1, c2) in mut_pairs:
         # increment counter and metric if nonsynonymous
@@ -516,18 +518,18 @@ def mutability(table):
             # increment metric
             aa1 = table[c1]
             aa2 = table[c2]
-            metric += np.abs(kd[aa1] - kd[aa2])
+            metric += abs(kd[aa1] - kd[aa2])
     # if there are no nonsynonymous mutations, return 0
     if nonsyn_mut == 0:
-        mutability = 0
+        mut = 0
     # else, return the average dKD per mutation
     else:
-        mutability = metric / nonsyn_mut
-    return mutability
+        mut = metric / nonsyn_mut
+    return mut
 
 
 def promiscuity(table, allow_ambiguous=False):
-    '''A function used to generate the genetic code resulting from
+    """A function used to generate the genetic code resulting from
     considering tRNA promiscuity. Uses Crick Wobble Hypothesis. Raises an
     exception if the table generated is ambiguous (more than one signal
     acceptable for a given codon)
@@ -540,13 +542,10 @@ def promiscuity(table, allow_ambiguous=False):
     Returns
     -------
     dict promsicuous: the resulting table when considering tRNA promiscuity
-    '''
+    """
     # handle type errors for input table
-    if type(table) != dict:
-        try:
-            table = table.codon_dict  # attempt to convert to dict
-        except:
-            raise ValueError("Input table is not type dict or CodonTable")
+    if not isinstance(table, dict):
+        raise TypeError("Input table is a dict or dict-like")
     # declare table to return
     promiscuous = {}
     for codon in triplet_codons:
@@ -566,7 +565,9 @@ def promiscuity(table, allow_ambiguous=False):
                 # raise error if allow_ambiguous = False
                 if not allow_ambiguous:
                     raise ValueError(
-                        'input code generates ambiguous code upon promiscuization')
+                        'input code generates ambiguous code '
+                        'upon promiscuization'
+                    )
                 else:
                     # else, package all nonstop codons as tuple
                     AAs = tuple(
@@ -581,24 +582,24 @@ def promiscuity(table, allow_ambiguous=False):
 
 
 def mut_pair_num(table):
-    '''
+    """
     A function that calculates the number of pairs of codons one
     mutation away from each other. Treats mutations with directionality. In
     general, the number of mutational pairs is equal to the number of
     codons in a table multiplied by the number of unique codons within one
-    mutation. Let a = alphabet length (generally 4), l = codon length
+    mutation. Let a = alphabet length (generally 4), L = codon length
     (generally 3)
 
-            n = (a^l) * l(a-1)
+            n = (a^L) * L(a-1)
 
     Parameters
     ----------
-    dict table: the codon table to analyze
+        dict table: the codon table to analyze
 
     Returns
     -------
-    int mut_num: the number of distinct mutational pairs.
-    '''
+        int mut_num: the number of distinct mutational pairs.
+    """
     # get list of all codons in table
     codon_list = list(table)
     # get alphabet size
@@ -608,13 +609,13 @@ def mut_pair_num(table):
             alphabet.add(nt)
     a = len(alphabet)
     # get codon length
-    l = len(codon_list[0])
+    L = len(codon_list[0])
     # calculate mut_num and return
-    return (a ** l) * l * (a - 1)
+    return (a ** L) * L * (a - 1)
 
 
 def get_mut_pairs(table):
-    '''
+    """
     A function used to generate the set of all pairs of codons one
     mutation away given a codon table.
 
@@ -625,7 +626,7 @@ def get_mut_pairs(table):
     Returns
     -------
     set<(str, str)> mut_pairs: a set of distinct mutational pairs.
-    '''
+    """
     # declare set of mutational pairs
     mut_pairs = set()
     # get list of codons and iterate over them
@@ -645,7 +646,7 @@ def get_mut_pairs(table):
 
 
 def order_NTPs(sortable, nucleic_acid='RNA'):
-    '''A function used to sort iterables by standard order of NTPs.
+    """A function used to sort iterables by standard order of NTPs.
     For RNA, U-C-A-G. For DNA, T-C-A-G. Returns sorted object.
 
     Parameters
@@ -656,7 +657,7 @@ def order_NTPs(sortable, nucleic_acid='RNA'):
     Returns
     -------
     iterable sorted_obj: the sorted object
-    '''
+    """
     # define ordering dictionary
     orderdict = {
         'RNA': ['U', 'C', 'A', 'G'],

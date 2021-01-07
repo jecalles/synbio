@@ -33,12 +33,10 @@ with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
 #############
 # wrappers  #
 #############
-
-
 def compare_same_type(func):
     @wraps(func)
     def wrapper(self, other):
-        if not isinstance(other, type(self)):
+        if not issubclass(type(self), type(other)):
             raise TypeError(
                 f"Cannot compare {self.__class__.__name__} with {type(other)}")
         else:
@@ -50,10 +48,8 @@ def compare_same_type(func):
 #############
 # functions #
 #############
-
-
 def get_codons(seq, n=3):
-    '''
+    """
     A function that takes an input DNA/RNA sequence representing an open
     reading frame (ORF)and splits that sequence into codons of length n
     (default=3)
@@ -66,7 +62,7 @@ def get_codons(seq, n=3):
     Returns
     -------
         list<str> codons: input sequence split into codons
-    '''
+    """
     # check that sequence is divisible by n
     if len(seq) % n != 0:
         raise ValueError(f"seq is not divisible by n ({n})")
@@ -89,10 +85,11 @@ def reverse_complement(seq, complement=dna_basepair_WC):
 #  Mixins   #
 #############
 class ComparableMixin:
-    '''
+    """
     A Mixin class that automatically provides some comparison dunder methods,
     given a class attribute _comparables
-    '''
+    """
+    _comparables = list()
 
     def __hash__(self):
         return hash(

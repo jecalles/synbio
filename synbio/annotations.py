@@ -5,8 +5,8 @@ from synbio.utils import ComparableMixin
 
 class Location(ComparableMixin):
     # TODO: write docstring
-    '''
-    '''
+    """
+    """
 
     _comparables = ['start', 'end', 'strand']
 
@@ -31,24 +31,26 @@ class Location(ComparableMixin):
 
     @staticmethod
     def contains(outer_loc, inner_loc):
-        '''
+        """
         A static method that compares two locations, determining if the
         inner_loc is completely contained by the outer location.
-        '''
-        return (outer_loc.start <= inner_loc.start) \
-               and (inner_loc.end <= outer_loc.end)
+        """
+        return (
+                    outer_loc.start <= inner_loc.start
+                    and inner_loc.end <= outer_loc.end
+        )
 
     @staticmethod
     def overlaps(loc1, loc2):
-        '''
+        """
         # TODO: write docstring for this method
-        '''
+        """
         return (loc1.start <= loc2.start < loc1.end) or (
                 loc2.start <= loc1.start < loc2.end)
 
     @staticmethod
     def find_overlaps(locations):
-        '''
+        """
         A static method that, given a list of Location objects, constructs a
         graph representing all Location objects that overlap with each other.
 
@@ -75,7 +77,7 @@ class Location(ComparableMixin):
             [0, 0, 0, 1, 1],
             [1, 1, 0, 1, 1],
         ]
-        '''
+        """
         # calculate overlaps
         loc_pairs = itertools.product(locations, repeat=2)
         bool_array = [
@@ -96,23 +98,23 @@ class Location(ComparableMixin):
         return cls(start, end)
 
     def to_slice(self):
-        '''
-        '''
+        """
+        """
         # TODO: write docstring
         return slice(self.start, self.end, 1)
 
 
 class Part(ComparableMixin):
     # TODO: write docstring
-    '''
-    '''
+    """
+    """
 
     _comparables = [
         'seq', 'location', 'name', 'kind', 'metadata'
     ]
 
     def __init__(self, seq="", location=None, name=None, kind=None,
-                 metadata={}):
+                 metadata=None):
 
         # initialize location if appropriate
         if location is None:
@@ -121,6 +123,10 @@ class Part(ComparableMixin):
         # initialize kind if None
         if kind is None:
             kind = self.__class__.__name__
+
+        # initialize metadata if None
+        if metadata is None:
+            metadata = dict()
 
         # TODO: are all these attributes necessary?
         self._seq_reference = seq
@@ -131,7 +137,7 @@ class Part(ComparableMixin):
 
         # assign self as annotation to seq; fails if seq is str (that's okay)
         try:
-            seq.annotations.add(self)
+            getattr(seq, "annotations").add(self)
         except AttributeError:
             pass
 

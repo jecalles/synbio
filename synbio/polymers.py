@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from collections import abc
 from copy import copy
 
@@ -6,7 +7,8 @@ from synbio.annotations import Location, Part
 from synbio.codes import Code
 
 
-class Polymer(abc.MutableSequence):
+class Polymer(abc.MutableSequence, utils.ComparableMixin):
+    _comparables = ['seq']
 
     def __init__(self, seq=''):
         self.seq = self._seq_check(seq)
@@ -55,11 +57,18 @@ class Polymer(abc.MutableSequence):
         raise NotImplementedError
 
 
-class NucleicAcid(Polymer):
+class NucleicAcid(Polymer, metaclass=ABCMeta):
+    """
+    """
+    # TODO: write docstring
+    _comparables = ['seq', 'annotations']
+    basepairing = None
 
-    def __init__(self, seq, annotations=set()):
+    def __init__(self, seq, annotations=None):
         # assert annotations is of type Part
-        if not all(
+        if annotations is None:
+            annotations = set()
+        elif not all(
                 isinstance(part, Part)
                 for part in annotations):
             raise TypeError("annotation must be a Part")
@@ -133,9 +142,11 @@ class NucleicAcid(Polymer):
 
     def insert(self, key, value):
         """
-        Please, don't use this method. Mkay? There are more idiomatic ways to work with NucleicAcids.
+        Please, don't use this method. Mkay? There are more idiomatic ways to
+        work with NucleicAcids.
 
-        Note: key may only be an int representing the index at which value will be added
+        Note: key may only be an int representing the index at which value
+        will be added
         """
         # TODO: write a better docstring
         if not isinstance(key, int):
@@ -163,16 +174,6 @@ class NucleicAcid(Polymer):
     def reverse_complement(self):
         raise NotImplementedError
 
-    @staticmethod
-    def _location_savy(func):
-        @wrapps(func)
-        def wrapper(self, key, value):
-            out = func(key, value)
-
-            return out
-
-        return wrapper
-
 
 class DNA(NucleicAcid):
     basepairing = utils.dna_basepair_WC
@@ -186,7 +187,13 @@ class DNA(NucleicAcid):
     def reverse_transcribe(self):
         return self
 
-    def translate(self, code=Code()):
+    def translate(self, code=None):
+        if code is None:
+            code = Code()
+        elif isinstance(code, dict):
+            code = Code(code)
+        else:
+            raise TypeError("code must be a dict or dict-like obj")
         mRNA = self.transcribe()
         return mRNA.translate(code)
 
@@ -208,8 +215,14 @@ class RNA(NucleicAcid):
     def reverse_transcribe(self):
         return DNA(self.seq.replace('U', 'T'))
 
-    def translate(self, code=Code()):
-        return Code(code).translate(self)
+    def translate(self, code=None):
+        if code is None:
+            code = Code()
+        elif isinstance(code, dict):
+            code = Code(code)
+        else:
+            raise TypeError("code must be a dict or dict-like obj")
+        return code.translate(self)
 
     def reverse_complement(self):
         return RNA(
