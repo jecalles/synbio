@@ -2,9 +2,10 @@ from functools import partial
 from typing import Iterable
 
 from synbio import utils
+from synbio.wrappers import codesavvy
 from synbio.annotations import Part
 from synbio.polymers import DNA, Polymer
-from synbio.codes import Code
+from synbio.codes import Code, get_synonymous_codons
 
 
 class Library(Part):
@@ -44,22 +45,18 @@ class Library(Part):
 
     def __iter__(self):
         yield from self.variance
+#######################
+# variance generators #
+#######################
+
+# TODO: write docstrings and tests for all of these
 
 
+@codesavvy
 def single_synonymous(seq, code=None):
-    # handle code input
-    if code is None:
-        code = Code()
-    elif isinstance(code, dict):
-        code = Code(code)
-    else:
-        raise TypeError("code must be a dict or dict-like obj")
-
     # get codons from transcript
     mRNA = DNA(seq).transcribe()
     codon_list = utils.get_codons(mRNA)
-    # define function that gets all synonymous codons for a given codon
-    def get_synonymous_codons(codon): return code.rmap()[code[codon]]
     # define a generator that returns all single synonymous_variants
     variants = (
         ''.join(codon_list[:pos] + list(synonym) + codon_list[pos+1:])
@@ -69,14 +66,8 @@ def single_synonymous(seq, code=None):
     return variants
 
 
+@codesavvy
 def double_synonymous(seq, code=None):
-    if code is None:
-        code = Code()
-    elif isinstance(code, dict):
-        code = Code(code)
-    else:
-        raise TypeError("code must be a dict or dict-like obj")
-
     # get codons from transcript
     mRNA = DNA(seq).transcribe()
     codon_list = utils.get_codons(mRNA)
@@ -95,3 +86,8 @@ def double_synonymous(seq, code=None):
         for syn2 in get_synonymous_codons(codon2)
     )
     return variants
+
+
+@codesavvy
+def single_nonsynonymous(seq, code=None, codon_frequencies=None):
+    pass

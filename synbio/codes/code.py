@@ -2,12 +2,14 @@
 from synbio import utils
 from synbio.codes import utils as codeutils
 
+# TODO: refactor so Code obj includes codon frequency
+
 
 class Code(dict):
-    ''' A class used to represent genetic codes. '''
+    """ A class used to represent genetic codes. """
 
     def __init__(self, code=None):
-        '''Automatically loads object with a Code and a
+        """Automatically loads object with a Code and a
         comparison function between amino acids "ordering". bool norm is used
         to tell dict_to_graph whether or not to set node values based on
         absolute value of metric or just the ordering. This nomenclature is
@@ -18,7 +20,7 @@ class Code(dict):
             dict code=None: a python dict representing a genetic code, optionally takes a string 'random' to assign a random code
         Returns
         -------
-            Code obj: returns a Code object '''
+            Code obj: returns a Code object """
         # optionally generate a random code, or load a preset code
         if type(code) == str:
             code_options = {
@@ -30,7 +32,7 @@ class Code(dict):
             }
             try:
                 code = code_options[code.upper()]
-            except:
+            except:  # TODO: fix bare except
                 raise ValueError(
                     'Code string not recognized. Use one of the following options: {0}'.format(
                         set(code_options.keys())
@@ -75,8 +77,7 @@ class Code(dict):
         return out
 
     def table(self):
-        '''a method used to represent a genetic code as a 4x4x4 array
-        '''
+        """a method used to represent a genetic code as a 4x4x4 array """
         rNTPs = utils.rNTPs
         out = [[[c1 + c2 + c3 + ':' + self[c1 + c2 + c3] for c2 in rNTPs]
                 for c3 in rNTPs]
@@ -85,7 +86,7 @@ class Code(dict):
         return out
 
     def rmap(self):
-        '''
+        """
         A method used to generate the reverse map of a genetic code. Returns an amino acid -> set(codon) dictionary.
 
         Parameters
@@ -95,7 +96,7 @@ class Code(dict):
         Returns
         -------
             dict rmap
-        '''
+        """
         rmap = {}
         for c, aa in self.items():
             codons = rmap.get(aa, [])
@@ -105,7 +106,7 @@ class Code(dict):
         return rmap
 
     def translate(self, seq):
-        '''
+        """
         A method used to translate a RNA sequence into its corresponding
         Protein sequence. Raises an error if the input sequence length is not
         divisible by the codon length, or if the sequence is not RNA.
@@ -117,14 +118,14 @@ class Code(dict):
         Returns
         -------
             Protein prot_seq: Protein obj representing translated input sequence
-        '''
+        """
         codons = utils.get_codons(seq, self.codon_length)
         return ''.join(
             self[c] for c in codons
         )
 
     def reverse_translate(self, prot_seq, stop_codon='UGA'):
-        '''
+        """
         A method used to reverse translate a given protein sequence, assuming
         the genetic code is one-to-one. Raises an error otherwise
 
@@ -135,7 +136,7 @@ class Code(dict):
         Returns
         -------
             str gene: string representing reverse translated gene sequence
-        '''
+        """
         # handle error if code is not one-to-one
         if not self.one_to_one:
             raise TypeError(
@@ -149,7 +150,7 @@ class Code(dict):
         )
 
     def recode(self, gene, encoding=None):
-        '''
+        """
         A method used to recode an input sequence, given an initial genetic code, into an RNA sequence in this genetic code. Note: requires input sequence to be in RNA
 
         Parameters
@@ -162,7 +163,36 @@ class Code(dict):
         Returns
         -------
             str out: output gene sequence (RNA) in this genetic code
-        '''
+        """
         in_code = Code(encoding)
         protein = in_code.translate(gene)
         return self.reverse_translate(protein)
+
+#############
+# functions #
+#############
+
+# TODO: write tests and docstrings for the functions below
+
+
+def get_synonymous_codons(codon, code):
+    return code.rmap()[code[codon]]
+
+
+def get_nonsynonymous_codons(codon, code, codon_frequency):
+    def max_codon(codon_list, codon_frequency):
+        # finds the codon in the list with the highest frequency
+        codon_and_frequency_pairs = (
+            (codon, codon_frequency[codon])
+            for codon in codon_list
+        )
+        return max(
+            codon_and_frequency_pairs,
+            key=lambda tup: tup[1]
+        )[0]
+
+    return [
+        max_codon(codon_list, codon_frequency)
+        for aa, codon_list in code.rmap().items()
+        if aa != code[codon]
+    ]

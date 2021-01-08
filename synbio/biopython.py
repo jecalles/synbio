@@ -1,4 +1,5 @@
 from synbio.polymers import DNA
+from synbio.annotations import Part
 
 
 def seqrecord_to_DNA(record):
