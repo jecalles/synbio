@@ -7,6 +7,13 @@ from synbio.codes import utils as codeutils
 
 class Code(dict):
     """ A class used to represent genetic codes. """
+    code_options = {
+        'STANDARD': codeutils.definitions.standard_code,
+        'COLORADO': codeutils.definitions.colorado_code,
+        'RED20': codeutils.definitions.RED20,
+        'RED15': codeutils.definitions.RED15,
+        'RANDOM': codeutils.functions.random_code()
+    }
 
     def __init__(self, code=None):
         """Automatically loads object with a Code and a
@@ -17,25 +24,21 @@ class Code(dict):
 
         Parameters
         ----------
-            dict code=None: a python dict representing a genetic code, optionally takes a string 'random' to assign a random code
+            dict code=None: a python dict representing a
+                genetic code, optionally takes a string 'random'
+                to assign a random code
         Returns
         -------
             Code obj: returns a Code object """
         # optionally generate a random code, or load a preset code
         if type(code) == str:
-            code_options = {
-                'STANDARD': codeutils.definitions.standard_code,
-                'COLORADO': codeutils.definitions.colorado_code,
-                'RED20': codeutils.definitions.RED20,
-                'RED15': codeutils.definitions.RED15,
-                'RANDOM': codeutils.functions.random_code()
-            }
             try:
-                code = code_options[code.upper()]
+                code = self.code_options[code.upper()]
             except:  # TODO: fix bare except
                 raise ValueError(
-                    'Code string not recognized. Use one of the following options: {0}'.format(
-                        set(code_options.keys())
+                    'Code string not recognized. Use one of the '
+                    'following options: {0}'.format(
+                        set(self.code_options.keys())
                     )
                 )
         # default to standard code
@@ -47,8 +50,10 @@ class Code(dict):
                 code = dict(code)
             except:
                 raise ValueError(
-                    'Code input parameter not recognized. Pass in a dictionary, Code object, or one of the following strings: {0}'.format(
-                        set(code_options.keys())
+                    'Code input parameter not recognized. '
+                    'Pass in a dictionary, Code object, or one of '
+                    'the following strings: {0}'.format(
+                        set(self.code_options.keys())
                     )
                 )
 
@@ -87,7 +92,8 @@ class Code(dict):
 
     def rmap(self):
         """
-        A method used to generate the reverse map of a genetic code. Returns an amino acid -> set(codon) dictionary.
+        A method used to generate the reverse map of a genetic code. Returns an
+        amino acid -> set(codon) dictionary.
 
         Parameters
         ----------
@@ -140,7 +146,8 @@ class Code(dict):
         # handle error if code is not one-to-one
         if not self.one_to_one:
             raise TypeError(
-                'cannot reverse translate sequence. genetic code is not one-to-one')
+                'cannot reverse translate sequence. '
+                'genetic code is not one-to-one')
         # otherwise, create reverse translation dictionary
         rev_dict = {aa: codon for codon, aa in self.items()}
         rev_dict['*'] = stop_codon
@@ -151,14 +158,15 @@ class Code(dict):
 
     def recode(self, gene, encoding=None):
         """
-        A method used to recode an input sequence, given an initial genetic code, into an RNA sequence in this genetic code. Note: requires input sequence to be in RNA
+        A method used to recode an input sequence, given an
+        initial genetic code, into an RNA sequence in this genetic code.
+        Note: requires input sequence to be in RNA
 
         Parameters
         ----------
             str gene: input gene sequence (DNA or RNA)
             Code encoding: genetic code used to encode input gene (default:
                 Standard Code). Note: input must be valid input to Code()
-                constructor
 
         Returns
         -------
@@ -171,28 +179,3 @@ class Code(dict):
 #############
 # functions #
 #############
-
-# TODO: write tests and docstrings for the functions below
-
-
-def get_synonymous_codons(codon, code):
-    return code.rmap()[code[codon]]
-
-
-def get_nonsynonymous_codons(codon, code, codon_frequency):
-    def max_codon(codon_list, codon_frequency):
-        # finds the codon in the list with the highest frequency
-        codon_and_frequency_pairs = (
-            (codon, codon_frequency[codon])
-            for codon in codon_list
-        )
-        return max(
-            codon_and_frequency_pairs,
-            key=lambda tup: tup[1]
-        )[0]
-
-    return [
-        max_codon(codon_list, codon_frequency)
-        for aa, codon_list in code.rmap().items()
-        if aa != code[codon]
-    ]

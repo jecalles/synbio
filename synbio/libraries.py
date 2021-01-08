@@ -5,7 +5,8 @@ from synbio import utils
 from synbio.wrappers import codesavvy
 from synbio.annotations import Part
 from synbio.polymers import DNA, Polymer
-from synbio.codes import Code, get_synonymous_codons
+from synbio.codes import Code
+from synbio.codes.functions import get_synonymous_codons
 
 
 class Library(Part):
