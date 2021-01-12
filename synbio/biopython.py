@@ -1,5 +1,7 @@
+from functools import partial
+
 from synbio.polymers import DNA
-from synbio.annotations import Part
+from synbio.annotations import Part, Location
 
 
 def seqrecord_to_DNA(record):
@@ -7,7 +9,12 @@ def seqrecord_to_DNA(record):
     """
     # TODO: docstring
     dna_obj = DNA(record.seq)
-    annotation = Part(seq=dna_obj, name=record.name, kind='source')
+    base_annotation = Part(seq=dna_obj, name=record.name, kind='source')
+    addt_annotations = [
+        seqfeature_to_Part(feat)(seq=dna_obj)
+        for feat in record.features
+    ]
+
     return dna_obj
 
 
