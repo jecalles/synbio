@@ -36,8 +36,8 @@ class Location(ComparableMixin):
         inner_loc is completely contained by the outer location.
         """
         return (
-                    outer_loc.start <= inner_loc.start
-                    and inner_loc.end <= outer_loc.end
+            outer_loc.start <= inner_loc.start
+            and inner_loc.end <= outer_loc.end
         )
 
     @staticmethod
@@ -46,7 +46,7 @@ class Location(ComparableMixin):
         # TODO: write docstring for this method
         """
         return (loc1.start <= loc2.start < loc1.end) or (
-                loc2.start <= loc1.start < loc2.end)
+            loc2.start <= loc1.start < loc2.end)
 
     @staticmethod
     def find_overlaps(locations):
@@ -110,7 +110,7 @@ class Part(ComparableMixin):
     """
 
     _comparables = [
-        'seq', 'location', 'name', 'kind', 'metadata'
+        '_seq_id', 'location', 'name', 'kind', 'metadata'
     ]
 
     def __init__(self, seq="", location=None, name=None, kind=None,
@@ -130,6 +130,7 @@ class Part(ComparableMixin):
 
         # TODO: are all these attributes necessary?
         self._seq_reference = seq
+        self._seq_id = id(seq)
         self.location = location
         self.name = name
         self.kind = kind
