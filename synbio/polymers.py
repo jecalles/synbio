@@ -76,13 +76,27 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         """
         # TODO: write docstring
 
-        # handle annotations input
         if annotations is None:
-            annotations = set()
-        elif not all(
+            # default value is empty dict
+            annotations = {}
+        else:
+            # try to cast annotations as dict
+            if isinstance(annotations, dict):
+                pass
+            else:
+                try:
+                    annotations = {
+                        part.name: part
+                        for part in annotations
+                    }
+                except TypeError:
+                    raise TypeError("annotations must be castable to dict")
+
+            # raise TypeError if not all annotations are Parts
+            if not all(
                 isinstance(part, Part)
-                for part in annotations):
-            raise TypeError("annotation must be a Part")
+                for part in annotations.values()
+            ): raise TypeError("annotation must be a Part")
 
         super().__init__(seq)
         self.annotations = annotations
@@ -102,7 +116,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         return super().__getitem__(slice_)
 
     def __setitem__(self, key, value):
-        length_change = len(value) - len(self.__getitem__(key))
+        length_change = len(value) - len(self[key])
 
         value = self._seq_check(value)
         if isinstance(key, Location):
@@ -126,7 +140,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().__setitem__(key, value)
 
         if self.annotations is not None:
-            for part in self.annotations:
+            for part in self.annotations.values():
                 part.update_location(loc, length_change)
 
     def __delitem__(self, key):
@@ -148,7 +162,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().__delitem__(key)
 
         if self.annotations is not None:
-            for part in self.annotations:
+            for part in self.annotations.values():
                 part.update_location(loc, length_change)
 
     def insert(self, key, value):
@@ -170,7 +184,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().insert(key, value)
 
         if self.annotations is not None:
-            for part in self.annotations:
+            for part in self.annotations.values():
                 part.update_location(loc, length_change)
 
     def transcribe(self):

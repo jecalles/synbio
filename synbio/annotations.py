@@ -1,4 +1,5 @@
 import itertools
+from uuid import uuid4
 
 from synbio.utils import ComparableMixin
 
@@ -116,19 +117,19 @@ class Part(ComparableMixin):
     def __init__(self, seq="", location=None, name=None, kind=None,
                  metadata=None):
 
-        # initialize location if appropriate
+        # default parameter initializations
         if location is None:
             location = Location(0, len(seq))
 
-        # initialize kind if None
+        if name is None:
+            name = uuid4()
+
         if kind is None:
             kind = self.__class__.__name__
 
-        # initialize metadata if None
         if metadata is None:
             metadata = dict()
 
-        # TODO: are all these attributes necessary?
         self._seq_reference = seq
         self._seq_id = id(seq)
         self.location = location
@@ -138,7 +139,7 @@ class Part(ComparableMixin):
 
         # assign self as annotation to seq; fails if seq is str (that's okay)
         try:
-            getattr(seq, "annotations").add(self)
+            seq.annotations[self.name] = self
         except AttributeError:
             pass
 

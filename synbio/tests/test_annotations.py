@@ -97,6 +97,10 @@ class TestLocation:
 
 
 class TestPart:
+    def test_eq(self):
+        # TODO: write test
+        pass
+
     def test_DNA_integration(self):
         dna = DNA("ATCGAATTCCGG")
         part1 = Part(seq=dna, location=Location(0, 4))
