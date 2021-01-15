@@ -133,7 +133,7 @@ class Part(ComparableMixin):
         self._seq_reference = seq
         self._seq_id = id(seq)
         self.location = location
-        self.name = name
+        self.name = str(name)
         self.kind = kind
         self.metadata = metadata
 

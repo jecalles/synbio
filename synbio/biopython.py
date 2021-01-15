@@ -9,8 +9,8 @@ def seqrecord_to_DNA(record):
     """
     # TODO: docstring
     dna_obj = DNA(record.seq)
-    base_annotation = Part(seq=dna_obj, name=record.name, kind='source')
-    addt_annotations = [
+    _ = Part(seq=dna_obj, name=record.name, kind='source')
+    _ = [
         seqfeature_to_Part(feat)(seq=dna_obj)
         for feat in record.features
     ]
@@ -29,9 +29,12 @@ def seqfeature_to_Part(feature):
     location = Location(start, end, strand)
     # get modifiers
     name = feature.qualifiers.get('label', '???')
+    if isinstance(name, list):
+        name = name[0]
     kind = feature.type
     metadata = feature.qualifiers
-    return partial(Part, name=name, kind=kind, location=location, metadata=metadata)
+    return partial(Part, name=name, kind=kind,
+                   location=location, metadata=metadata)
 
 
 def get_features_by_key(record, key="gene"):
@@ -43,11 +46,12 @@ def get_features_by_key(record, key="gene"):
     def feat_name(feat):
         return feat.qualifiers['locus_tag'][0]
 
-    def feat_seq(feat, record):
-        return str(feat.extract(record).seq)
+    def feat_seq(feat, rec):
+        return str(feat.extract(rec).seq)
 
     # return dict of name: sequence for each feature matching key
     return {
-        gene_name(feat): gene_seq(feat, record)
-        for feat in record.features if feat.type == key
+        feat_name(feat): feat_seq(feat, record)
+        for feat in record.features
+        if feat.type == key
     }
