@@ -23,10 +23,10 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin):
         return self.seq == other
 
     def __len__(self):
-        return self.seq.__len__()
+        return len(self.seq)
 
     def __getitem__(self, key):
-        return self.seq.__getitem__(key)
+        return self.__class__(self.seq[key])
 
     def __setitem__(self, key, value):
         seqlist = list(self.seq)
@@ -96,7 +96,8 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
             if not all(
                 isinstance(part, Part)
                 for part in annotations.values()
-            ): raise TypeError("annotation must be a Part")
+            ):
+                raise TypeError("annotation must be a Part")
 
         super().__init__(seq)
         self.annotations = annotations
@@ -271,7 +272,8 @@ class RNA(NucleicAcid):
             code = Code(code)
         else:
             raise TypeError("code must be a dict or dict-like obj")
-        return code.translate(self)
+        prot_seq = code.translate(self.seq)
+        return Protein(prot_seq)
 
     def reverse_complement(self):
         return RNA(
