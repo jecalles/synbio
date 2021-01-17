@@ -147,6 +147,9 @@ class Part(ComparableMixin):
         return f"{self.__class__.__name__}({self.name}, " \
                f"{self.kind}, {self.location})"
 
+    def __len__(self):
+        return len(self.seq)
+
     @property
     def seq(self):
         try:
