@@ -5,3 +5,4 @@ Pipfile.lock
 __pycache__/
 build/
 synbio_tooling.egg-info
+pyproject.toml
