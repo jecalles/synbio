@@ -19,6 +19,9 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin):
     def __repr__(self):
         return f"{self.__class__.__name__}({self.seq})"
 
+    def __str__(self):
+        return self.seq
+
     def __eq__(self, other):
         return self.seq == other
 
