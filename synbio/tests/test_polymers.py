@@ -1,3 +1,4 @@
+from synbio.annotations import *
 from synbio.polymers import *
 
 

@@ -20,9 +20,9 @@ class Library(Part):
                  ):
         # Type Check: raise error if seq_type is not a polymer
         if not issubclass(SeqType, Polymer):
-            raise TypeError("SeqType must be a subclass of Polymer")
+            raise TypeError("SeqType must be a subclass of IPolymer")
 
-        # convert input seq to Polymer if necessary
+        # convert input seq to IPolymer if necessary
         if not isinstance(base_seq, Polymer):
             base_seq = SeqType(base_seq)
 

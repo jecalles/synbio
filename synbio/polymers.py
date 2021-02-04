@@ -3,7 +3,7 @@ from collections import abc
 from copy import copy
 
 from synbio import utils
-from synbio.annotations import Location, Part
+from synbio.interfaces import ILocation, IPart
 from synbio.codes import Code
 
 
@@ -70,7 +70,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
     _comparables = ['seq', 'annotations']
     basepairing = None
 
-    def __init__(self, seq, annotations=None):
+    def __init__(self, seq="", annotations=None):
         """
         Parameters
         ----------
@@ -97,7 +97,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
 
             # raise TypeError if not all annotations are Parts
             if not all(
-                isinstance(part, Part)
+                isinstance(part, IPart)
                 for part in annotations.values()
             ):
                 raise TypeError("annotation must be a Part")
@@ -106,7 +106,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         self.annotations = annotations
 
     def __getitem__(self, key):
-        if isinstance(key, Location):
+        if isinstance(key, ILocation):
             slice_ = key.to_slice()
 
             # shortcircuit - if REV strand, return rev comp
@@ -123,7 +123,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         length_change = len(value) - len(self[key])
 
         value = self._seq_check(value)
-        if isinstance(key, Location):
+        if isinstance(key, ILocation):
             loc = copy(key)
             key = key.to_slice()
 
@@ -132,42 +132,17 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
                     value, self.basepairing
                 )
 
-        elif isinstance(key, slice):
-            loc = Location.from_slice(key)
-
-        elif isinstance(key, int):
-            loc = Location(key, key + 1)
-
-        else:
-            raise TypeError("could not convert key into Location")
-
         super().__setitem__(key, value)
-
-        if self.annotations is not None:
-            for part in self.annotations.values():
-                part.update_location(loc, length_change)
+        self.update_annotations(key, length_change)
 
     def __delitem__(self, key):
         length_change = -len(self.__getitem__(key))
 
-        if isinstance(key, Location):
-            loc = copy(key)
+        if isinstance(key, ILocation):
             key = key.to_slice()
 
-        elif isinstance(key, slice):
-            loc = Location.from_slice(key)
-
-        elif isinstance(key, int):
-            loc = Location(key, key + 1)
-
-        else:
-            raise TypeError("could not convert key into Location")
-
         super().__delitem__(key)
-
-        if self.annotations is not None:
-            for part in self.annotations.values():
-                part.update_location(loc, length_change)
+        self.update_annotations(key, length_change)
 
     def insert(self, key, value):
         """
@@ -183,13 +158,15 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
 
         length_change = len(value)
         value = self._seq_check(value)
-        loc = Location(key, key + 1)
 
         super().insert(key, value)
+        self.update_annotations(key, length_change)
 
+
+    def update_annotations(self, key, length_change):
         if self.annotations is not None:
             for part in self.annotations.values():
-                part.update_location(loc, length_change)
+                part.update_location(key, length_change)
 
     def transcribe(self):
         """

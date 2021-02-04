@@ -1,10 +1,12 @@
 import itertools
 from uuid import uuid4
 
+from synbio.interfaces import ILocation, IPart
+from synbio.polymers import DNA
 from synbio.utils import ComparableMixin
 
 
-class Location(ComparableMixin):
+class Location(ILocation, ComparableMixin):
     # TODO: write docstring
     """
     """
@@ -105,7 +107,7 @@ class Location(ComparableMixin):
         return slice(self.start, self.end, 1)
 
 
-class Part(ComparableMixin):
+class Part(IPart, ComparableMixin):
     # TODO: write docstring
     """
     """
@@ -114,10 +116,13 @@ class Part(ComparableMixin):
         '_seq_id', 'location', 'name', 'kind', 'metadata'
     ]
 
-    def __init__(self, seq="", location=None, name=None, kind=None,
+    def __init__(self, seq=None, location=None, name=None, kind=None,
                  metadata=None):
 
         # default parameter initializations
+        if seq is None:
+            seq = DNA()
+
         if location is None:
             location = Location(0, len(seq))
 
@@ -169,7 +174,20 @@ class Part(ComparableMixin):
             self._seq_reference.__setitem__(self.location.to_slice(),
                                             value)
 
-    def update_location(self, update_loc, length_change):
+    def update_location(self, key, length_change):
+        # handle parsing of key into Location object
+        if isinstance(key, ILocation):
+            update_loc = key
+
+        elif isinstance(key, slice):
+            update_loc = Location.from_slice(key)
+
+        elif isinstance(key, int):
+            update_loc = Location(key, key + 1)
+
+        else:
+            raise TypeError("could not convert key into Location")
+
         # if update is fully upstream of Part, update both start and end
         if update_loc.end <= self.location.start:
             self.location.start += length_change
