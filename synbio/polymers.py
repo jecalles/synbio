@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 from abc import ABCMeta
 from collections import abc
 from copy import copy
+from typing import Dict, List, Optional, Union
 
 from synbio import utils
-from synbio.interfaces import ILocation, IPart
 from synbio.codes import Code
+from synbio.interfaces import ILocation, IPart
 
 
 class Polymer(abc.MutableSequence, utils.ComparableMixin):
@@ -13,40 +16,42 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin):
     """
     _comparables = ['seq']
 
-    def __init__(self, seq=''):
+    def __init__(self, seq: Union[str, Polymer] = '') -> None:
         self.seq = self._seq_check(seq)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.seq})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.seq
 
-    def __eq__(self, other):
+    def __eq__(self, other: Union[str, Polymer]) -> bool:
         return self.seq == other
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.seq)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[int, slice, ILocation]) -> "Own Type":
         return self.__class__(self.seq[key])
 
-    def __setitem__(self, key, value):
+    def __setitem__(self,
+                    key: Union[int, slice, ILocation],
+                    value: Union[str, Polymer]) -> None:
         seqlist = list(self.seq)
         seqlist.__setitem__(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Union[int, slice, ILocation]) -> None:
         seqlist = list(self.seq)
         seqlist.__delitem__(key)
         self.seq = ''.join(seqlist)
 
-    def insert(self, key, value):
+    def insert(self, key: int, value: Union[str, Polymer]) -> None:
         seqlist = list(self.seq)
         seqlist.insert(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
-    def _seq_check(self, value):
+    def _seq_check(self, value: Union[str, Polymer]) -> str:
         # handle different input types
         if isinstance(value, Polymer):
             seq = value.seq
@@ -59,7 +64,7 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin):
                 f"input value not in {self.__class__.__name__} alphabet")
         return seq
 
-    def alphabet(self):
+    def alphabet(self) -> List[str]:
         raise NotImplementedError
 
 
@@ -70,7 +75,9 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
     _comparables = ['seq', 'annotations']
     basepairing = None
 
-    def __init__(self, seq="", annotations=None):
+    def __init__(self,
+                 seq: Union[str, NucleicAcid] = "",
+                 annotations: Optional[Dict[str, IPart]] = None) -> None:
         """
         Parameters
         ----------
@@ -97,15 +104,15 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
 
             # raise TypeError if not all annotations are Parts
             if not all(
-                isinstance(part, IPart)
-                for part in annotations.values()
+                    isinstance(part, IPart)
+                    for part in annotations.values()
             ):
                 raise TypeError("annotation must be a Part")
 
         super().__init__(seq)
         self.annotations = annotations
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[int, slice, ILocation]) -> "Own Type":
         if isinstance(key, ILocation):
             slice_ = key.to_slice()
 
@@ -119,7 +126,10 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
 
         return super().__getitem__(slice_)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self,
+                    key: Union[int, slice, ILocation],
+                    value: Union[str, Polymer]) -> None:
+
         length_change = len(value) - len(self[key])
 
         value = self._seq_check(value)
@@ -135,7 +145,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().__setitem__(key, value)
         self.update_annotations(key, length_change)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Union[int, slice, ILocation]) -> None:
         length_change = -len(self.__getitem__(key))
 
         if isinstance(key, ILocation):
@@ -144,7 +154,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().__delitem__(key)
         self.update_annotations(key, length_change)
 
-    def insert(self, key, value):
+    def insert(self, key: int, value: Union[str, Polymer]) -> None:
         """
         Please, don't use this method. Mkay? There are more idiomatic ways to
         work with NucleicAcids.
@@ -152,7 +162,6 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         Note: key may only be an int representing the index at which value
         will be added
         """
-        # TODO: write a better docstring
         if not isinstance(key, int):
             raise TypeError("key must be of type int")
 
@@ -162,13 +171,14 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().insert(key, value)
         self.update_annotations(key, length_change)
 
-
-    def update_annotations(self, key, length_change):
+    def update_annotations(self,
+                           key: Union[int, slice, ILocation],
+                           length_change: int) -> None:
         if self.annotations is not None:
             for part in self.annotations.values():
                 part.update_location(key, length_change)
 
-    def transcribe(self):
+    def transcribe(self) -> RNA:
         """
         # TODO: write docstring
         Returns
@@ -177,7 +187,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def reverse_transcribe(self):
+    def reverse_transcribe(self) -> DNA:
         """
         # TODO: write docstring
         Returns
@@ -186,16 +196,24 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def translate(self):
+    def translate(self, code: Optional[Union[dict, Code]] = None) -> Protein:
         """
         # TODO: write docstring
         Returns
         -------
 
         """
-        raise NotImplementedError
+        if code is None:
+            code = Code()
+        elif isinstance(code, dict):
+            code = Code(code)
+        else:
+            raise TypeError("code must be a dict or dict-like obj")
+        mRNA = self.transcribe()
+        prot_seq = code.translate(mRNA.seq)
+        return Protein(prot_seq)
 
-    def reverse_complement(self):
+    def reverse_complement(self) -> "Own Type":
         """
         # TODO: write docstring
         Returns
@@ -208,26 +226,16 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
 class DNA(NucleicAcid):
     basepairing = utils.dna_basepair_WC
 
-    def alphabet(self):
+    def alphabet(self) -> List[str]:
         return utils.dNTPs
 
-    def transcribe(self):
+    def transcribe(self) -> RNA:
         return RNA(self.seq.replace('T', 'U'))
 
-    def reverse_transcribe(self):
+    def reverse_transcribe(self) -> DNA:
         return self
 
-    def translate(self, code=None):
-        if code is None:
-            code = Code()
-        elif isinstance(code, dict):
-            code = Code(code)
-        else:
-            raise TypeError("code must be a dict or dict-like obj")
-        mRNA = self.transcribe()
-        return mRNA.translate(code)
-
-    def reverse_complement(self):
+    def reverse_complement(self) -> DNA:
         return DNA(
             utils.reverse_complement(self, utils.dna_basepair_WC)
         )
@@ -236,31 +244,21 @@ class DNA(NucleicAcid):
 class RNA(NucleicAcid):
     basepairing = utils.rna_basepair_WC
 
-    def alphabet(self):
+    def alphabet(self) -> List[str]:
         return utils.rNTPs
 
-    def transcribe(self):
+    def transcribe(self) -> RNA:
         return self
 
-    def reverse_transcribe(self):
+    def reverse_transcribe(self) -> DNA:
         return DNA(self.seq.replace('U', 'T'))
 
-    def translate(self, code=None):
-        if code is None:
-            code = Code()
-        elif isinstance(code, dict):
-            code = Code(code)
-        else:
-            raise TypeError("code must be a dict or dict-like obj")
-        prot_seq = code.translate(self.seq)
-        return Protein(prot_seq)
-
-    def reverse_complement(self):
+    def reverse_complement(self) -> RNA:
         return RNA(
             utils.reverse_complement(self, utils.rna_basepair_WC)
         )
 
 
 class Protein(Polymer):
-    def alphabet(self):
+    def alphabet(self) -> List[str]:
         return utils.aminoacids

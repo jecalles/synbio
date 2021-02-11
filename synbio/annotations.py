@@ -127,7 +127,7 @@ class Part(IPart, ComparableMixin):
             location = Location(0, len(seq))
 
         if name is None:
-            name = uuid4()
+            name = str(uuid4())
 
         if kind is None:
             kind = self.__class__.__name__
