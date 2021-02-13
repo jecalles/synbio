@@ -10,9 +10,12 @@ from synbio.codes import Code
 from synbio.interfaces import ILocation, IPart
 
 
-class Polymer(abc.MutableSequence, utils.ComparableMixin):
+class Polymer(abc.MutableSequence, utils.ComparableMixin, metaclass=ABCMeta):
     """
-    # TODO: write docstring
+    An abstract base class from which NucleicAcid and Protein inherit.
+
+    In order to create custom classes that inherit from Polymer, implement
+    self.alphabet() (see Polymer.alphabet() docstring for details).
     """
     _comparables = ['seq']
 
@@ -52,6 +55,22 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin):
         self.seq = ''.join(seqlist)
 
     def _seq_check(self, value: Union[str, Polymer]) -> str:
+        """
+        A private method used to check that the characters of a given input
+        sequence "value" all belong to a given Polymer's alphabet (defined in
+        the alphbabet() method).
+
+        Parameters
+        ----------
+        value: sequence to check
+
+        Returns
+        -------
+        True
+            if all characters are part of self.alphabet(), and
+        False
+            otherwise
+        """
         # handle different input types
         if isinstance(value, Polymer):
             seq = value.seq
@@ -62,9 +81,29 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin):
         if not all(bool_array):
             raise ValueError(
                 f"input value not in {self.__class__.__name__} alphabet")
+
         return seq
 
     def alphabet(self) -> List[str]:
+        """
+        A function prototype that returns a list of characters
+        representing valid inputs for a given Polymer subclass. Implement this
+        method in order to inherit from Polymer.
+
+        E.g.,
+
+        >>> class XNA(Polymer):
+        >>>     def alphabet(self):
+        >>>         return ["X", "Y", "W", "Z"]
+
+        >>> XNA("XXYYZZ")
+        XNA(XXYYZZ)
+        >>> XNA("AATTCCGG") # raises ValueError: input value not in XNA alphabet
+
+        Returns
+        -------
+        alphabet: list of valid characters
+        """
         raise NotImplementedError
 
 
