@@ -1,5 +1,5 @@
-import os
 import pickle
+from pathlib import Path
 from functools import wraps
 
 # define scope of package
@@ -19,8 +19,9 @@ __all__ = [
 #############
 # definitions#
 #############
-path = os.path.dirname(os.path.abspath(__file__))
-with open(path + '/res/utils_definitions.pickle', 'rb') as handle:
+module_path = Path(__file__).absolute().parent
+definitions_path = Path(module_path, "./res/utils_definitions.pickle").absolute()
+with open(definitions_path, 'rb') as handle:
     un_pickled = pickle.load(handle)
     [
         dNTPs, rNTPs, aminoacids, triplet_codons, triplet_mut_pairs,
