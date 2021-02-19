@@ -76,6 +76,8 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin, metaclass=ABCMeta):
             seq = value.seq
         else:
             seq = str(value)
+        # strip seq of whitespace
+        seq = ''.join(seq.split())
         # check if input sequence has appropriate alphabet
         bool_array = [item in self.alphabet() for item in seq.upper()]
         if not all(bool_array):
