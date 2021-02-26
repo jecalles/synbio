@@ -33,6 +33,13 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin):
     def __len__(self) -> int:
         return len(self.seq)
 
+    def __hash__(self) -> int:
+        comparables = (
+            val if "__hash__" in dir(val) else str(val)
+            for val in vars(self).values()
+        )
+        return hash(comparables)
+
     def __getitem__(self, key: LocationType) -> "Own Type":
         return self.__class__(self.seq[key])
 
