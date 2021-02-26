@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import NewType, Union
 
 
 class ILocation(ABC):
@@ -26,6 +27,7 @@ class ILocation(ABC):
     def to_slice(self):
         raise NotImplementedError
 
+LocationType = NewType("LocationType", Union[int, slice, ILocation])
 
 class IPart(ABC):
     def __init__(self):

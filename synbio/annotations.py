@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import itertools
+from typing import Dict, List, Optional, Sequence
 from uuid import uuid4
 
-from synbio.interfaces import ILocation, IPart
-from synbio.polymers import DNA
+from synbio.interfaces import ILocation, IPart, LocationType
+from synbio.polymers import DNA, SeqType
 from synbio.utils import ComparableMixin
 
 
@@ -13,7 +16,7 @@ class Location(ILocation, ComparableMixin):
 
     _comparables = ['start', 'end', 'strand']
 
-    def __init__(self, start, end, strand="FWD"):
+    def __init__(self, start: int, end: int, strand: str = "FWD") -> None:
         # check that start and end positions are valid
         if not start <= end:
             raise ValueError(
@@ -28,31 +31,31 @@ class Location(ILocation, ComparableMixin):
         self.end = end
         self.strand = strand
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.start}, " \
                f"{self.end}, {self.strand})"
 
     @staticmethod
-    def contains(outer_loc, inner_loc):
+    def contains(outer_loc: Location, inner_loc: Location) -> bool:
         """
         A static method that compares two locations, determining if the
         inner_loc is completely contained by the outer location.
         """
         return (
-            outer_loc.start <= inner_loc.start
-            and inner_loc.end <= outer_loc.end
+                outer_loc.start <= inner_loc.start
+                and inner_loc.end <= outer_loc.end
         )
 
     @staticmethod
-    def overlaps(loc1, loc2):
+    def overlaps(loc1: Location, loc2: Location) -> bool:
         """
         # TODO: write docstring for this method
         """
         return (loc1.start <= loc2.start < loc1.end) or (
-            loc2.start <= loc1.start < loc2.end)
+                loc2.start <= loc1.start < loc2.end)
 
     @staticmethod
-    def find_overlaps(locations):
+    def find_overlaps(locations: Sequence[Location]) -> List[List[bool]]:
         """
         A static method that, given a list of Location objects, constructs a
         graph representing all Location objects that overlap with each other.
@@ -94,14 +97,46 @@ class Location(ILocation, ComparableMixin):
         ]
         return bool_matrix
 
+    def offset(self, offset: int) -> Location:
+        """
+        A method that returns a new Location object whose start and end
+        positions are offset by an integer value
+
+        >>> loc1 = Location(10, 20, "FWD")
+        >>> loc2 = loc1.offset(5)
+        >>> print(loc1, loc2)
+        Location(10, 20, FWD) Location(15, 25, FWD)
+        >>> loc3 = Location(15, 25, "REV")
+        >>> loc4 = loc3.offset(5)
+        >>> print(loc3, loc4)
+        Location(15, 25, REV) Location(10, 20, REV)
+        """
+        # check type of offset
+        if not isinstance(offset, int):
+            raise TypeError("offset must be of type int")
+
+        # negate offset if Location is on reverse strand
+        if self.strand == "REV":
+            offset = -offset
+
+        return Location(
+            start=self.start + offset,
+            end=self.end + offset,
+            strand=self.strand
+        )
+
     @classmethod
-    def from_slice(cls, slice_):
+    def from_slice(cls, slice_: slice) -> Location:
+        """
+        A method that returns a new Location object from a slice object
+        """
         start = 0 if slice_.start is None else slice_.start
         end = slice_.stop
         return cls(start, end)
 
-    def to_slice(self):
+    def to_slice(self) -> slice:
         """
+        A method that returns a slice object representing the Location obj
         """
         # TODO: write docstring
         return slice(self.start, self.end, 1)
@@ -116,8 +151,12 @@ class Part(IPart, ComparableMixin):
         '_seq_id', 'location', 'name', 'kind', 'metadata'
     ]
 
-    def __init__(self, seq=None, location=None, name=None, kind=None,
-                 metadata=None):
+    def __init__(self,
+                 seq: Optional[SeqType] = None,
+                 location: Optional[Location] = None,
+                 name: Optional[str] = None,
+                 kind: Optional[str] = None,
+                 metadata: Optional[Dict[str, str]] = None):
 
         # default parameter initializations
         if seq is None:
@@ -148,24 +187,24 @@ class Part(IPart, ComparableMixin):
         except AttributeError:
             pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name}, " \
                f"{self.kind}, {self.location})"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.seq)
 
     @property
-    def seq(self):
+    def seq(self) -> SeqType:
         try:
             # prefer slicing directly with location, if seq is strand savvy
             return self._seq_reference[self.location]
         except TypeError:
-            # default to using .to_slice()
+            # default to using location.to_slice()
             return self._seq_reference[self.location.to_slice()]
 
     @seq.setter
-    def seq(self, value):
+    def seq(self, value: SeqType) -> None:
         try:
             # prefer slicing directly with location, if seq is strand savvy
             self._seq_reference.__setitem__(self.location, value)
@@ -174,9 +213,9 @@ class Part(IPart, ComparableMixin):
             self._seq_reference.__setitem__(self.location.to_slice(),
                                             value)
 
-    def update_location(self, key, length_change):
+    def update_location(self, key: LocationType, length_change: int) -> None:
         # handle parsing of key into Location object
-        if isinstance(key, ILocation):
+        if isinstance(key, Location):
             update_loc = key
 
         elif isinstance(key, slice):

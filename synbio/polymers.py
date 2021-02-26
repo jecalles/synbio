@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from abc import ABCMeta
 from collections import abc
 from copy import copy
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, NewType, Optional, Union
 
 from synbio import utils
-from synbio.codes import Code
-from synbio.interfaces import ILocation, IPart
+from synbio.codes import Code, CodeType
+from synbio.interfaces import ILocation, IPart, LocationType
 
 
-class Polymer(abc.MutableSequence, utils.ComparableMixin, metaclass=ABCMeta):
+class Polymer(abc.MutableSequence, utils.ComparableMixin):
     """
     An abstract base class from which NucleicAcid and Protein inherit.
 
@@ -19,7 +18,7 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin, metaclass=ABCMeta):
     """
     _comparables = ['seq']
 
-    def __init__(self, seq: Union[str, Polymer] = '') -> None:
+    def __init__(self, seq: SeqType = '') -> None:
         self.seq = self._seq_check(seq)
 
     def __repr__(self) -> str:
@@ -28,33 +27,31 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin, metaclass=ABCMeta):
     def __str__(self) -> str:
         return self.seq
 
-    def __eq__(self, other: Union[str, Polymer]) -> bool:
+    def __eq__(self, other: SeqType) -> bool:
         return self.seq == other
 
     def __len__(self) -> int:
         return len(self.seq)
 
-    def __getitem__(self, key: Union[int, slice, ILocation]) -> "Own Type":
+    def __getitem__(self, key: LocationType) -> "Own Type":
         return self.__class__(self.seq[key])
 
-    def __setitem__(self,
-                    key: Union[int, slice, ILocation],
-                    value: Union[str, Polymer]) -> None:
+    def __setitem__(self, key: LocationType, value: SeqType) -> None:
         seqlist = list(self.seq)
         seqlist.__setitem__(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
-    def __delitem__(self, key: Union[int, slice, ILocation]) -> None:
+    def __delitem__(self, key: LocationType) -> None:
         seqlist = list(self.seq)
         seqlist.__delitem__(key)
         self.seq = ''.join(seqlist)
 
-    def insert(self, key: int, value: Union[str, Polymer]) -> None:
+    def insert(self, key: int, value: SeqType) -> None:
         seqlist = list(self.seq)
         seqlist.insert(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
-    def _seq_check(self, value: Union[str, Polymer]) -> str:
+    def _seq_check(self, value: SeqType) -> str:
         """
         A private method used to check that the characters of a given input
         sequence "value" all belong to a given Polymer's alphabet (defined in
@@ -71,13 +68,8 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin, metaclass=ABCMeta):
         False
             otherwise
         """
-        # handle different input types
-        if isinstance(value, Polymer):
-            seq = value.seq
-        else:
-            seq = str(value)
         # strip seq of whitespace
-        seq = ''.join(seq.split())
+        seq = ''.join(str(value).split())
         # check if input sequence has appropriate alphabet
         bool_array = [item in self.alphabet() for item in seq.upper()]
         if not all(bool_array):
@@ -109,7 +101,7 @@ class Polymer(abc.MutableSequence, utils.ComparableMixin, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class NucleicAcid(Polymer, metaclass=ABCMeta):
+class NucleicAcid(Polymer):
     """
     """
     # TODO: write docstring
@@ -117,7 +109,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
     basepairing = None
 
     def __init__(self,
-                 seq: Union[str, NucleicAcid] = "",
+                 seq: SeqType = "",
                  annotations: Optional[Dict[str, IPart]] = None) -> None:
         """
         Parameters
@@ -131,29 +123,22 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
             # default value is empty dict
             annotations = {}
         else:
-            # try to cast annotations as dict
-            if isinstance(annotations, dict):
-                pass
-            else:
-                try:
-                    annotations = {
-                        part.name: part
-                        for part in annotations
-                    }
-                except TypeError:
-                    raise TypeError("annotations must be castable to dict")
+            try:
+                annotations = dict(annotations)
+            except TypeError:
+                raise TypeError("annotations must be castable to dict")
 
             # raise TypeError if not all annotations are Parts
             if not all(
                     isinstance(part, IPart)
                     for part in annotations.values()
             ):
-                raise TypeError("annotation must be a Part")
+                raise TypeError("annotations must be of type Part")
 
         super().__init__(seq)
         self.annotations = annotations
 
-    def __getitem__(self, key: Union[int, slice, ILocation]) -> "Own Type":
+    def __getitem__(self, key: LocationType) -> "Own Type":
         if isinstance(key, ILocation):
             slice_ = key.to_slice()
 
@@ -167,10 +152,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
 
         return super().__getitem__(slice_)
 
-    def __setitem__(self,
-                    key: Union[int, slice, ILocation],
-                    value: Union[str, Polymer]) -> None:
-
+    def __setitem__(self, key: LocationType, value: SeqType) -> None:
         length_change = len(value) - len(self[key])
 
         value = self._seq_check(value)
@@ -186,7 +168,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().__setitem__(key, value)
         self.update_annotations(key, length_change)
 
-    def __delitem__(self, key: Union[int, slice, ILocation]) -> None:
+    def __delitem__(self, key: LocationType) -> None:
         length_change = -len(self.__getitem__(key))
 
         if isinstance(key, ILocation):
@@ -195,7 +177,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().__delitem__(key)
         self.update_annotations(key, length_change)
 
-    def insert(self, key: int, value: Union[str, Polymer]) -> None:
+    def insert(self, key: int, value: SeqType) -> None:
         """
         Please, don't use this method. Mkay? There are more idiomatic ways to
         work with NucleicAcids.
@@ -212,9 +194,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         super().insert(key, value)
         self.update_annotations(key, length_change)
 
-    def update_annotations(self,
-                           key: Union[int, slice, ILocation],
-                           length_change: int) -> None:
+    def update_annotations(self, key: LocationType, length_change: int) -> None:
         if self.annotations is not None:
             for part in self.annotations.values():
                 part.update_location(key, length_change)
@@ -237,7 +217,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def translate(self, code: Optional[Union[dict, Code]] = None) -> Protein:
+    def translate(self, code: Optional[CodeType] = None) -> Protein:
         """
         # TODO: write docstring
         Returns
@@ -250,6 +230,7 @@ class NucleicAcid(Polymer, metaclass=ABCMeta):
             code = Code(code)
         else:
             raise TypeError("code must be a dict or dict-like obj")
+
         mRNA = self.transcribe()
         prot_seq = code.translate(mRNA.seq)
         return Protein(prot_seq)
@@ -303,3 +284,9 @@ class RNA(NucleicAcid):
 class Protein(Polymer):
     def alphabet(self) -> List[str]:
         return utils.aminoacids
+
+
+SeqType = NewType("SeqType", Union[str, Polymer])
+
+if __name__ == "__main__":
+    pass

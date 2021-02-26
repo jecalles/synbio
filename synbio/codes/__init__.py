@@ -1,1 +1,1 @@
-from .code import Code
+from .code import *

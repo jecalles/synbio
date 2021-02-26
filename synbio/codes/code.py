@@ -1,4 +1,6 @@
 # TODO: refactor code, now that utils has been split up
+from typing import NewType, Union, Dict
+
 from synbio import utils
 from synbio.codes import utils as codeutils
 
@@ -176,6 +178,4 @@ class Code(dict):
         protein = in_code.translate(gene)
         return self.reverse_translate(protein)
 
-#############
-# functions #
-#############
+CodeType = NewType("CodeType", Union[Dict[str, str], Code])
