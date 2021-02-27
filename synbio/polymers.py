@@ -259,7 +259,7 @@ class DNA(NucleicAcid):
         return utils.dNTPs
 
     def transcribe(self) -> RNA:
-        return RNA(self.seq.replace('T', 'U'))
+        return RNA(self.seq.replace('T', 'U').replace('t', 'u'))
 
     def reverse_transcribe(self) -> DNA:
         return self
@@ -280,7 +280,7 @@ class RNA(NucleicAcid):
         return self
 
     def reverse_transcribe(self) -> DNA:
-        return DNA(self.seq.replace('U', 'T'))
+        return DNA(self.seq.replace('U', 'T').replace('u', 't'))
 
     def reverse_complement(self) -> RNA:
         return RNA(
