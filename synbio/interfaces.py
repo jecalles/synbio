@@ -1,5 +1,16 @@
+from __future__ import annotations
+
 from abc import ABC
-from typing import NewType, Union
+from collections import abc
+from typing import NewType, Union, List
+
+
+__all__ = [
+    # interface classes
+    "ILocation", "IPart", "IPolymer",
+    # types
+    "LocationType", "SeqType"
+]
 
 
 class ILocation(ABC):
@@ -27,7 +38,9 @@ class ILocation(ABC):
     def to_slice(self):
         raise NotImplementedError
 
+
 LocationType = NewType("LocationType", Union[int, slice, ILocation])
+
 
 class IPart(ABC):
     def __init__(self):
@@ -48,3 +61,17 @@ class IPart(ABC):
 
     def update_location(self, key, length_change):
         raise NotImplementedError
+
+
+class IPolymer(abc.MutableSequence):
+    def __init__(self, seq: SeqType = '') -> None:
+        self.seq = self._seq_check(seq)
+
+    def _seq_check(self, value: SeqType) -> str:
+        raise NotImplementedError
+
+    def alphabet(self) -> List[str]:
+        raise NotImplementedError
+
+
+SeqType = NewType("SeqType", Union[str, IPolymer])

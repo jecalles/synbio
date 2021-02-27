@@ -8,4 +8,3 @@ class TestCode:
         # TODO: this test is kinda wimpy; beef it up
         standard_code = Code()
         print(standard_code)
-

@@ -107,9 +107,9 @@ def is_promiscuous(table):
     bool ambiguous: boolean representing the promiscuity of the table
     """
     return any(
-            type(AA) != str
-            for AA in table.values()
-        )
+        type(AA) != str
+        for AA in table.values()
+    )
 
 
 def is_one_to_one(table):

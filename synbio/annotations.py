@@ -4,9 +4,14 @@ import itertools
 from typing import Dict, List, Optional, Sequence
 from uuid import uuid4
 
-from synbio.interfaces import ILocation, IPart, LocationType
-from synbio.polymers import DNA, SeqType
+from synbio.interfaces import ILocation, IPart, LocationType, SeqType
+from synbio.polymers import DNA
 from synbio.utils import ComparableMixin
+
+
+__all__ = [
+    "Location", "Part"
+]
 
 
 class Location(ILocation, ComparableMixin):

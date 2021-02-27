@@ -1,5 +1,9 @@
 from synbio.codes import Code
 
+__all__ = [
+    "codesavvy"
+]
+
 
 def codesavvy(func):
     def wrapper(*args, **kwargs):
@@ -12,4 +16,5 @@ def codesavvy(func):
         else:
             raise TypeError("code must be a dict or dict-like obj")
         return func(*args, **kwargs)
+
     return wrapper

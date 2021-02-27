@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from collections import abc
 from copy import copy
-from typing import Dict, List, NewType, Optional, Union
+from typing import Dict, List, Optional
 
 from synbio import utils
 from synbio.codes import Code, CodeType
-from synbio.interfaces import ILocation, IPart, LocationType
+from synbio.interfaces import ILocation, IPart, IPolymer, LocationType, SeqType
+
+__all__ = [
+    "Polymer", "NucleicAcid", "DNA", "RNA", "Protein"
+]
 
 
-class Polymer(abc.MutableSequence, utils.ComparableMixin):
+class Polymer(IPolymer, utils.ComparableMixin):
     """
     An abstract base class from which NucleicAcid and Protein inherit.
 
@@ -292,8 +295,6 @@ class Protein(Polymer):
     def alphabet(self) -> List[str]:
         return utils.aminoacids
 
-
-SeqType = NewType("SeqType", Union[str, Polymer])
 
 if __name__ == "__main__":
     pass

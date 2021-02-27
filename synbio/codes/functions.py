@@ -1,12 +1,21 @@
+from typing import Dict, Set
 
-# TODO: write tests and docstrings for the functions below
+from synbio.codes import Code
 
 
-def get_synonymous_codons(codon, code):
+def get_synonymous_codons(codon: str, code: Code) -> Set[str]:
     return code.rmap()[code[codon]]
 
 
-def get_nonsynonymous_codons(codon, code, codon_frequency):
+def get_nonsynonymous_codons(
+        codon: str,
+        code: Code,
+        codon_frequency: Dict[str, float]) -> Set[str]:
+    """
+    this code doesn't do what it thinks it does! whaat is this supposed to do?
+    """
+    raise NotImplementedError("This function under construction")
+
     def max_codon(codon_list, freq):
         # finds the codon in the list with the highest frequency
         codon_and_frequency_pairs = (

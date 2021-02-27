@@ -1,6 +1,9 @@
 import pickle
-from pathlib import Path
 from functools import wraps
+from pathlib import Path
+from typing import Dict, List
+
+from synbio.interfaces import SeqType
 
 # define scope of package
 __all__ = [
@@ -16,11 +19,13 @@ __all__ = [
     "ComparableMixin"
 ]
 
-#############
-# definitions#
-#############
+###############
+# definitions #
+###############
 module_path = Path(__file__).absolute().parent
-definitions_path = Path(module_path, "./res/utils_definitions.pickle").absolute()
+definitions_path = Path(
+    module_path, "./res/utils_definitions.pickle"
+).absolute()
 with open(definitions_path, 'rb') as handle:
     un_pickled = pickle.load(handle)
     [
@@ -49,7 +54,7 @@ def compare_same_type(func):
 #############
 # functions #
 #############
-def get_codons(seq, n=3):
+def get_codons(seq: SeqType, n=3) -> List[SeqType]:
     """
     A function that takes an input DNA/RNA sequence representing an open
     reading frame (ORF)and splits that sequence into codons of length n
@@ -76,7 +81,8 @@ def get_codons(seq, n=3):
     return codons
 
 
-def reverse_complement(seq, complement=dna_basepair_WC):
+def reverse_complement(seq: SeqType,
+                       complement: Dict[str, str] = dna_basepair_WC):
     return ''.join(
         complement[nt] for nt in seq[::-1]
     )
@@ -92,13 +98,13 @@ class ComparableMixin:
     """
     _comparables = list()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(
             (getattr(self, comp) for comp in self._comparables)
         )
 
     @compare_same_type
-    def __eq__(self, other):
+    def __eq__(self, other: "Same Type") -> bool:
         return all(
             getattr(self, comp) == getattr(other, comp)
             for comp in self._comparables

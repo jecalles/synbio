@@ -1,14 +1,20 @@
 # TODO: refactor code, now that utils has been split up
-from typing import NewType, Union, Dict
+from __future__ import annotations
+
+from typing import Dict, List, NewType, Optional, Set, Union
 
 from synbio import utils
 from synbio.codes import utils as codeutils
+from synbio.interfaces import SeqType
 
-# TODO: refactor so Code obj includes codon frequency
+__all__ = [
+    "Code", "CodeType"
+]
 
 
 class Code(dict):
-    """ A class used to represent genetic codes. """
+    """A class used to represent genetic codes."""
+    # TODO: refactor so Code obj includes codon frequency
     code_options = {
         'STANDARD': codeutils.definitions.standard_code,
         'COLORADO': codeutils.definitions.colorado_code,
@@ -17,7 +23,7 @@ class Code(dict):
         'RANDOM': codeutils.functions.random_code()
     }
 
-    def __init__(self, code=None):
+    def __init__(self, code: Optional[CodeType] = None) -> None:
         """Automatically loads object with a Code and a
         comparison function between amino acids "ordering". bool norm is used
         to tell dict_to_graph whether or not to set node values based on
@@ -67,7 +73,7 @@ class Code(dict):
         self.one_to_one = codeutils.functions.is_one_to_one(code)
         self.codon_length = len(next(iter(self)))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         code = self.table()
 
         crossline = '-' * 25 + '\n'
@@ -83,7 +89,7 @@ class Code(dict):
         out += crossline[:-1]
         return out
 
-    def table(self):
+    def table(self) -> List[List[List[str]]]:
         """a method used to represent a genetic code as a 4x4x4 array """
         rNTPs = utils.rNTPs
         out = [[[c1 + c2 + c3 + ':' + self[c1 + c2 + c3] for c2 in rNTPs]
@@ -92,7 +98,7 @@ class Code(dict):
 
         return out
 
-    def rmap(self):
+    def rmap(self) -> Dict[str, Set[str]]:
         """
         A method used to generate the reverse map of a genetic code. Returns an
         amino acid -> set(codon) dictionary.
@@ -113,7 +119,7 @@ class Code(dict):
 
         return rmap
 
-    def translate(self, seq):
+    def translate(self, seq: SeqType) -> str:
         """
         A method used to translate a RNA sequence into its corresponding
         Protein sequence. Raises an error if the input sequence length is not
@@ -125,14 +131,17 @@ class Code(dict):
 
         Returns
         -------
-            Protein prot_seq: Protein obj representing translated input sequence
+            str prot_seq: str representing translated input sequence
         """
         codons = utils.get_codons(seq, self.codon_length)
         return ''.join(
-            self[c] for c in codons
+            self[c.upper()] for c in codons
         )
 
-    def reverse_translate(self, prot_seq, stop_codon='UGA'):
+    def reverse_translate(
+            self,
+            prot_seq: str,
+            stop_codon: str = 'UGA') -> str:
         """
         A method used to reverse translate a given protein sequence, assuming
         the genetic code is one-to-one. Raises an error otherwise
@@ -158,7 +167,7 @@ class Code(dict):
             rev_dict[aa] for aa in prot_seq
         )
 
-    def recode(self, gene, encoding=None):
+    def recode(self, gene: SeqType, encoding: Optional[CodeType] = None) -> str:
         """
         A method used to recode an input sequence, given an
         initial genetic code, into an RNA sequence in this genetic code.
@@ -177,5 +186,6 @@ class Code(dict):
         in_code = Code(encoding)
         protein = in_code.translate(gene)
         return self.reverse_translate(protein)
+
 
 CodeType = NewType("CodeType", Union[Dict[str, str], Code])

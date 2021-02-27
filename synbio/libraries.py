@@ -1,12 +1,22 @@
 from functools import partial
-from typing import Iterable
+from typing import Iterable, Optional, Dict
 
 from synbio import utils
-from synbio.wrappers import codesavvy
+from synbio.codes.wrappers import codesavvy
 from synbio.annotations import Part
+from synbio.interfaces import SeqType
 from synbio.polymers import DNA, Polymer
-from synbio.codes import Code
+from synbio.codes import CodeType
 from synbio.codes.functions import get_synonymous_codons
+
+
+__all__ = [
+    # class
+    "Library",
+    # variance generators
+    "single_synonymous", "single_nonsynonymous",
+    "double_synonymous", "double_nonsynonymous"
+]
 
 
 class Library(Part):
@@ -46,6 +56,7 @@ class Library(Part):
 
     def __iter__(self):
         yield from self.variance
+
 #######################
 # variance generators #
 #######################
@@ -54,7 +65,9 @@ class Library(Part):
 
 
 @codesavvy
-def single_synonymous(seq, code=None):
+def single_synonymous(
+        seq: SeqType,
+        code: Optional[CodeType] = None) -> Iterable[str]:
     # get codons from transcript
     mRNA = DNA(seq).transcribe()
     codon_list = utils.get_codons(mRNA)
@@ -62,18 +75,18 @@ def single_synonymous(seq, code=None):
     variants = (
         ''.join(codon_list[:pos] + list(synonym) + codon_list[pos+1:])
         for pos, codon in enumerate(codon_list)
-        for synonym in get_synonymous_codons(codon)
+        for synonym in get_synonymous_codons(codon, code)
     )
     return variants
 
 
 @codesavvy
-def double_synonymous(seq, code=None):
+def double_synonymous(
+        seq: SeqType,
+        code: Optional[CodeType] = None) -> Iterable[str]:
     # get codons from transcript
     mRNA = DNA(seq).transcribe()
     codon_list = utils.get_codons(mRNA)
-    # define function that gets all synonymous codons for a given codon
-    def get_synonymous_codons(codon): return code.rmap()[code[codon]]
     # define a generator that returns double synonymous_variants
     variants = (
         ''.join(
@@ -83,12 +96,19 @@ def double_synonymous(seq, code=None):
         )
         for ix1, codon1 in enumerate(codon_list)
         for ix2, codon2 in enumerate(codon_list[ix1+1:])
-        for syn1 in get_synonymous_codons(codon1)
-        for syn2 in get_synonymous_codons(codon2)
+        for syn1 in get_synonymous_codons(codon1, code)
+        for syn2 in get_synonymous_codons(codon2, code)
     )
     return variants
 
 
 @codesavvy
-def single_nonsynonymous(seq, code=None, codon_frequencies=None):
-    pass
+def single_nonsynonymous(
+        seq: SeqType,
+        code: Optional[CodeType] = None,
+        codon_frequencies: Optional[Dict[str, float]] = None):
+    raise NotImplementedError("function under construction")
+
+@codesavvy
+def double_nonsynonymous():
+    raise NotImplementedError("function under construction")

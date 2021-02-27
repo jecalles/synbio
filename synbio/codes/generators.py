@@ -1,10 +1,11 @@
 from random import choice
+from typing import Iterable
 
 from .code import Code
 from .utils import definitions
 
 
-def red20():
+def red20() -> Iterable[Code]:
     '''
     A generator that randomly generates a stream of RED20 codes as python dictionaries without yielding repeated codes
 
