@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 from uuid import uuid4
 
 from synbio.interfaces import ILocation, IPart, LocationType, SeqType
@@ -161,7 +161,7 @@ class Part(IPart, ComparableMixin):
                  location: Optional[Location] = None,
                  name: Optional[str] = None,
                  kind: Optional[str] = None,
-                 metadata: Optional[Dict[str, str]] = None):
+                 metadata: Optional[Dict[str, Any]] = None):
 
         # default parameter initializations
         if seq is None:
@@ -236,9 +236,11 @@ class Part(IPart, ComparableMixin):
         if update_loc.end <= self.location.start:
             self.location.start += length_change
             self.location.end += length_change
+
         # if update is contained within Part, then only update end
         elif Location.contains(self.location, update_loc):
             self.location.end += length_change
+
         # if update overlaps with one end of Part, truncate Part
         elif Location.overlaps(self.location, update_loc) \
                 and length_change != 0:
