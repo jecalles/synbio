@@ -6,7 +6,6 @@ from uuid import uuid4
 
 from synbio.interfaces import ILocation, IPart, LocationType, SeqType
 from synbio.polymers import DNA
-from synbio.utils import ComparableMixin
 
 
 __all__ = [
@@ -14,7 +13,7 @@ __all__ = [
 ]
 
 
-class Location(ILocation, ComparableMixin):
+class Location(ILocation):
     # TODO: write docstring
     """
     """
@@ -147,7 +146,7 @@ class Location(ILocation, ComparableMixin):
         return slice(self.start, self.end, 1)
 
 
-class Part(IPart, ComparableMixin):
+class Part(IPart):
     # TODO: write docstring
     """
     """

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Dict, List, Optional
 
 from synbio import utils
@@ -10,12 +11,22 @@ __all__ = [
 ]
 
 
-class Polymer(IPolymer, utils.ComparableMixin):
+class Polymer(IPolymer):
     """
     An abstract base class from which NucleicAcid and Protein inherit.
 
     In order to create custom classes that inherit from Polymer, implement
-    self.alphabet() (see Polymer.alphabet() docstring for details).
+    self.alphabet()
+
+    E.g.,
+
+    >>> class XNA(Polymer):
+    >>>     def alphabet(self):
+    >>>         return ["X", "Y", "W", "Z"]
+
+    >>> XNA("XXYYZZ")
+    XNA(XXYYZZ)
+    >>> XNA("AATTCCGG") # raises ValueError("input value not in XNA alphabet")
     """
     _comparables = ['seq']
 
@@ -100,26 +111,57 @@ class Polymer(IPolymer, utils.ComparableMixin):
 
         >>> XNA("XXYYZZ")
         XNA(XXYYZZ)
-        >>> XNA("AATTCCGG") # raises ValueError: input value not in XNA alphabet
-
-        Returns
-        -------
-        alphabet: list of valid characters
+        >>> XNA("AATTCCGG")#raises ValueError("input value not in XNA alphabet")
         """
         raise NotImplementedError
 
 
 class NucleicAcid(Polymer):
     """
+    An abstract base class from which DNA and RNA inherit. NucleicAcids are
+    Polymers with complementary strands (thus, implicitly, with basepairing
+    rules) as well as with annotations.
+
+    To subclass from NucleicAcid, the following methods must be implemented:
+        - alphabet(self) -> List[str]
+        - transcribe(self) -> RNA
+        - reverse_transcribe(self) -> DNA
+
+    E.g.,
+
+    >>> class XNA(NucleicAcid):
+    >>>     basepairing = {
+    >>>         'X':'Y',
+    >>>         'Y':'X',
+    >>>         'W':'Z',
+    >>>         'Z':'W'
+    >>>     }
+    >>>     def alphabet(self) -> List[str]:
+    >>>         return ['W', 'X', 'Y', 'Z']
+    >>>     def transcribe(self) -> RNA:
+    >>>         return RNA(
+    >>>             self.seq
+    >>>                 .replace('X', 'A')
+    >>>                 .replace('Y', 'U')
+    >>>                 .replace('W', 'C')
+    >>>                 .replace('Z', 'G')
+    >>>         )
+    >>>     def reverse_transcribe(self) -> DNA:
+    >>>         return self.transcribe().reverse_transcribe()
+
+    >>> XNA("XXYYZZ")
+    XNA(XXYYZZ)
+    >>> XNA("AATTCCGG") #raises ValueError("input value not in XNA alphabet")
     """
-    # TODO: write docstring
     _comparables = ['seq', 'annotations']
     basepairing = None
 
     def __init__(self,
                  seq: SeqType = "",
                  annotations: Optional[Dict[str, IPart]] = None) -> None:
-        if annotations is None:
+        if isinstance(seq, NucleicAcid):
+            annotations = seq.annotations
+        elif annotations is None:
             annotations = {}
         else:
             try:
@@ -210,28 +252,26 @@ class NucleicAcid(Polymer):
 
     def transcribe(self) -> RNA:
         """
-        # TODO: write docstring
-        Returns
-        -------
-
+        A function prototype that returns a new RNA object representing the
+        result of transcribing this NucleicAcid to RNA. Implement this method
+        in order to inherit from NucleicAcid
         """
         raise NotImplementedError
 
     def reverse_transcribe(self) -> DNA:
         """
-        # TODO: write docstring
-        Returns
-        -------
-
+        A function prototype that returns a new DNA object representing the
+        result of reverse transcribing this NucleicAcid to RNA. Implement this
+        method in order to inherit from NucleicAcid
         """
         raise NotImplementedError
 
     def translate(self, code: Optional[CodeType] = None) -> Protein:
         """
-        # TODO: write docstring
-        Returns
-        -------
-
+        A method that returns a new Protein object representing the
+        transcription of a NucleicAcid to RNA, followed by the translation of
+        that RNA to a Protein, given a genetic code mapping RNA to Proteins (
+        defaults to the Standard Code).
         """
         if code is None:
             code = Code()
@@ -246,15 +286,19 @@ class NucleicAcid(Polymer):
 
     def reverse_complement(self) -> "Own Type":
         """
-        # TODO: write docstring
-        Returns
-        -------
-
+        A method that returns a new object of the same type as self
+        representing the reverse complementary sequence of self, i.e.,
+        the sequence on the reverse strand of self.
         """
-        raise NotImplementedError
+        return self.__class__(
+            utils.reverse_complement(self, self.basepairing)
+        )
 
 
 class DNA(NucleicAcid):
+    """
+    A class used to represent DNA
+    """
     basepairing = utils.dna_basepair_WC
 
     def alphabet(self) -> List[str]:
@@ -266,13 +310,11 @@ class DNA(NucleicAcid):
     def reverse_transcribe(self) -> DNA:
         return self
 
-    def reverse_complement(self) -> DNA:
-        return DNA(
-            utils.reverse_complement(self, utils.dna_basepair_WC)
-        )
-
 
 class RNA(NucleicAcid):
+    """
+    A class used to represent RNA
+    """
     basepairing = utils.rna_basepair_WC
 
     def alphabet(self) -> List[str]:
@@ -284,13 +326,12 @@ class RNA(NucleicAcid):
     def reverse_transcribe(self) -> DNA:
         return DNA(self.seq.replace('U', 'T').replace('u', 't'))
 
-    def reverse_complement(self) -> RNA:
-        return RNA(
-            utils.reverse_complement(self, utils.rna_basepair_WC)
-        )
-
 
 class Protein(Polymer):
+    """
+    A class used to represent Proteins
+    """
+
     def alphabet(self) -> List[str]:
         return utils.aminoacids
 

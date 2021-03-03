@@ -1,5 +1,4 @@
 import pickle
-from functools import wraps
 from pathlib import Path
 from typing import Dict, List
 
@@ -13,10 +12,6 @@ __all__ = [
     "quadruplet_codons", "quadruplet_mut_pairs", "PRS", "kdHydrophobicity",
     # functions
     "get_codons", "reverse_complement",
-    # wrappers
-    "compare_same_type",
-    # Mixins
-    "ComparableMixin"
 ]
 
 ###############
@@ -34,21 +29,6 @@ with open(definitions_path, 'rb') as handle:
         dna_basepair_WC, rna_basepair_WC,
         PRS, kdHydrophobicity
     ] = un_pickled
-
-
-#############
-# wrappers  #
-#############
-def compare_same_type(func):
-    @wraps(func)
-    def wrapper(self, other):
-        if not issubclass(type(self), type(other)):
-            raise TypeError(
-                f"Cannot compare {self.__class__.__name__} with {type(other)}")
-        else:
-            return func(self, other)
-
-    return wrapper
 
 
 #############
@@ -86,26 +66,3 @@ def reverse_complement(seq: SeqType,
     return ''.join(
         complement[nt] for nt in seq[::-1]
     )
-
-
-#############
-#  Mixins   #
-#############
-class ComparableMixin:
-    """
-    A Mixin class that automatically provides some comparison dunder methods,
-    given a class attribute _comparables
-    """
-    _comparables = list()
-
-    def __hash__(self) -> int:
-        return hash(
-            (getattr(self, comp) for comp in self._comparables)
-        )
-
-    @compare_same_type
-    def __eq__(self, other: "Same Type") -> bool:
-        return all(
-            getattr(self, comp) == getattr(other, comp)
-            for comp in self._comparables
-        )

@@ -3,9 +3,13 @@ from __future__ import annotations
 from abc import ABC
 from collections import abc
 from typing import NewType, Union, List
-
+from functools import wraps
 
 __all__ = [
+    # wrappers
+    "compare_same_type",
+    # mixins
+    "ComparableMixin",
     # interface classes
     "ILocation", "IPart", "IPolymer",
     # types
@@ -13,7 +17,48 @@ __all__ = [
 ]
 
 
-class ILocation(ABC):
+#############
+# wrappers  #
+#############
+def compare_same_type(func):
+    @wraps(func)
+    def wrapper(self, other):
+        if not issubclass(type(self), type(other)):
+            raise TypeError(
+                f"Cannot compare {self.__class__.__name__} with {type(other)}")
+        else:
+            return func(self, other)
+
+    return wrapper
+
+
+#############
+#  Mixins   #
+#############
+class ComparableMixin:
+    """
+    A Mixin class that automatically provides some comparison dunder methods,
+    given a class attribute _comparables
+    """
+    _comparables = list()
+
+    def __hash__(self) -> int:
+        return hash(
+            (getattr(self, comp) for comp in self._comparables)
+        )
+
+    @compare_same_type
+    def __eq__(self, other: "Same Type") -> bool:
+        return all(
+            getattr(self, comp) == getattr(other, comp)
+            for comp in self._comparables
+        )
+
+
+################
+#  Interfaces  #
+################
+class ILocation(ABC, ComparableMixin):
     def __init__(self):
         start = None
         end = None
@@ -42,7 +87,7 @@ class ILocation(ABC):
 LocationType = NewType("LocationType", Union[int, slice, ILocation])
 
 
-class IPart(ABC):
+class IPart(ABC, ComparableMixin):
     def __init__(self):
         self._seq_reference = None
         self._seq_id = None
@@ -63,7 +108,7 @@ class IPart(ABC):
         raise NotImplementedError
 
 
-class IPolymer(abc.MutableSequence):
+class IPolymer(abc.MutableSequence, ComparableMixin):
     def __init__(self, seq: SeqType = '') -> None:
         self.seq = self._seq_check(seq)
 
@@ -75,3 +120,4 @@ class IPolymer(abc.MutableSequence):
 
 
 SeqType = NewType("SeqType", Union[str, IPolymer])
+
