@@ -17,27 +17,27 @@ class TestLibrary:
         # should pass
         Library(base_seq=dna_str)  # from raw dna string
         Library(base_seq=dna_str,
-                SeqType=DNA)  # from dna string w/ proper SeqType
+                seq_type=DNA)  # from dna string w/ proper SeqType
         Library(base_seq=dna_obj)  # from DNA object
 
         Library(base_seq=rna_str,
-                SeqType=RNA)  # from rna string w/ proper SeqType
+                seq_type=RNA)  # from rna string w/ proper SeqType
         Library(base_seq=rna_obj)  # from RNA object
 
         # should fail
         assert isinstance(
             testutils.raises(
-                Library, [], {'base_seq': dna_str, 'SeqType': RNA}
+                Library, [], {'base_seq': dna_str, 'seq_type': RNA}
             ), ValueError
         )
         assert isinstance(
             testutils.raises(
-                Library, [], {'base_seq': rna_str, 'SeqType': DNA}
+                Library, [], {'base_seq': rna_str, 'seq_type': DNA}
             ), ValueError
         )
         assert isinstance(
             testutils.raises(
-                Library, [], {'base_seq': dna_str, 'SeqType': str}
+                Library, [], {'base_seq': dna_str, 'seq_type': str}
             ), TypeError
         )
 

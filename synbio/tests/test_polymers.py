@@ -104,6 +104,26 @@ class TestDNA:
         assert part4.seq == "CGAATTCC"
         assert part4.location == Location(2, 10)
 
+    def test_indexing_by_part_name(self):
+        dna = DNA("ATCGAATTCCGG")
+        part1 = Part(seq=dna, location=Location(0, 4), name='part 1')
+
+        assert dna['part 1'] == part1.seq
+        assert dna['part 1'] == "ATCG"
+
+        part2 = Part(seq=dna, location=Location(4, 8), name='part 2')
+        dna['part 2'] = "GGCC"
+
+        assert dna['part 2'] == "GGCC"
+        assert part2.seq == "GGCC"
+        assert dna[4:8] == "GGCC"
+
+        dna['part 1'] = "AT"
+        assert dna['part 1'] == "AT"
+        assert part1.location == Location(0, 2)
+        assert dna['part 2'] == "GGCC"
+        assert part2.location == Location(2, 6)
+
     def test_duplicate_parts(self):
         # TODO: write test that ensures that only unique parts are found in DNA.annotations
         x = DNA("AAAA")

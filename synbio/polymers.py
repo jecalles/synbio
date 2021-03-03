@@ -121,14 +121,6 @@ class NucleicAcid(Polymer):
     def __init__(self,
                  seq: SeqType = "",
                  annotations: Optional[Dict[str, IPart]] = None) -> None:
-        """
-        Parameters
-        ----------
-        seq
-        annotations
-        """
-        # TODO: write docstring
-
         if annotations is None:
             # default value is empty dict
             annotations = {}
@@ -149,7 +141,10 @@ class NucleicAcid(Polymer):
         self.annotations = annotations
 
     def __getitem__(self, key: LocationType) -> "Own Type":
-        if isinstance(key, ILocation):
+        if isinstance(key, str):
+            slice_ = self.annotations[key].location.to_slice()
+
+        elif isinstance(key, ILocation):
             slice_ = key.to_slice()
 
             # shortcircuit - if REV strand, return rev comp
@@ -164,9 +159,11 @@ class NucleicAcid(Polymer):
 
     def __setitem__(self, key: LocationType, value: SeqType) -> None:
         length_change = len(value) - len(self[key])
-
         value = self._seq_check(value)
-        if isinstance(key, ILocation):
+
+        if isinstance(key, str):
+            slice_ = self.annotations[key].location.to_slice()
+        elif isinstance(key, ILocation):
             slice_ = key.to_slice()
 
             if key.strand == "REV":

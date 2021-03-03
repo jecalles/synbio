@@ -25,16 +25,16 @@ class Library(Part):
 
     # TODO: write docstring
 
-    def __init__(self, base_seq="", location=None, name=None, SeqType=DNA,
+    def __init__(self, base_seq="", location=None, name=None, seq_type=DNA,
                  variance=lambda seq: seq, variance_params=None, metadata=None,
                  ):
         # Type Check: raise error if seq_type is not a polymer
-        if not issubclass(SeqType, Polymer):
+        if not issubclass(seq_type, Polymer):
             raise TypeError("SeqType must be a subclass of IPolymer")
 
         # convert input seq to IPolymer if necessary
         if not isinstance(base_seq, Polymer):
-            base_seq = SeqType(base_seq)
+            base_seq = seq_type(base_seq)
 
         # set default value for variance_params if None
         if variance_params is None:
