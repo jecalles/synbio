@@ -1,6 +1,4 @@
 from __future__ import annotations
-
-from copy import copy
 from typing import Dict, List, Optional
 
 from synbio import utils
@@ -122,7 +120,6 @@ class NucleicAcid(Polymer):
                  seq: SeqType = "",
                  annotations: Optional[Dict[str, IPart]] = None) -> None:
         if annotations is None:
-            # default value is empty dict
             annotations = {}
         else:
             try:
@@ -140,7 +137,7 @@ class NucleicAcid(Polymer):
         super().__init__(seq)
         self.annotations = annotations
 
-    def __getitem__(self, key: LocationType) -> "Own Type":
+    def __getitem__(self, key: str | LocationType) -> "Own Type":
         if isinstance(key, str):
             slice_ = self.annotations[key].location.to_slice()
 
@@ -157,7 +154,7 @@ class NucleicAcid(Polymer):
 
         return super().__getitem__(slice_)
 
-    def __setitem__(self, key: LocationType, value: SeqType) -> None:
+    def __setitem__(self, key: str | LocationType, value: SeqType) -> None:
         length_change = len(value) - len(self[key])
         value = self._seq_check(value)
 
@@ -176,10 +173,12 @@ class NucleicAcid(Polymer):
         super().__setitem__(slice_, value)
         self.update_annotations(slice_, length_change)
 
-    def __delitem__(self, key: LocationType) -> None:
+    def __delitem__(self, key: str | LocationType) -> None:
         length_change = -len(self.__getitem__(key))
 
-        if isinstance(key, ILocation):
+        if isinstance(key, str):
+            slice_ = self.annotations[key].location.to_slice()
+        elif isinstance(key, ILocation):
             slice_ = key.to_slice()
         else:
             slice_ = key
