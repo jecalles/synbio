@@ -167,25 +167,28 @@ class NucleicAcid(Polymer):
 
         value = self._seq_check(value)
         if isinstance(key, ILocation):
-            loc = copy(key)
-            key = key.to_slice()
+            slice_ = key.to_slice()
 
-            if loc.strand == "REV":
+            if key.strand == "REV":
                 value = utils.reverse_complement(
                     value, self.basepairing
                 )
+        else:
+            slice_ = key
 
-        super().__setitem__(key, value)
-        self.update_annotations(key, length_change)
+        super().__setitem__(slice_, value)
+        self.update_annotations(slice_, length_change)
 
     def __delitem__(self, key: LocationType) -> None:
         length_change = -len(self.__getitem__(key))
 
         if isinstance(key, ILocation):
-            key = key.to_slice()
+            slice_ = key.to_slice()
+        else:
+            slice_ = key
 
-        super().__delitem__(key)
-        self.update_annotations(key, length_change)
+        super().__delitem__(slice_)
+        self.update_annotations(slice_, length_change)
 
     def insert(self, key: int, value: SeqType) -> None:
         """
