@@ -22,7 +22,7 @@ class Polymer(IPolymer, utils.ComparableMixin):
     _comparables = ['seq']
 
     def __init__(self, seq: SeqType = '') -> None:
-        self.seq = self._seq_check(seq)
+        self.seq = str(self._seq_check(seq))
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.seq})"
@@ -31,7 +31,7 @@ class Polymer(IPolymer, utils.ComparableMixin):
         return self.seq
 
     def __eq__(self, other: SeqType) -> bool:
-        return self.seq == other
+        return self.seq.upper() == other
 
     def __len__(self) -> int:
         return len(self.seq)
