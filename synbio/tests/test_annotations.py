@@ -101,6 +101,21 @@ class TestPart:
         # TODO: write test
         pass
 
+    def test_slice(self):
+        dna = DNA("ATCGAATTCCGG")
+        part1 = Part(seq=dna, name="part1", location=Location(2, 8, "FWD"))
+        part2 = Part(seq=dna, name="part2", location=Location(4, 10, "REV"))
+
+        assert part1[2:4].seq == DNA("AA")
+        assert part1[2:4] == Part(seq=dna, name="part1_subset",
+                                  location=Location(4, 6))
+        assert part1[2:4] == part1[Location(2, 4, "FWD")]
+
+        assert part2[2:5].seq == DNA("GAA")
+        assert part2[2:5] == Part(seq=dna, name="part2_subset",
+                                  location=Location(6, 9, "REV"))
+        assert part2[2:5] == part2[Location(2, 5, "REV")]
+
     def test_DNA_integration(self):
         dna = DNA("ATCGAATTCCGG")
         part1 = Part(seq=dna, location=Location(0, 4))

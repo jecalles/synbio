@@ -5,7 +5,7 @@ from synbio.polymers import *
 class TestPolymer:
     def test_hash(self):
         # TODO: write test for Polymer.__hash__()
-        pass
+        assert 1 == 2
 
 
 class TestDNA:
@@ -124,6 +124,10 @@ class TestDNA:
         assert dna['part 2'] == "GGCC"
         assert part2.location == Location(2, 6)
 
+    def test_reverse_complement(self):
+        # TODO: write this test
+        assert 1 == 2
+
     def test_duplicate_parts(self):
         # TODO: write test that ensures that only unique parts are found in DNA.annotations
         x = DNA("AAAA")
@@ -136,8 +140,8 @@ class TestDNA:
         assert x.annotations != y.annotations
 
     def test_pickling(self):
-        # TODO: write test that covers DNA to pkl files
-        pass
+        # TODO: write this test
+        assert 1 == 2
 
     def test_central_dogma(self):
         gfp_str = "ATGAGTAAAGGAGAAGAACTTTTCACTGGAGTTGTCCCAATTCTTGTTGAA" \

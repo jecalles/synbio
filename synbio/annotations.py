@@ -17,9 +17,6 @@ class Location(ILocation):
     # TODO: write docstring
     """
     """
-
-    _comparables = ['start', 'end', 'strand']
-
     def __init__(self, start: int, end: int, strand: str = "FWD") -> None:
         # check that start and end positions are valid
         if not start <= end:
@@ -38,6 +35,9 @@ class Location(ILocation):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.start}, " \
                f"{self.end}, {self.strand})"
+
+    def _comparables(self) -> List[str]:
+        return ['start', 'end', 'strand']
 
     @staticmethod
     def contains(outer_loc: Location, inner_loc: Location) -> bool:
@@ -113,15 +113,11 @@ class Location(ILocation):
         >>> loc3 = Location(15, 25, "REV")
         >>> loc4 = loc3.offset(5)
         >>> print(loc3, loc4)
-        Location(15, 25, REV) Location(10, 20, REV)
+        Location(15, 25, REV) Location(20, 30, REV)
         """
         # check type of offset
         if not isinstance(offset, int):
             raise TypeError("offset must be of type int")
-
-        # negate offset if Location is on reverse strand
-        if self.strand == "REV":
-            offset = -offset
 
         return Location(
             start=self.start + offset,
@@ -150,11 +146,6 @@ class Part(IPart):
     # TODO: write docstring
     """
     """
-
-    _comparables = [
-        '_seq_id', 'location', 'name', 'kind', 'metadata'
-    ]
-
     def __init__(self,
                  seq: Optional[SeqType] = None,
                  location: Optional[Location] = None,
@@ -197,6 +188,29 @@ class Part(IPart):
 
     def __len__(self) -> int:
         return len(self.seq)
+
+    def __getitem__(self, key: LocationType) -> Part:
+        if isinstance(key, ILocation):
+            loc = key
+        elif isinstance(key, slice):
+            loc = Location.from_slice(key)
+        else:
+            raise TypeError("key must be of type ILocation or slice")
+
+        loc.strand = self.location.strand
+
+        return Part(
+            seq=self._seq_reference,
+            location=loc.offset(self.location.start),
+            name=f"{self.name}_subset",
+            kind=self.kind,
+            metadata=self.metadata
+        )
+
+    def _comparables(self) -> List[str]:
+        return  [
+            '_seq_id', 'location', 'name', 'kind', 'metadata'
+        ]
 
     @property
     def seq(self) -> SeqType:

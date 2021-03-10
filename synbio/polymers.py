@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from synbio import utils
 from synbio.codes import Code, CodeType
-from synbio.interfaces import ILocation, IPart, IPolymer, LocationType, SeqType
+from synbio.interfaces import *
 
 __all__ = [
     "Polymer", "NucleicAcid", "DNA", "RNA", "Protein"
@@ -28,8 +28,6 @@ class Polymer(IPolymer):
     XNA(XXYYZZ)
     >>> XNA("AATTCCGG") # raises ValueError("input value not in XNA alphabet")
     """
-    _comparables = ['seq']
-
     def __init__(self, seq: SeqType = '') -> None:
         self.seq = str(self._seq_check(seq))
 
@@ -44,13 +42,6 @@ class Polymer(IPolymer):
 
     def __len__(self) -> int:
         return len(self.seq)
-
-    def __hash__(self) -> int:
-        comparables = (
-            val if "__hash__" in dir(val) else str(val)
-            for val in vars(self).values()
-        )
-        return hash(comparables)
 
     def __getitem__(self, key: LocationType) -> "Own Type":
         return self.__class__(self.seq[key])
@@ -69,6 +60,11 @@ class Polymer(IPolymer):
         seqlist = list(self.seq)
         seqlist.insert(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
+
+
+    def _comparables(self) -> List[str]:
+        return ['seq']
+
 
     def _seq_check(self, value: SeqType) -> str:
         """
@@ -124,20 +120,22 @@ class NucleicAcid(Polymer):
 
     To subclass from NucleicAcid, the following methods must be implemented:
         - alphabet(self) -> List[str]
+        - basepairing(self_ -> Dict[str, str]
         - transcribe(self) -> RNA
         - reverse_transcribe(self) -> DNA
 
     E.g.,
 
     >>> class XNA(NucleicAcid):
-    >>>     basepairing = {
-    >>>         'X':'Y',
-    >>>         'Y':'X',
-    >>>         'W':'Z',
-    >>>         'Z':'W'
-    >>>     }
     >>>     def alphabet(self) -> List[str]:
     >>>         return ['W', 'X', 'Y', 'Z']
+    >>>     def basepairing(self):
+    >>>         return {
+    >>>             'X':'Y',
+    >>>             'Y':'X',
+    >>>             'W':'Z',
+    >>>             'Z':'W'
+    >>>         }
     >>>     def transcribe(self) -> RNA:
     >>>         return RNA(
     >>>             self.seq
@@ -153,7 +151,6 @@ class NucleicAcid(Polymer):
     XNA(XXYYZZ)
     >>> XNA("AATTCCGG") #raises ValueError("input value not in XNA alphabet")
     """
-    _comparables = ['seq', 'annotations']
     basepairing = None
 
     def __init__(self,
@@ -179,7 +176,7 @@ class NucleicAcid(Polymer):
         super().__init__(seq)
         self.annotations = annotations
 
-    def __getitem__(self, key: str | LocationType) -> "Own Type":
+    def __getitem__(self, key: IndexType) -> "Own Type":
         if isinstance(key, str):
             slice_ = self.annotations[key].location.to_slice()
 
@@ -196,7 +193,7 @@ class NucleicAcid(Polymer):
 
         return super().__getitem__(slice_)
 
-    def __setitem__(self, key: str | LocationType, value: SeqType) -> None:
+    def __setitem__(self, key: IndexType, value: SeqType) -> None:
         length_change = len(value) - len(self[key])
         value = self._seq_check(value)
 
@@ -215,7 +212,7 @@ class NucleicAcid(Polymer):
         super().__setitem__(slice_, value)
         self.update_annotations(slice_, length_change)
 
-    def __delitem__(self, key: str | LocationType) -> None:
+    def __delitem__(self, key: IndexType) -> None:
         length_change = -len(self.__getitem__(key))
 
         if isinstance(key, str):
@@ -244,6 +241,9 @@ class NucleicAcid(Polymer):
 
         super().insert(key, value)
         self.update_annotations(key, length_change)
+
+    def _comparables(self) -> List[str]:
+        return ['seq', 'annotations']
 
     def update_annotations(self, key: LocationType, length_change: int) -> None:
         if self.annotations is not None:

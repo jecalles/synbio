@@ -1,7 +1,7 @@
 # TODO: refactor code, now that utils has been split up
 from __future__ import annotations
 
-from typing import Dict, List, NewType, Optional, Set, Union
+from typing import Dict, List, TypeVar, Optional, Set
 
 from synbio import utils
 from synbio.codes import utils as codeutils
@@ -42,7 +42,7 @@ class Code(dict):
         if type(code) == str:
             try:
                 code = self.code_options[code.upper()]
-            except:  # TODO: fix bare except
+            except KeyError:  # TODO: fix bare except
                 raise ValueError(
                     'Code string not recognized. Use one of the '
                     'following options: {0}'.format(
@@ -56,7 +56,7 @@ class Code(dict):
         else:
             try:
                 code = dict(code)
-            except:
+            except TypeError:
                 raise ValueError(
                     'Code input parameter not recognized. '
                     'Pass in a dictionary, Code object, or one of '
@@ -76,7 +76,7 @@ class Code(dict):
     def __repr__(self) -> str:
         code = self.table()
 
-        crossline = '-' * 25 + '\n'
+        crossline = '.' + '-' * 23 + '.' + '\n'
 
         out = object.__repr__(self) + '\n'
         for col in code:
@@ -188,4 +188,4 @@ class Code(dict):
         return self.reverse_translate(protein)
 
 
-CodeType = NewType("CodeType", Union[Dict[str, str], Code])
+CodeType = TypeVar("CodeType", Dict[str, str], Code)
