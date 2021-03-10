@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Dict, List, Optional
+from abc import abstractmethod
 
 from synbio import utils
 from synbio.codes import Code, CodeType
@@ -61,10 +62,8 @@ class Polymer(IPolymer):
         seqlist.insert(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
-
     def _comparables(self) -> List[str]:
         return ['seq']
-
 
     def _seq_check(self, value: SeqType) -> str:
         """
@@ -93,6 +92,7 @@ class Polymer(IPolymer):
 
         return seq
 
+    @abstractmethod
     def alphabet(self) -> List[str]:
         """
         A function prototype that returns a list of characters
@@ -151,8 +151,6 @@ class NucleicAcid(Polymer):
     XNA(XXYYZZ)
     >>> XNA("AATTCCGG") #raises ValueError("input value not in XNA alphabet")
     """
-    basepairing = None
-
     def __init__(self,
                  seq: SeqType = "",
                  annotations: Optional[Dict[str, IPart]] = None) -> None:
@@ -186,7 +184,7 @@ class NucleicAcid(Polymer):
             # shortcircuit - if REV strand, return rev comp
             if key.strand == "REV":
                 return utils.reverse_complement(
-                    self.seq.__getitem__(slice_), self.basepairing
+                    self.seq.__getitem__(slice_), self.basepairing()
                 )
         else:
             slice_ = key
@@ -204,7 +202,7 @@ class NucleicAcid(Polymer):
 
             if key.strand == "REV":
                 value = utils.reverse_complement(
-                    value, self.basepairing
+                    value, self.basepairing()
                 )
         else:
             slice_ = key
@@ -250,6 +248,11 @@ class NucleicAcid(Polymer):
             for part in self.annotations.values():
                 part.update_location(key, length_change)
 
+    @abstractmethod
+    def basepairing(self) -> Dict[str, str]:
+        raise NotImplementedError
+
+    @abstractmethod
     def transcribe(self) -> RNA:
         """
         A function prototype that returns a new RNA object representing the
@@ -258,6 +261,7 @@ class NucleicAcid(Polymer):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def reverse_transcribe(self) -> DNA:
         """
         A function prototype that returns a new DNA object representing the
@@ -291,7 +295,7 @@ class NucleicAcid(Polymer):
         the sequence on the reverse strand of self.
         """
         return self.__class__(
-            utils.reverse_complement(self, self.basepairing)
+            utils.reverse_complement(self.seq, self.basepairing())
         )
 
 
@@ -299,10 +303,11 @@ class DNA(NucleicAcid):
     """
     A class used to represent DNA
     """
-    basepairing = utils.dna_basepair_WC
-
     def alphabet(self) -> List[str]:
         return utils.dNTPs
+
+    def basepairing(self) -> Dict[str, str]:
+        return utils.dna_basepair_WC
 
     def transcribe(self) -> RNA:
         return RNA(self.seq.replace('T', 'U').replace('t', 'u'))
@@ -315,10 +320,11 @@ class RNA(NucleicAcid):
     """
     A class used to represent RNA
     """
-    basepairing = utils.rna_basepair_WC
-
     def alphabet(self) -> List[str]:
         return utils.rNTPs
+
+    def basepairing(self) -> Dict[str, str]:
+        return utils.rna_basepair_WC
 
     def transcribe(self) -> RNA:
         return self
@@ -331,7 +337,6 @@ class Protein(Polymer):
     """
     A class used to represent Proteins
     """
-
     def alphabet(self) -> List[str]:
         return utils.aminoacids
 

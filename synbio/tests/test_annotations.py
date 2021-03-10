@@ -36,23 +36,23 @@ class TestLocation:
         e = self.e
 
         # testing contains on self should return True
-        assert Location.contains(a, a) == True
+        assert Location.contains(a, a)
 
         # Truly contained should return True ...
-        assert Location.contains(a, b) == True
+        assert Location.contains(a, b)
         # ... even with the same start index
-        assert Location.contains(a, c) == True
+        assert Location.contains(a, c)
         # ... but not vice versa (order matters!!)
-        assert Location.contains(b, a) == False
-        assert Location.contains(c, a) == False
+        assert not Location.contains(b, a)
+        assert not Location.contains(c, a)
 
         # Overlaped, but not contained, should return False
-        assert Location.contains(a, e) == False
-        assert Location.contains(e, a) == False
+        assert not Location.contains(a, e)
+        assert not Location.contains(e, a)
 
         # No overlap at all should return False
-        assert Location.contains(a, d) == False
-        assert Location.contains(d, a) == False
+        assert not Location.contains(a, d)
+        assert not Location.contains(d, a)
 
     def test_overlaps(self):
         a = self.a
@@ -65,19 +65,19 @@ class TestLocation:
         assert Location.overlaps(a, a) == True
 
         # sequential locations should not overlap
-        assert Location.overlaps(a, d) == False
-        assert Location.overlaps(d, a) == False
+        assert not Location.overlaps(a, d)
+        assert not Location.overlaps(d, a)
 
         # overlapping locations should return True
-        assert Location.overlaps(a, e) == True
-        assert Location.overlaps(e, a) == True
+        assert Location.overlaps(a, e)
+        assert Location.overlaps(e, a)
 
         # contained location should return True ...
-        assert Location.overlaps(a, b) == True
-        assert Location.overlaps(b, a) == True
+        assert Location.overlaps(a, b)
+        assert Location.overlaps(b, a)
         # ... even with the same start index
-        assert Location.overlaps(a, c) == True
-        assert Location.overlaps(c, a) == True
+        assert Location.overlaps(a, c)
+        assert Location.overlaps(c, a)
 
     def test_find_overlaps(self):
         locations = [self.a, self.b, self.c, self.d, self.e]
@@ -90,7 +90,6 @@ class TestLocation:
             [1, 1, 0, 1, 1],
         ]
 
-    # TODO: write test for to_slice()
     def test_to_slice(self):
         loc = self.b
         assert loc.to_slice() == slice(4, 7, 1)
@@ -98,8 +97,22 @@ class TestLocation:
 
 class TestPart:
     def test_eq(self):
-        # TODO: write test
-        pass
+        dna = DNA("ATCGAATTCCGG")
+        part1 = Part(seq=dna, name="same name", location=Location(2, 8, "FWD"))
+        part2 = Part(seq=dna, name="same name", location=Location(2, 8, "FWD"))
+        part3 = Part(seq=dna, name="diff name", location=Location(2, 8, "FWD"))
+        part4 = Part(seq=dna, name="diff name", location=Location(4, 10, "REV"))
+
+        assert part1 == part1
+
+        assert part1 == part2
+        assert part2 == part1
+
+        assert part1 != part3
+        assert part3 != part1
+        
+        assert part1 != part4
+        assert part4 != part1
 
     def test_slice(self):
         dna = DNA("ATCGAATTCCGG")

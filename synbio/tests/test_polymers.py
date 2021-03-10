@@ -2,12 +2,6 @@ from synbio.annotations import *
 from synbio.polymers import *
 
 
-class TestPolymer:
-    def test_hash(self):
-        # TODO: write test for Polymer.__hash__()
-        assert 1 == 2
-
-
 class TestDNA:
     seq = DNA("AATTCCGG")
     loc_fwd = Location(2, 7, "FWD")  # 5' --TTCCG- 3'
@@ -125,8 +119,10 @@ class TestDNA:
         assert part2.location == Location(2, 6)
 
     def test_reverse_complement(self):
-        # TODO: write this test
-        assert 1 == 2
+        dna = DNA("ATCGAATTCCGG")
+        assert dna.reverse_complement().reverse_complement() == dna
+        assert dna[2:7].reverse_complement() == DNA("ATTCG")
+        assert dna[2:7].reverse_complement() == dna[Location(2, 7, "REV")]
 
     def test_duplicate_parts(self):
         # TODO: write test that ensures that only unique parts are found in DNA.annotations
@@ -138,10 +134,6 @@ class TestDNA:
         assert len(x.annotations) == 1
         assert len(y.annotations) == 1
         assert x.annotations != y.annotations
-
-    def test_pickling(self):
-        # TODO: write this test
-        assert 1 == 2
 
     def test_central_dogma(self):
         gfp_str = "ATGAGTAAAGGAGAAGAACTTTTCACTGGAGTTGTCCCAATTCTTGTTGAA" \
