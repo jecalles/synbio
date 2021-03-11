@@ -110,7 +110,7 @@ class TestPart:
 
         assert part1 != part3
         assert part3 != part1
-        
+
         assert part1 != part4
         assert part4 != part1
 
