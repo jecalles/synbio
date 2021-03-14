@@ -1,13 +1,22 @@
+import itertools
+import pickle
 import random
 from collections import deque
 from copy import copy
 from math import comb as binomial
+from pathlib import Path
 
-from synbio.codes.utils.definitions import *
-from synbio.utils import *
+from synbio.utils import (
+    aminoacids, kdHydrophobicity, rNTPs, rna_basepairing, triplet_rna_codons,
+)
 
 # define scope of package
 __all__ = [
+    # definitions
+    "unrestricted_block", "standard_block", "natural_block", "dna_wobbling",
+    "rna_wobbling", "standard_code", "colorado_code", "RED20", "RED15",
+    "FS20", "FS16",
+    # functions
     "get_aa_counts", "get_block_counts", "is_ambiguous", "is_promiscuous",
     "is_one_to_one", "get_codon_connectivity", "get_resi_connectivity",
     "get_codon_neighbors", "table_to_blocks", "blocks_to_table", "check_block",
@@ -21,6 +30,231 @@ def __dir__():
     return default + __all__
 
 
+###############
+# definitions #
+###############
+def _get_block(grouping):
+    return {
+        i: list(group)
+        for i, group in enumerate(grouping)
+    }
+
+
+unrestricted_block = _get_block(triplet_rna_codons)
+
+
+def _get_standard_grouping(codon):
+    return 0 if codon[-1] in {'U', 'C'} \
+        else 1 if codon[-1] == 'A' \
+        else 2
+
+
+_, _standard_grouping = zip(
+    *itertools.groupby(triplet_rna_codons, _get_standard_grouping)
+)
+standard_block = _get_block(_standard_grouping)
+
+natural_block = {
+    0: ['UUU', 'UUC'],
+    1: ['UUA', 'UUG'],
+    2: ['CUU', 'CUC', 'CUA', 'CUG'],
+    3: ['AUU', 'AUC', 'AUA'],
+    4: ['AUG'],
+    5: ['GUU', 'GUC', 'GUA', 'GUG'],
+    6: ['UCU', 'UCC', 'UCA', 'UCG'],
+    7: ['CCU', 'CCC', 'CCA', 'CCG'],
+    8: ['ACU', 'ACC', 'ACA', 'ACG'],
+    9: ['GCU', 'GCC', 'GCA', 'GCG'],
+    10: ['UAU', 'UAC'],
+    11: ['UAA', 'UAG'],
+    12: ['CAU', 'CAC'],
+    13: ['CAA', 'CAG'],
+    14: ['AAU', 'AAC'],
+    15: ['AAA', 'AAG'],
+    16: ['GAU', 'GAC'],
+    17: ['GAA', 'GAG'],
+    18: ['UGU', 'UGC'],
+    19: ['UGA'],
+    20: ['UGG'],
+    21: ['CGU', 'CGC', 'CGA', 'CGG'],
+    22: ['AGU', 'AGC'],
+    23: ['AGA', 'AGG'],
+    24: ['GGU', 'GGC', 'GGA', 'GGG']
+}
+
+# define Watson Crick Wobbling Rules
+dna_wobbling = {
+    'T': ['A', 'G'],
+    'C': ['G'],
+    'A': ['T', 'C'],
+    'G': ['T', 'C'],
+    'I': ['A', 'C', 'T']
+}
+rna_wobbling = {
+    'U': ['A', 'G'],
+    'C': ['G'],
+    'A': ['U', 'C'],
+    'G': ['U', 'C'],
+    'I': ['A', 'C', 'U']
+}
+
+# define standard code
+standard_code = {
+    'UUU': 'F',
+    'UUC': 'F',
+    'UUA': 'L',
+    'UUG': 'L',
+    'UCU': 'S',
+    'UCC': 'S',
+    'UCA': 'S',
+    'UCG': 'S',
+    'UAU': 'Y',
+    'UAC': 'Y',
+    'UAA': '*',
+    'UAG': '*',
+    'UGU': 'C',
+    'UGC': 'C',
+    'UGA': '*',
+    'UGG': 'W',
+    'CUU': 'L',
+    'CUC': 'L',
+    'CUA': 'L',
+    'CUG': 'L',
+    'CCU': 'P',
+    'CCC': 'P',
+    'CCA': 'P',
+    'CCG': 'P',
+    'CAU': 'H',
+    'CAC': 'H',
+    'CAA': 'Q',
+    'CAG': 'Q',
+    'CGU': 'R',
+    'CGC': 'R',
+    'CGA': 'R',
+    'CGG': 'R',
+    'AUU': 'I',
+    'AUC': 'I',
+    'AUA': 'I',
+    'AUG': 'M',
+    'ACU': 'T',
+    'ACC': 'T',
+    'ACA': 'T',
+    'ACG': 'T',
+    'AAU': 'N',
+    'AAC': 'N',
+    'AAA': 'K',
+    'AAG': 'K',
+    'AGU': 'S',
+    'AGC': 'S',
+    'AGA': 'R',
+    'AGG': 'R',
+    'GUU': 'V',
+    'GUC': 'V',
+    'GUA': 'V',
+    'GUG': 'V',
+    'GCU': 'A',
+    'GCC': 'A',
+    'GCA': 'A',
+    'GCG': 'A',
+    'GAU': 'D',
+    'GAC': 'D',
+    'GAA': 'E',
+    'GAG': 'E',
+    'GGU': 'G',
+    'GGC': 'G',
+    'GGA': 'G',
+    'GGG': 'G',
+}
+# define refactored [sic] code from Pines et al 2017 (aka Colorado code)
+colorado_code = {
+    'GAA': 'V',
+    'UCG': 'V',
+    'CGU': 'V',
+    'UGA': 'L',
+    'AAU': 'L',
+    'CUC': 'L',
+    'CCA': 'I',
+    'GGG': 'I',
+    'UUU': 'I',
+    'UAC': 'I',
+    'CAG': 'A',
+    'AUA': 'A',
+    'GCU': 'A',
+    'AGC': 'A',
+    'GAU': 'E',
+    'ACA': 'E',
+    'UUC': 'E',
+    'CGG': 'E',
+    'UGU': 'D',
+    'AAC': 'D',
+    'GUG': 'D',
+    'UAA': '*',
+    'UCU': 'P',
+    'AUG': 'P',
+    'GUC': 'P',
+    'CAA': 'P',
+    'GAC': 'T',
+    'UCA': 'T',
+    'CCC': 'S',
+    'AGG': 'S',
+    'AUU': 'Q',
+    'GGA': 'Q',
+    'UGC': 'N',
+    'CAU': 'N',
+    'GCG': 'M',
+    'CUA': 'M',
+    'AAA': 'C',
+    'UUG': 'C',
+    'GGU': 'C',
+    'CUU': 'G',
+    'AGU': 'G',
+    'ACC': 'G',
+    'UAG': 'G',
+    'UGG': 'R',
+    'GCA': 'R',
+    'CAC': 'R',
+    'GGC': 'H',
+    'CCG': 'H',
+    'UUA': 'H',
+    'ACU': 'H',
+    'CGA': 'K',
+    'UCC': 'K',
+    'GUU': 'K',
+    'AAG': 'K',
+    'CCU': 'Y',
+    'GAG': 'Y',
+    'AUC': 'Y',
+    'CGC': 'W',
+    'ACG': 'W',
+    'GUA': 'W',
+    'UAU': 'W',
+    'GCC': 'F',
+    'CUG': 'F',
+    'AGA': 'F',
+}
+
+
+# get RED20 and RED15 from file
+def _get_pickle_path(local_path_str):
+    _basepath = Path(__file__).absolute().parent
+    return Path(
+        _basepath, local_path_str
+    )
+
+
+with open(_get_pickle_path('res/RED20.pickle'), 'rb') as handle:
+    RED20 = pickle.load(handle)
+with open(_get_pickle_path('res/RED15.pickle'), 'rb') as handle:
+    RED15 = pickle.load(handle)
+with open(_get_pickle_path('res/FS20.pickle'), 'rb') as handle:
+    FS20 = pickle.load(handle)
+with open(_get_pickle_path('res/FS16.pickle'), 'rb') as handle:
+    FS16 = pickle.load(handle)
+
+
+#############
+# functions #
+#############
 def get_aa_counts(table):
     """ A function that takes a Code and finds the counts of each
     AA. Returns a dictionary mapping AA to their respective counts.
@@ -548,7 +782,7 @@ def promiscuity(table, allow_ambiguous=False):
         raise TypeError("Input table is a dict or dict-like")
     # declare table to return
     promiscuous = {}
-    for codon in triplet_codons:
+    for codon in triplet_rna_codons:
         promiscuous[codon] = '0'
     # loop over codons to reassign
     for codon, AA in table.items():
@@ -556,7 +790,7 @@ def promiscuity(table, allow_ambiguous=False):
         if AA == '0':
             continue
         # get codons that would be decoded in reality
-        wobble = rna_wobble_WC[rna_basepair_WC[codon[-1]]]
+        wobble = rna_wobbling[rna_basepairing[codon[-1]]]
         codons = [codon[:2] + nt3 for nt3 in wobble]
         # determine if there is ambiguity
         acceptable = [AA, '0']
@@ -678,7 +912,3 @@ def order_NTPs(sortable, nucleic_acid='RNA'):
         # raise error
         sorted_obj = False
     return sorted_obj
-
-
-if __name__ == '__main__':
-    pass

@@ -1,7 +1,7 @@
 # TODO: refactor code, now that utils has been split up
 from __future__ import annotations
 
-from typing import Dict, List, TypeVar, Optional, Set
+from typing import Dict, List, Optional, Set, TypeVar
 
 from synbio import utils
 from synbio.codes import utils as codeutils
@@ -16,11 +16,11 @@ class Code(dict):
     """A class used to represent genetic codes."""
     # TODO: refactor so Code obj includes codon frequency
     code_options = {
-        'STANDARD': codeutils.definitions.standard_code,
-        'COLORADO': codeutils.definitions.colorado_code,
-        'RED20': codeutils.definitions.RED20,
-        'RED15': codeutils.definitions.RED15,
-        'RANDOM': codeutils.functions.random_code()
+        'STANDARD': codeutils.standard_code,
+        'COLORADO': codeutils.colorado_code,
+        'RED20': codeutils.RED20,
+        'RED15': codeutils.RED15,
+        'RANDOM': codeutils.random_code()
     }
 
     def __init__(self, code: Optional[CodeType] = None) -> None:
@@ -51,7 +51,7 @@ class Code(dict):
                 )
         # default to standard code
         elif code is None:
-            code = codeutils.definitions.standard_code
+            code = codeutils.standard_code
         # else, try and cast input to a dict
         else:
             try:
@@ -69,8 +69,8 @@ class Code(dict):
         super().__init__(code)
 
         # Assign additional attributes
-        self.ambiguous = codeutils.functions.is_promiscuous(code)
-        self.one_to_one = codeutils.functions.is_one_to_one(code)
+        self.ambiguous = codeutils.is_promiscuous(code)
+        self.one_to_one = codeutils.is_one_to_one(code)
         self.codon_length = len(next(iter(self)))
 
     def __repr__(self) -> str:
