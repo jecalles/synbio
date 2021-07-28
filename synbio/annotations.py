@@ -7,15 +7,15 @@ from uuid import uuid4
 from synbio.interfaces import ILocation, IPart, LocationType, SeqType
 from synbio.polymers import DNA
 
-
 __all__ = [
     "Location", "Part"
 ]
 
 
 class Location(ILocation):
-    # TODO: write docstring
     """
+    A class used to specify a location on a NucleicAcid, as well as a
+    strand (FWD or REV
     """
     def __init__(self, start: int, end: int, strand: str = "FWD") -> None:
         # check that start and end positions are valid
@@ -28,9 +28,9 @@ class Location(ILocation):
         if strand not in {'FWD', 'REV'}:
             raise ValueError(f"input strand ({strand}) not FWD or REV")
 
-        self.start = start
-        self.end = end
-        self.strand = strand
+        self.start = int(start)
+        self.end = int(end)
+        self.strand = str(strand)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.start}, " \
@@ -44,6 +44,19 @@ class Location(ILocation):
         """
         A static method that compares two locations, determining if the
         inner_loc is completely contained by the outer location.
+
+        E.g.,
+        >>> a = Location(0, 10) # a: ----------
+        >>> b = Location(4, 7)  # b:     ----
+        >>> c = Location(5, 15) # c:      ----------
+        >>> Location.contains(a, a)
+        True
+        >>> Location.contains(a, b)
+        True
+        >>> Location.contains(b, a)
+        False
+        >>> Location.contains(a, c)
+        False
         """
         return (
                 outer_loc.start <= inner_loc.start
@@ -53,7 +66,22 @@ class Location(ILocation):
     @staticmethod
     def overlaps(loc1: Location, loc2: Location) -> bool:
         """
-        # TODO: write docstring for this method
+        A static method that, given two Location objects, returns True if the
+        two locations overlap and False otherwise
+
+        E.g.,
+
+        >>> a = Location(0, 10) # a: ----------
+        >>> b = Location(4, 7)  # b:     ----
+        >>> c = Location(0, 4)  # c: ----
+        >>> Location.overlaps(a, a)
+        True
+        >>> Location.overlaps(a, b)
+        True
+        >>> Location.overlaps(a, c)
+        True
+        >>> Location.overlaps(b, c)
+        False
         """
         return (loc1.start <= loc2.start < loc1.end) or (
                 loc2.start <= loc1.start < loc2.end)
@@ -138,20 +166,22 @@ class Location(ILocation):
         """
         A method that returns a slice object representing the Location obj
         """
-        # TODO: write docstring
         return slice(self.start, self.end, 1)
 
 
 class Part(IPart):
-    # TODO: write docstring
     """
+    A class used to represent an annotation of or an abstraction over
+    NucleicAcids (e.g., promoters, genes, terminators, restriction sites, etc.)
     """
-    def __init__(self,
-                 seq: Optional[SeqType] = None,
-                 location: Optional[Location] = None,
-                 name: Optional[str] = None,
-                 kind: Optional[str] = None,
-                 metadata: Optional[Dict[str, Any]] = None):
+    def __init__(
+            self,
+            seq: Optional[SeqType] = None,
+            location: Optional[Location] = None,
+            name: Optional[str] = None,
+            kind: Optional[str] = None,
+            metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
 
         # default parameter initializations
         if seq is None:

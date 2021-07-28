@@ -1,7 +1,7 @@
 from functools import partial
 
+from synbio.annotations import Location, Part
 from synbio.polymers import DNA
-from synbio.annotations import Part, Location
 
 
 def seqrecord_to_DNA(record):

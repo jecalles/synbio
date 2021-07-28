@@ -1,9 +1,11 @@
 from typing import Dict, Set
 
+from synbio.polymers import SeqType
 from synbio.codes import Code
 
 
-def get_synonymous_codons(codon: str, code: Code) -> Set[str]:
+def get_synonymous_codons(codon: SeqType, code: Code) -> Set[str]:
+    codon = str(codon)
     return code.rmap()[code[codon]]
 
 

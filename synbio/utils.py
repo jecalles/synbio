@@ -1,5 +1,5 @@
-from typing import Dict, List
 import itertools
+from typing import Dict, List
 
 from synbio.interfaces import SeqType
 
@@ -17,8 +17,8 @@ __all__ = [
     "triplet_dna_codons", "triplet_dna_mut_pairs",
     "quadruplet_dna_codons", "quadruplet_dna_mut_pairs",
     # basepairing
-    "dna_basepair_WC", "rna_basepair_WC", "nonstandard_basepair_WC",
-    "extended_dna_basepair_WC", "extended_rna_basepair_WC",
+    "dna_basepairing", "rna_basepairing", "nonstandard_basepairing",
+    "extended_dna_basepairing", "extended_rna_basepairing",
     # aminoacid physicochemistry
     "PRS", "kdHydrophobicity",
     #############
@@ -135,19 +135,19 @@ quadruplet_dna_codons = [
 ]
 
 # define Watson Crick Wobbling Rules
-dna_basepair_WC = {
+dna_basepairing = {
     'T': 'A',
     'C': 'G',
     'A': 'T',
     'G': 'C'
 }
-rna_basepair_WC = {
+rna_basepairing = {
     'U': 'A',
     'C': 'G',
     'A': 'U',
     'G': 'C'
 }
-nonstandard_basepair_WC = {
+nonstandard_basepairing = {
     'I': 'H',
     'R': 'Y',
     'Y': 'R',
@@ -162,8 +162,8 @@ nonstandard_basepair_WC = {
     'N': 'N',
     '-': '-',
 }
-extended_dna_basepair_WC = {**dna_basepair_WC, **nonstandard_basepair_WC}
-extended_rna_basepair_WC = {**rna_basepair_WC, **nonstandard_basepair_WC}
+extended_dna_basepairing = {**dna_basepairing, **nonstandard_basepairing}
+extended_rna_basepairing = {**rna_basepairing, **nonstandard_basepairing}
 
 # define all pairs of codons 1 mutation away
 def all_single_mutations(codon, NTPs):
@@ -216,7 +216,7 @@ def get_codons(seq: SeqType, n=3) -> List[SeqType]:
 
 
 def reverse_complement(seq: SeqType,
-                       complement: Dict[str, str] = dna_basepair_WC):
+                       complement: Dict[str, str] = dna_basepairing):
     return ''.join(
         complement[nt] for nt in seq[::-1]
     )

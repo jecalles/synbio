@@ -1,14 +1,14 @@
 from functools import partial
-from typing import Iterable, Optional, Dict
+from typing import Dict, Iterable, Optional, Callable, Any
 
 from synbio import utils
-from synbio.codes.wrappers import codesavvy
 from synbio.annotations import Part
-from synbio.interfaces import SeqType
-from synbio.polymers import DNA, Polymer
 from synbio.codes import CodeType
 from synbio.codes.functions import get_synonymous_codons
-
+from synbio.codes.wrappers import codesavvy
+from synbio.interfaces import SeqType
+from synbio.polymers import DNA, Polymer
+from synbio.annotations import Location
 
 __all__ = [
     # class
@@ -21,26 +21,33 @@ __all__ = [
 
 class Library(Part):
     """
+    TODO: write docstring
     """
-
-    # TODO: write docstring
-
-    def __init__(self, base_seq="", location=None, name=None, seq_type=DNA,
-                 variance=lambda seq: seq, variance_params=None, metadata=None,
-                 ):
-        # Type Check: raise error if seq_type is not a polymer
+    def __init__(
+            self,
+            base_seq: Optional[SeqType] = None,
+            location: Optional[Location] = None,
+            name: Optional[str] = None,
+            seq_type: type(Polymer) = DNA,
+            variance: Callable[[SeqType], Iterable[SeqType]] = lambda s: [s],
+            variance_params: Optional[dict] = None,
+            metadata: Optional[Dict[str, Any]] = None
+    ):
+        # Type Check: raise error if seq_type is not a Polymer
         if not issubclass(seq_type, Polymer):
-            raise TypeError("SeqType must be a subclass of IPolymer")
+            raise TypeError("SeqType must be a subclass of Polymer")
 
-        # convert input seq to IPolymer if necessary
-        if not isinstance(base_seq, Polymer):
-            base_seq = seq_type(base_seq)
+        if base_seq is None:
+            seq = seq_type()
+        elif isinstance(base_seq, Polymer):
+            seq = base_seq
+        else:
+            seq = seq_type(base_seq)
 
-        # set default value for variance_params if None
         if variance_params is None:
             variance_params = dict()
 
-        super().__init__(name=name, seq=base_seq, location=location,
+        super().__init__(name=name, seq=seq, location=location,
                          metadata=metadata)
 
         # handle variance typing: expect functions -> iterators and iterators
@@ -107,8 +114,10 @@ def single_nonsynonymous(
         seq: SeqType,
         code: Optional[CodeType] = None,
         codon_frequencies: Optional[Dict[str, float]] = None):
+    # TODO: implement
     raise NotImplementedError("function under construction")
 
 @codesavvy
 def double_nonsynonymous():
+    # TODO: implement
     raise NotImplementedError("function under construction")

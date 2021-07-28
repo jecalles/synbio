@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name='synbio-tooling',
-    version='0.0.1',
+    version='0.1.0.2',
     author='Jonathan Calles',
     author_email='callesjonathan@gmail.com',
     description='Tools for doing synthetic biology',
@@ -24,5 +24,5 @@ setuptools.setup(
     ],
     python_requires='>3.8',
     install_requires=requirements,
-    package_data={'codes':['res/*']}
+    include_package_data=True
 )

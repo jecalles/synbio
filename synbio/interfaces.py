@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import abc
-from typing import TypeVar, List
 from functools import wraps
 from pathlib import Path
+from typing import List, TypeVar
 
 __all__ = [
     # wrappers

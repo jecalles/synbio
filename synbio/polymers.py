@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional
 from abc import abstractmethod
+from typing import Dict, List, Optional
 
 from synbio import utils
 from synbio.codes import Code, CodeType
@@ -307,7 +307,7 @@ class DNA(NucleicAcid):
         return utils.dNTPs
 
     def basepairing(self) -> Dict[str, str]:
-        return utils.dna_basepair_WC
+        return utils.dna_basepairing
 
     def transcribe(self) -> RNA:
         return RNA(self.seq.replace('T', 'U').replace('t', 'u'))
@@ -324,7 +324,7 @@ class RNA(NucleicAcid):
         return utils.rNTPs
 
     def basepairing(self) -> Dict[str, str]:
-        return utils.rna_basepair_WC
+        return utils.rna_basepairing
 
     def transcribe(self) -> RNA:
         return self
