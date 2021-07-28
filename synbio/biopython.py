@@ -23,9 +23,14 @@ def seqfeature_to_Part(feature):
     """
     # TODO: docstring
     # get location
-    start = feature.location.start
-    end = feature.location.end
-    strand = "FWD" if feature.location.strand == 1 else "REV"
+    if feature.location is None:
+        start = 0
+        end = 0
+        strand = "FWD"
+    else:
+        start = feature.location.start
+        end = feature.location.end
+        strand = "FWD" if feature.location.strand == 1 else "REV"
     location = Location(start, end, strand)
     # get modifiers
     name = feature.qualifiers.get('label', '???')
