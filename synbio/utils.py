@@ -1,7 +1,7 @@
 import itertools
 from typing import Dict, List
 
-from synbio.interfaces import SeqType
+from synbio.interfaces import SeqType, LocationType
 
 # define scope of package
 __all__ = [
@@ -24,7 +24,7 @@ __all__ = [
     #############
     # functions #
     #############
-    "get_codons", "reverse_complement", "is_palindrome",
+    "get_codons", "reverse_complement", "is_palindrome", "find_subseq",
     "all_single_mutations", "mutation_pairs"
 ]
 
@@ -220,10 +220,32 @@ def get_codons(seq: SeqType, n=3) -> List[SeqType]:
 def reverse_complement(seq: SeqType,
                        complement: Dict[str, str] = dna_basepairing) -> str:
     return ''.join(
-        complement[nt] for nt in seq[::-1]
+        complement[nt.upper()] for nt in seq[::-1]
     )
 
 
 def is_palindrome(seq: SeqType) -> bool:
     comp_seq = seq.casefold()
     return comp_seq == comp_seq[::-1]
+
+
+def find_subseq(seq: SeqType, subseq: SeqType) -> List[LocationType]:
+    """
+    >>> from synbio.utils import find_subseq
+    >>>
+    >>> seq_to_search = "xxXatATaTxXatatxx"
+    >>> subseq_to_find = "atat"     # search is NOT case sensitive
+    >>>
+    >>> subseq_ix = find_subseq(seq_to_search, subseq_to_find)
+    >>> subseq_ix
+    [slice(3, 7, None), slice(5, 9, None), slice(11, 15, None)]
+    >>> subseqs = [seq_to_search[ix] for ix in subseq_ix]
+    ['atAT', 'ATaT', 'atat']
+    """
+
+    seq_len = len(seq)
+    subseq_len = len(subseq)
+    all_substrings = (seq[ix:ix+subseq_len] for ix in range(seq_len-subseq_len+1))
+    matches = (slice(ix, ix + subseq_len) for ix, sub in enumerate(
+        all_substrings) if str(sub).casefold() == str(subseq).casefold())
+    return list(matches)
