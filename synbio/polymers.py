@@ -39,7 +39,7 @@ class Polymer(IPolymer):
         return self.seq
 
     def __eq__(self, other: SeqType) -> bool:
-        return self.seq.upper() == other
+        return str(self).casefold() == str(other).casefold()
 
     def __len__(self) -> int:
         return len(self.seq)
