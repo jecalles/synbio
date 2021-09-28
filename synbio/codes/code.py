@@ -167,9 +167,9 @@ class Code(dict):
             rev_dict[aa] for aa in prot_seq
         )
 
-    def recode(self, gene: SeqType, gene_encoding: Optional[CodeType] = None) \
-            -> \
-            str:
+    def recode(
+            self, gene: SeqType, gene_encoding: Optional[CodeType] = None
+    ) -> str:
         """
         A method used to recode an input sequence, given an
         initial genetic code, into an RNA sequence in this genetic code.

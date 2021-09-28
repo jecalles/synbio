@@ -56,7 +56,7 @@ def find_overhangs(
         new_matrix = np.copy(item.dist_matrix)
         new_matrix[:ix, ix] = distances
 
-        new_score = -np.linalg.norm(new_matrix)
+        new_score = -np.linalg.norm(new_matrix) # TODO: update scoring alg.
         new_vals = item.overhangs + [new_val]
         return OverhangSet(
             new_score, next(counter), new_matrix, new_vals

@@ -24,10 +24,9 @@ __all__ = [
     #############
     # functions #
     #############
-    "get_codons", "reverse_complement",
+    "get_codons", "reverse_complement", "is_palindrome",
     "all_single_mutations", "mutation_pairs"
 ]
-
 
 ###############
 # definitions #
@@ -36,19 +35,19 @@ __all__ = [
 dNTPs = ['T', 'C', 'A', 'G']
 rNTPs = ['U', 'C', 'A', 'G']
 nonstandard_NTPs = [
-    'I', # Inosine
-    'R', # A/G/I (puRine)
-    'Y', # C/T/U (pYrimidine)
-    'K', # G/T/U (have Ketone groups)
-    'M', # A/C (have aMino groups)
-    'S', # C/G (Strong interaction)
-    'W', # A/T (Weak interaction)
-    'B', # NOT A (e.g., C, G, T, or U)
-    'D', # NOT C (e.g., A, G, T, or U)
-    'H', # NOT G (e.g., A, C, T, or U)
-    'V', # NOT T/U (e.g., A, C, or G)
-    'N', # any (e.g., A, C, T, G, or U)
-    '-', # gap / no nucleic acid
+    'I',  # Inosine
+    'R',  # A/G/I (puRine)
+    'Y',  # C/T/U (pYrimidine)
+    'K',  # G/T/U (have Ketone groups)
+    'M',  # A/C (have aMino groups)
+    'S',  # C/G (Strong interaction)
+    'W',  # A/T (Weak interaction)
+    'B',  # NOT A (e.g., C, G, T, or U)
+    'D',  # NOT C (e.g., A, G, T, or U)
+    'H',  # NOT G (e.g., A, C, T, or U)
+    'V',  # NOT T/U (e.g., A, C, or G)
+    'N',  # any (e.g., A, C, T, G, or U)
+    '-',  # gap / no nucleic acid
 ]
 extended_dNTPs = dNTPs + nonstandard_NTPs
 extended_rNTPs = rNTPs + nonstandard_NTPs
@@ -58,13 +57,13 @@ aminoacids = [
     'W', 'T', 'N', 'Q', 'D', 'E', 'R', 'H', 'K', '*'
 ]
 nonstandard_aminoacids = [
-    'B', # Asp or Asn
-    'J', # Leu or Ile
-    'O', # Pyr / Pyrrolysine
-    'U', # Sel / Selenocysteine
-    'Z', # Glu or Gln
-    'X', # any amino acid
-    '-', # gap / no amino acid
+    'B',  # Asp or Asn
+    'J',  # Leu or Ile
+    'O',  # Pyr / Pyrrolysine
+    'U',  # Sel / Selenocysteine
+    'Z',  # Glu or Gln
+    'X',  # any amino acid
+    '-',  # gap / no amino acid
 ]
 extended_aminoacids = aminoacids + nonstandard_aminoacids
 # define polar requirement scale
@@ -165,10 +164,11 @@ nonstandard_basepairing = {
 extended_dna_basepairing = {**dna_basepairing, **nonstandard_basepairing}
 extended_rna_basepairing = {**rna_basepairing, **nonstandard_basepairing}
 
+
 # define all pairs of codons 1 mutation away
 def all_single_mutations(codon, NTPs):
     return set(
-        codon[:i] + nt + codon[i+1:]
+        codon[:i] + nt + codon[i + 1:]
         for i, base in enumerate(codon)
         for nt in NTPs if not nt == base
     )
@@ -180,10 +180,12 @@ def mutation_pairs(codons, NTPs):
         for codon in codons
     }
 
+
 triplet_rna_mut_pairs = mutation_pairs(triplet_rna_codons, rNTPs)
 quadruplet_rna_mut_pairs = mutation_pairs(quadruplet_rna_codons, rNTPs)
 triplet_dna_mut_pairs = mutation_pairs(triplet_dna_codons, dNTPs)
 quadruplet_dna_mut_pairs = mutation_pairs(quadruplet_dna_codons, dNTPs)
+
 
 #############
 # functions #
@@ -216,7 +218,12 @@ def get_codons(seq: SeqType, n=3) -> List[SeqType]:
 
 
 def reverse_complement(seq: SeqType,
-                       complement: Dict[str, str] = dna_basepairing):
+                       complement: Dict[str, str] = dna_basepairing) -> str:
     return ''.join(
         complement[nt] for nt in seq[::-1]
     )
+
+
+def is_palindrome(seq: SeqType) -> bool:
+    comp_seq = seq.casefold()
+    return comp_seq == comp_seq[::-1]
