@@ -182,8 +182,7 @@ class NucleicAcid(Polymer):
         if isinstance(key, str):
             if isinstance(self.annotations[key].location, list):
                 slice_ = [
-                    loc.to_slice()
-                    for loc in self.annotations[key].location
+                    loc.to_slice() for loc in self.annotations[key].location
                 ]
             else:
                 slice_ = self.annotations[key].location.to_slice()
@@ -194,7 +193,7 @@ class NucleicAcid(Polymer):
             # shortcircuit - if REV strand, return rev comp
             if key.strand == "REV":
                 return utils.reverse_complement(
-                    self.seq.__getitem__(slice_), self.basepairing()
+                    self.seq[slice_], self.basepairing()
                 )
         else:
             slice_ = key
@@ -202,7 +201,7 @@ class NucleicAcid(Polymer):
         if isinstance(slice_, list):
             return reduce(
                 lambda x, y: x+y,
-                [super().__getitem__(s) for s in slice_]
+                [self[s] for s in slice_]
             )
         else:
             return super().__getitem__(slice_)

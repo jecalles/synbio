@@ -136,6 +136,14 @@ class TestDNA:
         assert x.annotations != y.annotations
 
 
+    def test_circular_get_item(self):
+        dna = DNA("AAAAATTTTTCCCCCGGGGG")
+        _ = Part(seq=dna, name="test_part",
+                 location=[Location(15, 20), Location(0, 5)])  # GGGGGAAAAA
+
+        assert dna["test_part"] == "GGGGGAAAAA"
+
+
     def test_add(self):
         dna1 = DNA("AAAATTTT")
         part1 = Part(seq=dna1, location=Location(0, 4))

@@ -171,11 +171,10 @@ class TestPart:
 
     def test_circular_seq(self):
         dna = ("AAAAATTTTTCCCCCGGGGG")
-        part1 = Part(seq=dna, location=Location(4, 12))             # AATTTTTCC
-        part2 = Part(seq=dna,
+        part = Part(seq=dna,
                      location=[Location(15, 20), Location(0, 5)])   # GGGGGAAAAA
 
-        assert part2.seq == "GGGGGAAAAA"
+        assert part.seq == "GGGGGAAAAA"
 
 
 if __name__ == '__main__':
