@@ -169,6 +169,14 @@ class TestPart:
         assert part4.seq == "CGAATTCC"
         assert part4.location == Location(2, 10)
 
+    def test_circular_seq(self):
+        dna = ("AAAAATTTTTCCCCCGGGGG")
+        part1 = Part(seq=dna, location=Location(4, 12))             # AATTTTTCC
+        part2 = Part(seq=dna,
+                     location=[Location(15, 20), Location(0, 5)])   # GGGGGAAAAA
+
+        assert part2.seq == "GGGGGAAAAA"
+
 
 if __name__ == '__main__':
     TestPart().test_DNA_integration()

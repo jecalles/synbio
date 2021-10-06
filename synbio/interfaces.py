@@ -138,7 +138,7 @@ class ILocation(ABC, ComparableMixin):
         raise NotImplementedError
 
 
-LocationType = TypeVar("LocationType", int, slice, ILocation)
+LocationType = TypeVar("LocationType", int, slice, ILocation, List[ILocation])
 IndexType = TypeVar("IndexType", str, LocationType)
 
 

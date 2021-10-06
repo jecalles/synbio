@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from typing import Dict, List, Optional
+from functools import reduce
 
 from synbio import utils
 from synbio.codes import Code, CodeType
@@ -179,7 +180,13 @@ class NucleicAcid(Polymer):
 
     def __getitem__(self, key: IndexType) -> "Own Type":
         if isinstance(key, str):
-            slice_ = self.annotations[key].location.to_slice()
+            if isinstance(self.annotations[key].location, list):
+                slice_ = [
+                    loc.to_slice()
+                    for loc in self.annotations[key].location
+                ]
+            else:
+                slice_ = self.annotations[key].location.to_slice()
 
         elif isinstance(key, ILocation):
             slice_ = key.to_slice()
@@ -192,7 +199,13 @@ class NucleicAcid(Polymer):
         else:
             slice_ = key
 
-        return super().__getitem__(slice_)
+        if isinstance(slice_, list):
+            return reduce(
+                lambda x, y: x+y,
+                [super().__getitem__(s) for s in slice_]
+            )
+        else:
+            return super().__getitem__(slice_)
 
     def __setitem__(self, key: IndexType, value: SeqType) -> None:
         length_change = len(value) - len(self[key])

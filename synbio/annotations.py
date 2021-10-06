@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+from functools import reduce
 from typing import Any, Dict, List, Optional, Sequence
 from uuid import uuid4
 
@@ -14,8 +15,8 @@ __all__ = [
 
 class Location(ILocation):
     """
-    A class used to specify a location on a NucleicAcid, as well as a
-    strand (FWD or REV
+    A class used to specify a location on a SeqType, as well as a
+    strand--FWD or REV for NucleicAcids, FWD by default for all other types.
     """
     def __init__(self, start: int, end: int, strand: str = "FWD") -> None:
         # check that start and end positions are valid
@@ -177,7 +178,7 @@ class Part(IPart):
     def __init__(
             self,
             seq: Optional[SeqType] = None,
-            location: Optional[Location] = None,
+            location: Optional[LocationType] = None,
             name: Optional[str] = None,
             kind: Optional[str] = None,
             metadata: Optional[Dict[str, Any]] = None
@@ -242,14 +243,21 @@ class Part(IPart):
             '_seq_id', 'location', 'name', 'kind', 'metadata'
         ]
 
+    def _seq_index(self, loc: LocationType):
+        try:
+            return self._seq_reference[loc]
+        except TypeError:
+            return self._seq_reference[loc.to_slice()]
+
     @property
     def seq(self) -> SeqType:
-        try:
-            # prefer slicing directly with location, if seq is strand savvy
-            return self._seq_reference[self.location]
-        except TypeError:
-            # default to using location.to_slice()
-            return self._seq_reference[self.location.to_slice()]
+        if isinstance(self.location, list):
+            return reduce(
+                lambda x, y: x+y,
+                [self._seq_index(loc) for loc in self.location]
+            )
+        else:
+            return self._seq_index(self.location)
 
     @seq.setter
     def seq(self, value: SeqType) -> None:
