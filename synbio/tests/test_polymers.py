@@ -135,6 +135,32 @@ class TestDNA:
         assert len(y.annotations) == 1
         assert x.annotations != y.annotations
 
+
+    def test_add(self):
+        dna1 = DNA("AAAATTTT")
+        part1 = Part(seq=dna1, location=Location(0, 4))
+        part2 = Part(seq=dna1, location=Location(4, 8))
+
+        dna2 = DNA("CCCCGGGG")
+        part3 = Part(seq=dna2, location=Location(0, 4))
+        part4 = Part(seq=dna2, location=Location(4, 8))
+
+        dna3 = dna1 + dna2
+
+        assert dna3 == "AAAATTTTCCCCGGGG"
+
+        assert part1.seq == "AAAA"
+        assert part1.location == Location(0, 4)
+
+        assert part2.seq == "TTTT"
+        assert part2.location == Location(4, 8)
+
+        assert part3.seq == "CCCC"
+        assert part3.location == Location(8, 12)
+
+        assert part4.seq == "GGGG"
+        assert part4.location == Location(12, 16)
+
     def test_central_dogma(self):
         gfp_str = "ATGAGTAAAGGAGAAGAACTTTTCACTGGAGTTGTCCCAATTCTTGTTGAA" \
                   "TTAGATGGTGATGTTAATGGGCACAAATTTTCTGTCAGTGGAGAGGGTGAA" \

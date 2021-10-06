@@ -41,6 +41,9 @@ class Polymer(IPolymer):
     def __eq__(self, other: SeqType) -> bool:
         return str(self).casefold() == str(other).casefold()
 
+    def __add__(self, other: SeqType) -> Polymer:
+        return self.__class__(''.join([str(self), str(other)]))
+
     def __len__(self) -> int:
         return len(self.seq)
 
@@ -222,6 +225,23 @@ class NucleicAcid(Polymer):
 
         super().__delitem__(slice_)
         self.update_annotations(slice_, length_change)
+
+    def __add__(self, other: NucleicAcid) -> NucleicAcid:
+        new_seq = super().__add__(other)
+        new_annotations = dict(self.annotations)
+
+        self_length = len(self)
+
+        for key, part in dict(other.annotations).items():
+            part._seq_reference = new_seq
+            part.location = part.location.offset(self_length)
+
+            new_annotations[key] = part
+
+        new_seq.annotations = new_annotations
+
+        return new_seq
+
 
     def insert(self, key: int, value: SeqType) -> None:
         """
