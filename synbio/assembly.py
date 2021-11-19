@@ -7,6 +7,7 @@ from queue import PriorityQueue
 import numpy as np
 
 from synbio.interfaces import SeqType
+from synbio.utils import reverse_complement
 
 
 @dataclass(order=True)
@@ -20,10 +21,15 @@ class OverhangSet:
 # TODO: write tests
 def get_overhangs(seq, L=4):
     # TODO: write docstring
-    return set(
+    all_overhangs = set(
         str(seq[i:i + L])
         for i in range(len(seq) - L + 1)
     )
+    minus_self_complimentary = set(
+        overhang for overhang in all_overhangs
+        if overhang != reverse_complement(overhang)
+    )
+    return minus_self_complimentary
 
 
 def find_overhangs(
@@ -48,13 +54,13 @@ def find_overhangs(
             new_val: SeqType,
             counter: Iterator[int]
     ) -> OverhangSet:
-        ix = len(item.overhangs)
+        matrix_ix = len(item.overhangs)
         distances = [
             sum(char1 != char2 for char1, char2 in zip(new_val, val))
             for val in item.overhangs
         ]
         new_matrix = np.copy(item.dist_matrix)
-        new_matrix[:ix, ix] = distances
+        new_matrix[:matrix_ix, matrix_ix] = distances
 
         new_score = -np.linalg.norm(new_matrix) # TODO: update scoring alg.
         new_vals = item.overhangs + [new_val]
@@ -99,7 +105,7 @@ def find_overhangs(
             # recursive case: partial solution is incomplete
             new_items = (
                 _get_new_item(item, new_val, item_count)
-                for new_val in overhangs_per_region[curr_region]
+                for ix, new_val in enumerate(overhangs_per_region[curr_region])
                 if new_val not in item.overhangs
             )
             for it in new_items:
