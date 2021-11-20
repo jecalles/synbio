@@ -1,2 +1,5 @@
 numpy
 biopython
+
+Pint
+setuptools
