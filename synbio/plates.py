@@ -3,8 +3,9 @@ from dataclasses import dataclass
 import itertools
 
 import numpy as np
-import pint; u = pint.UnitRegistry()
+import pint
 
+from synbio.units import unit_registry as u
 from synbio.reagents import Reagent
 
 
@@ -44,12 +45,15 @@ class Well:
 
     @volume.setter
     def volume(self, v: pint.Quantity) -> None:
-        if v > self.max_vol:
+        vol = v.magnitude * u.Unit(v.units)
+        if vol > self.max_vol:
             raise ValueError(
-                f"set volume exceeds max well volume: ({self.max_vol})"
+                f"set volume exceeds max well volume ({self.max_vol})"
             )
-        else:
-            self._vol = v
+        elif vol < 0:
+            raise ValueError(f"set volume is less than zero {vol}")
+
+        self._vol = vol
 
 
 class Plate:

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 import pint
 
-
 __all__ = [
     "Reagent", "PureReagent", "Mixture"
 ]
@@ -12,8 +11,8 @@ __all__ = [
 class Reagent:
     name: str
 
-    def __str__(self):
-        return self.name
+    def __hash__(self):
+        return hash(self.name)
 
 
 @dataclass
@@ -41,4 +40,3 @@ class Mixture(Reagent):
     @property
     def components(self) -> List[Reagent]:
         return list(self.recipe.keys())
-
