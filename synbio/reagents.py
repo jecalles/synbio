@@ -1,10 +1,11 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 from dataclasses import dataclass
 
-import pint
-
 __all__ = [
-    "Reagent", "PureReagent", "Mixture"
+    # dataclasses
+    "Reagent", "Mixture",
+    # constants
+    "PURE"
 ]
 
 @dataclass
@@ -13,11 +14,6 @@ class Reagent:
 
     def __hash__(self):
         return hash(self.name)
-
-
-@dataclass
-class PureReagent(Reagent):
-    molar_mass: Optional[pint.Quantity] = None
 
 
 @dataclass
@@ -40,3 +36,16 @@ class Mixture(Reagent):
     @property
     def components(self) -> List[Reagent]:
         return list(self.recipe.keys())
+
+# Constants
+pure_reagents = {
+    name: Reagent(name)
+    for name in "Sol_A Sol_B DNA RNase_Inh H20".split()
+}
+PURE = Mixture(name="PURE", recipe={
+    pure_reagents['Sol_A']: 4,
+    pure_reagents['Sol_B']: 3,
+    pure_reagents['DNA']: 1,
+    pure_reagents['RNase_Inh']:1,
+    pure_reagents['H20']: 1
+})

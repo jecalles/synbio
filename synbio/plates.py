@@ -1,17 +1,18 @@
-from typing import List, Tuple, Dict, Optional
-from dataclasses import dataclass
 import itertools
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+import pandas as pd
 import pint
 
+from synbio.reagents import Mixture, Reagent
 from synbio.units import unit_registry as u
-from synbio.reagents import Reagent
-
 
 __all__ = [
     # Dataclasses
     "Well", "Plate",
+    "ExperimentalCondition", "Experiment",
     # Functions
     "make_96_well",
     "make_384_well", "make_384_ldv_well",
@@ -206,3 +207,20 @@ def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
     dead_vol = 1 * u.uL
 
     return Plate(name, shape, max_vol, dead_vol)
+
+
+@dataclass
+class ExperimentalCondition:
+    name: str
+    content: Mixture
+    replicates: int = 3
+    volume: pint.Quantity = 1 * u.uL
+
+
+@dataclass
+class Experiment:
+    source_plate: Plate
+    dest_plate: Plate
+    experiments: List[ExperimentalCondition]
+    name_map: Dict[str, str]
+    data: pd.DataFrame = None

@@ -1,5 +1,5 @@
 numpy
-biopython
 
 Pint
 setuptools
+pandas
