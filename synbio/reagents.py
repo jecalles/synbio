@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from dataclasses import dataclass
 
 __all__ = [
@@ -12,23 +12,8 @@ __all__ = [
 class Reagent:
     name: str
 
-    def __post_init__(self):
-        self._recipe = None
-
     def __hash__(self):
-        return hash((self.name, self._recipe))
-
-    @property
-    def recipe(self) -> Dict['OwnType', float]:
-        """
-        A "recipe" is a component list with nondimensional units
-        """
-        if self._recipe is None:
-            rec = {self: 1}
-        else:
-            rec = self._recipe
-
-        return rec
+        return hash(self.name)
 
 
 @dataclass
@@ -46,10 +31,12 @@ class Mixture(Reagent):
         'H20'       : 1,
     }
     """
-    _recipe: Dict[Reagent, float]
+    recipe: Dict[Reagent, float]
 
-    def __post_init__(self):
-        pass
+    @property
+    def components(self) -> List[Reagent]:
+        return list(self.recipe.keys())
+
 # Constants
 pure_reagents = {
     name: Reagent(name)
