@@ -1,4 +1,5 @@
 import itertools
+from math import prod
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
@@ -55,6 +56,18 @@ class Well:
             raise ValueError(f"set volume is less than zero {vol}")
 
         self._vol = vol
+
+    @property
+    def recipe(self) -> Dict[Reagent, pint.Quantity]:
+        rec = self.content.recipe
+
+        total = sum(rec.values())
+        vol_factor = cond.volume / total * cond.replicates
+
+        return {
+            reagent: num * vol_factor
+            for reagent, num in recipe.items()
+        }
 
 
 class Plate:
@@ -142,6 +155,28 @@ class Plate:
                 f"self.well_volumes = {self.well_volumes} \n"
             )
 
+    @property
+    def num_wells(self) -> int:
+        return prod(self.shape)
+
+
+    @property
+    def empty_wells(self) -> Dict[str, Well]:
+        return {
+            name: well
+            for name, well in self.dict.items()
+            if well.volume == 0 * u.uL
+        }
+
+    @property
+    def full_wells(self) -> Dict[str, Well]:
+        empty = self.empty_wells.keys()
+        return {
+            name: well
+            for name, well in self.dict.items()
+            if name not in empty
+        }
+
     @staticmethod
     def get_row_names(num_rows: int) -> List[str]:
 
@@ -162,6 +197,22 @@ class Plate:
     def get_col_names(num_cols: int) -> List[str]:
         return list(str(i + 1) for i in range(num_cols))
 
+
+@dataclass
+class ExperimentalCondition:
+    name: str
+    content: Mixture
+    replicates: int = 3
+    volume: pint.Quantity = 1 * u.uL
+
+
+@dataclass
+class Experiment:
+    source_plate: Plate
+    dest_plate: Plate
+    experiments: List[ExperimentalCondition]
+    name_map: Dict[str, str]
+    data: pd.DataFrame = None
 
 # Functions
 def make_96_well(name: Optional[str] = None) -> Plate:
@@ -209,18 +260,3 @@ def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
     return Plate(name, shape, max_vol, dead_vol)
 
 
-@dataclass
-class ExperimentalCondition:
-    name: str
-    content: Mixture
-    replicates: int = 3
-    volume: pint.Quantity = 1 * u.uL
-
-
-@dataclass
-class Experiment:
-    source_plate: Plate
-    dest_plate: Plate
-    experiments: List[ExperimentalCondition]
-    name_map: Dict[str, str]
-    data: pd.DataFrame = None
