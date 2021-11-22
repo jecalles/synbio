@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 from dataclasses import dataclass
 
 __all__ = [
@@ -8,12 +8,28 @@ __all__ = [
     "PURE"
 ]
 
+
 @dataclass
 class Reagent:
     name: str
 
+    def __post_init__(self):
+        self._recipe = None
+
     def __hash__(self):
-        return hash(self.name)
+        return hash((self.name, self._recipe))
+
+    @property
+    def recipe(self) -> Dict['OwnType', float]:
+        """
+        A "recipe" is a component list with nondimensional units
+        """
+        if self._recipe is None:
+            rec = {self: 1}
+        else:
+            rec = self._recipe
+
+        return rec
 
 
 @dataclass
@@ -31,21 +47,18 @@ class Mixture(Reagent):
         'H20'       : 1,
     }
     """
-    recipe: Dict[Reagent, float]
-
-    @property
-    def components(self) -> List[Reagent]:
-        return list(self.recipe.keys())
+    _recipe: Dict[Reagent, float]
+    def __post_init__(self): pass
 
 # Constants
 pure_reagents = {
     name: Reagent(name)
-    for name in "Sol_A Sol_B DNA RNase_Inh H20".split()
+    for name in "Sol-A Sol-B DNA RNase-Inh H20".split()
 }
-PURE = Mixture(name="PURE", recipe={
-    pure_reagents['Sol_A']: 4,
-    pure_reagents['Sol_B']: 3,
+PURE = Mixture(name="PURE", _recipe={
+    pure_reagents['Sol-A']: 4,
+    pure_reagents['Sol-B']: 3,
     pure_reagents['DNA']: 1,
-    pure_reagents['RNase_Inh']:1,
+    pure_reagents['RNase-Inh']:1,
     pure_reagents['H20']: 1
 })
