@@ -62,11 +62,11 @@ class Well:
         rec = self.content.recipe
 
         total = sum(rec.values())
-        vol_factor = cond.volume / total * cond.replicates
+        vol_factor = self.volume / total
 
         return {
             reagent: num * vol_factor
-            for reagent, num in recipe.items()
+            for reagent, num in rec.items()
         }
 
 
