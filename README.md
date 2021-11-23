@@ -6,7 +6,10 @@ This is a homebrewed package for doing synthetic biology. It provides Python cla
 There is none, yet. Email me (callesjonathan@gmail.com) if you have questions
 
 ## Dependencies
-Requires ![numpy](https://numpy.org/doc/stable/). Well, only if you want to do automated gene assembly. All the core code is written in pure Python. Future refactoring will split the codebase into pure Python and external-module-dependent packages.
+- ![numpy](https://numpy.org/doc/stable/): numerical package
+- ![pandas](https://pandas.pydata.org/docs/user_guide/index.html): data storage, manipulation, and representation
+- ![biopython](https://biopython.org/): bioinformatics / general purpose biology package
+- ![pint](https://pint.readthedocs.io/en/stable/): handles units and dimensional analysis
 
 ## Installation
 synbio is hosted on PyPi; you can install it using pip:
