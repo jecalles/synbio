@@ -13,9 +13,9 @@ There is none, yet. Email me (callesjonathan@gmail.com) if you have questions
 
 ## Installation
 synbio is hosted on PyPi; you can install it using pip:
-'''
+```python
 pip install synbio-tooling
-'''
+```
 
 or, if you'd like to install the bleeding edge version directly from GitHub, run the following commands:
 
