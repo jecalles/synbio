@@ -43,7 +43,7 @@ class Well:
 
     @property
     def volume(self) -> pint.Quantity:
-        return self._vol
+        return np.round(self._vol, decimals=4)
 
     @volume.setter
     def volume(self, v: pint.Quantity) -> None:
@@ -58,6 +58,14 @@ class Well:
         self._vol = vol
 
     @property
+    def available_vol(self) -> pint.Quantity:
+        return max(
+            np.round(self.volume - self.dead_vol, decimals=4),
+            0 * u.uL
+        )
+
+
+    @property
     def recipe(self) -> Dict[Reagent, pint.Quantity]:
         rec = self.content.recipe
 
@@ -65,7 +73,7 @@ class Well:
         vol_factor = self.volume / total
 
         return {
-            reagent: num * vol_factor
+            reagent: np.round(num * vol_factor, decimals=4)
             for reagent, num in rec.items()
         }
 
