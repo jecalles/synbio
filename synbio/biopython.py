@@ -46,6 +46,7 @@ def get_features_by_key(record, key="gene"):
     """
     A function that filters Biopython SeqRecord.features by key
     """
+
     # TODO: docstring
 
     def feat_name(feat):

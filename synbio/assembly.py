@@ -1,8 +1,8 @@
-from typing import List, Iterator
 from dataclasses import dataclass
 from itertools import count
 from math import prod
 from queue import PriorityQueue
+from typing import Iterator, List
 
 import numpy as np
 
@@ -62,7 +62,7 @@ def find_overhangs(
         new_matrix = np.copy(item.dist_matrix)
         new_matrix[:matrix_ix, matrix_ix] = distances
 
-        new_score = -np.linalg.norm(new_matrix) # TODO: update scoring alg.
+        new_score = -np.linalg.norm(new_matrix)  # TODO: update scoring alg.
         new_vals = item.overhangs + [new_val]
         return OverhangSet(
             new_score, next(counter), new_matrix, new_vals

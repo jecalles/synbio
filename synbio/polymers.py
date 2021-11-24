@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import MutableSequence
-
 from abc import abstractmethod
-from typing import Dict, List, Optional
 from functools import reduce
+from typing import Dict, List, Optional
 
 from synbio import utils
 from synbio.codes import Code, CodeType
@@ -32,6 +30,7 @@ class Polymer(IPolymer):
     XNA(XXYYZZ)
     >>> XNA("AATTCCGG") # raises ValueError("input value not in XNA alphabet")
     """
+
     def __init__(self, seq: SeqType = '') -> None:
         self.seq = str(self._seq_check(seq))
 
@@ -157,6 +156,7 @@ class NucleicAcid(Polymer):
     XNA(XXYYZZ)
     >>> XNA("AATTCCGG") #raises ValueError("input value not in XNA alphabet")
     """
+
     def __init__(self,
                  seq: SeqType = "",
                  annotations: Optional[Dict[str, IPart]] = None) -> None:
@@ -202,7 +202,7 @@ class NucleicAcid(Polymer):
 
         if isinstance(slice_, list):
             return reduce(
-                lambda x, y: x+y,
+                lambda x, y: x + y,
                 [self[s] for s in slice_]
             )
         else:
@@ -255,7 +255,6 @@ class NucleicAcid(Polymer):
         new_seq.annotations = new_annotations
 
         return new_seq
-
 
     def insert(self, key: int, value: SeqType) -> None:
         """
@@ -337,6 +336,7 @@ class DNA(NucleicAcid):
     """
     A class used to represent DNA
     """
+
     def alphabet(self) -> List[str]:
         return utils.dNTPs
 
@@ -354,6 +354,7 @@ class RNA(NucleicAcid):
     """
     A class used to represent RNA
     """
+
     def alphabet(self) -> List[str]:
         return utils.rNTPs
 
@@ -371,6 +372,7 @@ class Protein(Polymer):
     """
     A class used to represent Proteins
     """
+
     def alphabet(self) -> List[str]:
         return utils.aminoacids
 

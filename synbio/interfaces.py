@@ -38,6 +38,7 @@ class ComparableMixin:
     A Mixin class that automatically provides an equality comparison method.
     Requires concrete implementation of _comparables method
     """
+
     @abstractmethod
     def _comparables(self) -> List[str]:
         """
@@ -69,6 +70,7 @@ class ComparableMixin:
             for comp in self._comparables()
         )
 
+
 class HashableMixin(ComparableMixin):
     """
     A Mixin class that extends ComparableMixin to provide both equality and
@@ -87,6 +89,7 @@ class HashableMixin(ComparableMixin):
     >>> bobby = Foo(3, 4, "just_ignored")
     >>> {foo: foo.val_c for foo in [alice, bobby]} # works!
     """
+
     def __hash__(self) -> int:
         return hash(
             (getattr(self, comp) for comp in self._comparables())
@@ -196,4 +199,3 @@ class IPart(ABC, ComparableMixin):
     @abstractmethod
     def update_location(self, key, length_change):
         raise NotImplementedError
-

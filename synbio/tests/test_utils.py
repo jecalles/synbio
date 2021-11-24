@@ -5,9 +5,10 @@ from synbio.utils import *
 def test_utils():
     pass
 
+
 def test_find_subseq():
     seq_to_search = "xxXatATaTxXatatxx"
-    subseq_to_find = "atat"     # search is NOT case sensitive
+    subseq_to_find = "atat"  # search is NOT case sensitive
 
     subseq_ix = find_subseq(seq_to_search, subseq_to_find)
     assert subseq_ix == [

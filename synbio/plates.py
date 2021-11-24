@@ -1,9 +1,8 @@
 import itertools
-from math import prod
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
-
 from datetime import date
+from math import prod
+from typing import Dict, List, Optional, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -51,7 +50,6 @@ class Well:
 
         self.vol = vol
 
-
     @property
     def working_vol(self) -> pint.Quantity:
         """
@@ -64,7 +62,6 @@ class Well:
             0 * u.uL
         )
 
-
     @property
     def available_vol(self) -> pint.Quantity:
         """
@@ -75,7 +72,6 @@ class Well:
             np.round(self.volume - self.dead_vol, decimals=4),
             0 * u.uL
         )
-
 
     @property
     def recipe(self) -> Dict[Reagent, pint.Quantity]:
@@ -92,7 +88,7 @@ class Well:
 
 class Plate:
     def __init__(
-            self, name: str, shape:Tuple[int, int],
+            self, name: str, shape: Tuple[int, int],
             max_vol: pint.Quantity, dead_vol: pint.Quantity
     ):
         self.name = name
@@ -167,7 +163,7 @@ class Plate:
         }
 
     @well_volumes.setter
-    def well_volumes(self, volumes: Dict[str, pint.Quantity]) ->None:
+    def well_volumes(self, volumes: Dict[str, pint.Quantity]) -> None:
         if all(
                 x not in {'max_vol', 'dead_vol', 'working_vol'}
                 for x in volumes.keys()
@@ -189,7 +185,6 @@ class Plate:
     @property
     def num_wells(self) -> int:
         return prod(self.shape)
-
 
     @property
     def empty_wells(self) -> Dict[str, Well]:
@@ -229,6 +224,9 @@ class Plate:
         return list(str(i + 1) for i in range(num_cols))
 
 
+PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], str)
+
+
 @dataclass
 class ExperimentalCondition:
     name: str
@@ -242,10 +240,11 @@ class Experiment:
     name: str
     source_plate: Plate
     dest_plate: Plate
-    experiments: List[ExperimentalCondition]
+    conditions: List[ExperimentalCondition]
     name_map: Dict[str, str]
     data: pd.DataFrame = None
     date: date = date.today()
+
 
 # Functions
 def make_96_well(name: Optional[str] = None) -> Plate:
@@ -281,7 +280,6 @@ def make_384_ldv_well(name: Optional[str] = None) -> Plate:
     return Plate(name, shape, max_vol, dead_vol)
 
 
-
 def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
     if name is None:
         name = "1536LDV"
@@ -291,5 +289,3 @@ def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
     dead_vol = 1 * u.uL
 
     return Plate(name, shape, max_vol, dead_vol)
-
-

@@ -1,7 +1,7 @@
 import itertools
 from typing import Dict, List, Union
 
-from synbio.interfaces import SeqType, LocationType
+from synbio.interfaces import LocationType, SeqType
 
 # define scope of package
 __all__ = [
@@ -248,7 +248,8 @@ def find_subseq(seq: SeqType, subseq: SeqType) -> List[LocationType]:
 
     seq_len = len(seq)
     subseq_len = len(subseq)
-    all_substrings = (seq[ix:ix+subseq_len] for ix in range(seq_len-subseq_len+1))
+    all_substrings = (seq[ix:ix + subseq_len] for ix in
+                      range(seq_len - subseq_len + 1))
     matches = (slice(ix, ix + subseq_len) for ix, sub in enumerate(
         all_substrings) if str(sub).casefold() == str(subseq).casefold())
     return list(matches)

@@ -1,5 +1,5 @@
-from typing import Dict
 from dataclasses import dataclass
+from typing import Dict
 
 __all__ = [
     # dataclasses
@@ -48,6 +48,7 @@ class Mixture(Reagent):
         'H20'       : 1,
     }
     """
+
     def __init__(self, name: str, recipe: Dict[Reagent, float]):
         super().__init__(name)
         self._recipe = recipe
@@ -71,6 +72,6 @@ PURE = Mixture(name="PURE", recipe={
     pure_reagents['Sol-A']: 4,
     pure_reagents['Sol-B']: 3,
     pure_reagents['DNA']: 1,
-    pure_reagents['RNase-Inh']:1,
+    pure_reagents['RNase-Inh']: 1,
     pure_reagents['H20']: 1
 })

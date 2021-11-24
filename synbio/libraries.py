@@ -1,14 +1,13 @@
 from functools import partial
-from typing import Dict, Iterable, Optional, Callable, Any
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from synbio import utils
-from synbio.annotations import Part
+from synbio.annotations import Location, Part
 from synbio.codes import CodeType
 from synbio.codes.functions import get_synonymous_codons
 from synbio.codes.wrappers import codesavvy
 from synbio.interfaces import SeqType
 from synbio.polymers import DNA, Polymer
-from synbio.annotations import Location
 
 __all__ = [
     # class
@@ -23,6 +22,7 @@ class Library(Part):
     """
     TODO: write docstring
     """
+
     def __init__(
             self,
             base_seq: Optional[SeqType] = None,
@@ -64,6 +64,7 @@ class Library(Part):
     def __iter__(self):
         yield from self.variance
 
+
 #######################
 # variance generators #
 #######################
@@ -80,7 +81,7 @@ def single_synonymous(
     codon_list = utils.get_codons(mRNA)
     # define a generator that returns all single synonymous_variants
     variants = (
-        ''.join(codon_list[:pos] + list(synonym) + codon_list[pos+1:])
+        ''.join(codon_list[:pos] + list(synonym) + codon_list[pos + 1:])
         for pos, codon in enumerate(codon_list)
         for synonym in get_synonymous_codons(codon, code)
     )
@@ -98,11 +99,11 @@ def double_synonymous(
     variants = (
         ''.join(
             codon_list[:ix1] + list(syn1)
-            + codon_list[ix1+1:ix1+ix2+1] + list(syn2)
-            + codon_list[ix1+ix2+2:]
+            + codon_list[ix1 + 1:ix1 + ix2 + 1] + list(syn2)
+            + codon_list[ix1 + ix2 + 2:]
         )
         for ix1, codon1 in enumerate(codon_list)
-        for ix2, codon2 in enumerate(codon_list[ix1+1:])
+        for ix2, codon2 in enumerate(codon_list[ix1 + 1:])
         for syn1 in get_synonymous_codons(codon1, code)
         for syn2 in get_synonymous_codons(codon2, code)
     )
@@ -116,6 +117,7 @@ def single_nonsynonymous(
         codon_frequencies: Optional[Dict[str, float]] = None):
     # TODO: implement
     raise NotImplementedError("function under construction")
+
 
 @codesavvy
 def double_nonsynonymous():

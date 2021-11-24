@@ -27,9 +27,8 @@ class TestPlates:
             dead_vol=dead_vol
         )
 
-
     def test_dict(self):
-        #TODO: write
+        # TODO: write
         # getter
 
         # setter

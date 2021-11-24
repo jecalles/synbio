@@ -1,7 +1,7 @@
 from typing import Dict, Set
 
-from synbio.polymers import SeqType
 from synbio.codes import Code
+from synbio.polymers import SeqType
 
 
 def get_synonymous_codons(codon: SeqType, code: Code) -> Set[str]:

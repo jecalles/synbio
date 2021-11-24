@@ -172,7 +172,7 @@ class TestPart:
     def test_circular_seq(self):
         dna = ("AAAAATTTTTCCCCCGGGGG")
         part = Part(seq=dna,
-                     location=[Location(15, 20), Location(0, 5)])   # GGGGGAAAAA
+                    location=[Location(15, 20), Location(0, 5)])  # GGGGGAAAAA
 
         assert part.seq == "GGGGGAAAAA"
 

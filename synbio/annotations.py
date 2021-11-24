@@ -18,6 +18,7 @@ class Location(ILocation):
     A class used to specify a location on a SeqType, as well as a
     strand--FWD or REV for NucleicAcids, FWD by default for all other types.
     """
+
     def __init__(self, start: int, end: int, strand: str = "FWD") -> None:
         # check that start and end positions are valid
         if not start <= end:
@@ -175,6 +176,7 @@ class Part(IPart):
     A class used to represent an annotation of or an abstraction over
     NucleicAcids (e.g., promoters, genes, terminators, restriction sites, etc.)
     """
+
     def __init__(
             self,
             seq: Optional[SeqType] = None,
@@ -239,7 +241,7 @@ class Part(IPart):
         )
 
     def _comparables(self) -> List[str]:
-        return  [
+        return [
             '_seq_id', 'location', 'name', 'kind', 'metadata'
         ]
 
@@ -253,7 +255,7 @@ class Part(IPart):
     def seq(self) -> SeqType:
         if isinstance(self.location, list):
             return reduce(
-                lambda x, y: x+y,
+                lambda x, y: x + y,
                 [self._seq_index(loc) for loc in self.location]
             )
         else:
