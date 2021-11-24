@@ -3,6 +3,8 @@ from math import prod
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+from datetime import date
+
 import numpy as np
 import pandas as pd
 import pint
@@ -28,22 +30,14 @@ class Well:
     max_vol: pint.Quantity
     dead_vol: pint.Quantity
 
-    _vol: pint.Quantity = 0 * u.uL
+    vol: pint.Quantity = 0 * u.uL
 
     def __str__(self):
         return self.name
 
     @property
-    def working_vol(self) -> pint.Quantity:
-        working_vol = self.max_vol - self.dead_vol
-        if working_vol < 0:
-            raise AttributeError(f"working volume cannot be negative! "
-                                 f"{working_vol}")
-        return working_vol
-
-    @property
     def volume(self) -> pint.Quantity:
-        return np.round(self._vol, decimals=4)
+        return np.round(self.vol, decimals=4)
 
     @volume.setter
     def volume(self, v: pint.Quantity) -> None:
@@ -55,10 +49,28 @@ class Well:
         elif vol < 0:
             raise ValueError(f"set volume is less than zero {vol}")
 
-        self._vol = vol
+        self.vol = vol
+
+
+    @property
+    def working_vol(self) -> pint.Quantity:
+        """
+        A property that returns the maximum transferable volume in a Well,
+        given its max_vol and dead_vol. Working volume is a property of the
+        geometry of the Well
+        """
+        return max(
+            np.round(self.max_vol - self.dead_vol, decimals=4),
+            0 * u.uL
+        )
+
 
     @property
     def available_vol(self) -> pint.Quantity:
+        """
+        A property that returns the total volume in the well that can be
+        transferred, given that wells have dead volume.
+        """
         return max(
             np.round(self.volume - self.dead_vol, decimals=4),
             0 * u.uL
@@ -103,6 +115,17 @@ class Plate:
                 dead_vol=dead_vol
             )
         self.array = array
+
+    def __repr__(self) -> str:
+        cls_ = self.__class__.__name__
+        name = self.name
+        shp = self.shape
+        n_full = len(self.full_wells)
+
+        vols = self.well_volumes
+
+        return f'{cls_}(name="{name}", shape={shp}, {n_full} full wells, ' \
+               f'max_vol={vols["max_vol"]}), dead_vol={vols["dead_vol"]})'
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -216,11 +239,13 @@ class ExperimentalCondition:
 
 @dataclass
 class Experiment:
+    name: str
     source_plate: Plate
     dest_plate: Plate
     experiments: List[ExperimentalCondition]
     name_map: Dict[str, str]
     data: pd.DataFrame = None
+    date: date = date.today()
 
 # Functions
 def make_96_well(name: Optional[str] = None) -> Plate:

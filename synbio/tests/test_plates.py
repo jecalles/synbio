@@ -1,6 +1,5 @@
-import pint; u = pint.UnitRegistry()
-
 from synbio.plates import *
+from synbio.units import unit_registry as u
 
 
 class TestWell:
@@ -17,7 +16,7 @@ class TestWell:
 class TestPlates:
     def test_init(self):
         name = "test_plate"
-        shape = (3, 4) # not a real plate
+        shape = (3, 4)  # not a real plate
         max_vol = 30 * u.uL
         dead_vol = 5 * u.uL
 
