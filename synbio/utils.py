@@ -1,5 +1,5 @@
 import itertools
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from synbio.interfaces import SeqType, LocationType
 
@@ -24,8 +24,11 @@ __all__ = [
     #############
     # functions #
     #############
+    # biology stuff
     "get_codons", "reverse_complement", "is_palindrome", "find_subseq",
-    "all_single_mutations", "mutation_pairs"
+    "all_single_mutations", "mutation_pairs",
+    # python stuff
+    "get_class_name"
 ]
 
 ###############
@@ -249,3 +252,11 @@ def find_subseq(seq: SeqType, subseq: SeqType) -> List[LocationType]:
     matches = (slice(ix, ix + subseq_len) for ix, sub in enumerate(
         all_substrings) if str(sub).casefold() == str(subseq).casefold())
     return list(matches)
+
+
+def get_class_name(obj: Union[object, type]) -> str:
+    return (
+        str(obj.__class__)
+            .split("'")[1]
+            .split('.')[-1]
+    )

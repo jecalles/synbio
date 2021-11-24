@@ -3,18 +3,15 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import abc
 from functools import wraps
-from pathlib import Path
 from typing import List, TypeVar
 
 __all__ = [
     # wrappers
     "compare_same_type",
     # mixins
-    "ComparableMixin",
+    "ComparableMixin", "HashableMixin",
     # annotations
     "ILocation", "IPart", "IPolymer", "LocationType", "IndexType", "SeqType",
-    # # parsers
-    # "IParser", "FileType"
 ]
 
 
@@ -76,6 +73,19 @@ class HashableMixin(ComparableMixin):
     """
     A Mixin class that extends ComparableMixin to provide both equality and
     hash methods, given a class attribute _comparables
+
+    >>> class Foo(HashableMixin):
+    >>>     def __init__(self, a, b, c):
+    >>>         self.val_a = a
+    >>>         self.val_c = c
+    >>>         self.val_b = b
+    >>>
+    >>>     def _comparables(self):
+    >>>         return ['val_a', 'val_b']
+
+    >>> alice = Foo(1, 2, "not_compared")
+    >>> bobby = Foo(3, 4, "just_ignored")
+    >>> {foo: foo.val_c for foo in [alice, bobby]} # works!
     """
     def __hash__(self) -> int:
         return hash(
@@ -86,12 +96,25 @@ class HashableMixin(ComparableMixin):
 ################
 #  Interfaces  #
 ################
-
-
-# polymers
-class IPolymer(abc.MutableSequence, ComparableMixin):
+class IPolymer(abc.MutableSequence, HashableMixin):
     def __init__(self, seq: SeqType = '') -> None:
         self.seq = self._seq_check(seq)
+
+    @abstractmethod
+    def __getitem__(self, key):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __setitem__(self, key, value):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __delitem__(self, key):
+        raise NotImplementedError
+
+    @abstractmethod
+    def insert(self, key, value):
+        raise NotImplementedError
 
     @abstractmethod
     def _seq_check(self, value: SeqType) -> str:
@@ -174,26 +197,3 @@ class IPart(ABC, ComparableMixin):
     def update_location(self, key, length_change):
         raise NotImplementedError
 
-
-# parsers
-
-
-class IParser(ABC):
-    @abstractmethod
-    def read(self, filename: FileType) -> str:
-        pass
-
-    @abstractmethod
-    def write(self, obj: IWriteable, filename: FileType) -> None:
-        pass
-
-    @abstractmethod
-    def write_string(self, obj: IWriteable) -> str:
-        pass
-
-
-FileType = TypeVar("FileType", str, Path)
-
-
-class IWriteable:
-    pass

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import MutableSequence
+
 from abc import abstractmethod
 from typing import Dict, List, Optional
 from functools import reduce
