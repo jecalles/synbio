@@ -6,3 +6,5 @@ __pycache__/
 build/
 synbio_tooling.egg-info
 pyproject.toml
+sandbox/
+
