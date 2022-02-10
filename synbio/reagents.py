@@ -62,7 +62,6 @@ class Mixture(Reagent):
         }
         return f'{cls_}(name="{name}", recipe="{rcp}")'
 
-
 # Constants
 pure_reagents = {
     name: Reagent(name)
