@@ -1,6 +1,8 @@
 import re
 from copy import deepcopy
+from datetime import date
 from functools import reduce
+from itertools import islice
 from math import ceil, prod
 from typing import Dict, List, Tuple
 
@@ -11,13 +13,18 @@ import pint
 from synbio.plates import *
 from synbio.reagents import *
 
+__all__ = [
+    "calc_reagents", "to_wells", "assign_wells",
+    "make_echo_prot", "make_experiment"
+]
 
-def calc_reagents(experiment: Experiment) -> Dict[Reagent, pint.Quantity]:
+
+def calc_reagents(conditions: List[Condition]) -> Dict[Reagent, pint.Quantity]:
     """
     TODO: 1. write docstring 2. move this to plates.Well
     """
 
-    def calc_reagent(cond: ExperimentalCondition) -> Dict[
+    def calc_reagent(cond: Condition) -> Dict[
         Reagent, pint.Quantity]:
         recipe = cond.content.recipe
 
@@ -29,7 +36,7 @@ def calc_reagents(experiment: Experiment) -> Dict[Reagent, pint.Quantity]:
             for reagent, num in recipe.items()
         }
 
-    adj_recipes = [calc_reagent(c) for c in experiment.conditions]
+    adj_recipes = [calc_reagent(c) for c in conditions]
 
     def merge_dict(dict1, dict2):
         dict3 = {**dict1, **dict2}
@@ -42,7 +49,7 @@ def calc_reagents(experiment: Experiment) -> Dict[Reagent, pint.Quantity]:
 
 
 def to_wells(
-        experiment: Experiment,
+        conditions: List[Condition],
         reagents: Dict[Reagent, pint.Quantity],
         source_plate: Plate,
         destination_plate: Plate
@@ -58,7 +65,7 @@ def to_wells(
 
             vol=cond.volume
         )
-        for cond in experiment.conditions
+        for cond in conditions
         for i in range(cond.replicates)
     ]
 
@@ -95,18 +102,22 @@ def to_wells(
     return (source_wells, dest_wells)
 
 
-def assign_wells(plate: Plate, wells: List[Well]) -> Dict[str, str]:
+def assign_wells(
+        plate: Plate, wells: List[Well], offset: int = 0
+) -> Dict[str, str]:
     """
     Modifies plate in place by assigning wells to plate.array. Returns a python dict
     representing a "name_map" to be used
     """
-    if (n_assign := len(wells)) > (n_plate := prod(plate.shape)):
+    if (n_assign := len(wells)) > (n_plate := prod(plate.shape)) - offset:
         raise ValueError(
             f"cannot assign {n_assign} wells to {n_plate} well plate!")
 
+    well_names = islice(plate.dict, offset, None)
+
     well_dict = {
         name: well
-        for name, well in zip(plate.dict, wells)
+        for name, well in zip(well_names, wells)
     }
     plate.dict = well_dict
 
@@ -207,3 +218,21 @@ def make_echo_prot(
         df.to_csv(filename)
 
     return df
+
+def make_experiment(
+        name: str,
+        conditions: List[Condition],
+        src_plate: Plate, dest_plate: Plate,
+        src_plate_offset: int = 0
+) -> Experiment:
+    reagents = calc_reagents(conditions)
+
+    src_wells, dest_wells = to_wells(conditions, reagents, src_plate, dest_plate)
+
+    name_map = assign_wells(dest_plate, dest_wells)
+    _ = assign_wells(src_plate, src_wells, src_plate_offset)
+
+    return Experiment(
+        name=name, source_plate=src_plate, dest_plate=dest_plate,
+        conditions=conditions, name_map=name_map, data=None, date=date.today()
+    )

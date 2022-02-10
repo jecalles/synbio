@@ -14,7 +14,7 @@ from synbio.units import unit_registry as u
 __all__ = [
     # Dataclasses
     "Well", "Plate",
-    "ExperimentalCondition", "Experiment",
+    "Condition", "Experiment",
     # Functions
     "make_96_well",
     "make_384_well", "make_384_ldv_well",
@@ -228,7 +228,7 @@ PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], str)
 
 
 @dataclass
-class ExperimentalCondition:
+class Condition:
     name: str
     content: Mixture
     replicates: int = 3
@@ -240,7 +240,7 @@ class Experiment:
     name: str
     source_plate: Plate
     dest_plate: Plate
-    conditions: List[ExperimentalCondition]
+    conditions: List[Condition]
     name_map: Dict[str, str]
     data: pd.DataFrame = None
     date: date = date.today()
