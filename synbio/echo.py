@@ -5,6 +5,7 @@ from functools import reduce
 from itertools import islice
 from math import ceil, prod
 from typing import Dict, List, Tuple
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -12,43 +13,27 @@ import pint
 
 from synbio.plates import *
 from synbio.reagents import *
+from synbio.experiment import *
 
+"""
+TODO:
+- EchoExperiment
+- read current workflow; propose refactor
+"""
 __all__ = [
-    "calc_reagents", "to_wells", "assign_wells",
+    # dataclasses
+    "EchoExperiment",
+    # functions
+    "calc_reagents", "assign_reagents_to_wells", "update_plates",
     "make_echo_prot", "make_experiment"
 ]
+@dataclass
+class EchoExperiment:
+    "TODO: inherit from base Experiment class; add plates as subfield; add repr"
+    pass
 
 
-def calc_reagents(conditions: List[Condition]) -> Dict[Reagent, pint.Quantity]:
-    """
-    TODO: 1. write docstring 2. move this to plates.Well
-    """
-
-    def calc_reagent(cond: Condition) -> Dict[
-        Reagent, pint.Quantity]:
-        recipe = cond.content.recipe
-
-        total = sum(recipe.values())
-        vol_factor = cond.volume / total * cond.replicates
-
-        return {
-            reagent: num * vol_factor
-            for reagent, num in recipe.items()
-        }
-
-    adj_recipes = [calc_reagent(c) for c in conditions]
-
-    def merge_dict(dict1, dict2):
-        dict3 = {**dict1, **dict2}
-        for key, value in dict3.items():
-            if key in dict1 and key in dict2:
-                dict3[key] = dict1[key] + dict2[key]
-        return dict3
-
-    return reduce(merge_dict, adj_recipes)
-
-
-def to_wells(
+def assign_reagents_to_wells(
         conditions: List[Condition],
         reagents: Dict[Reagent, pint.Quantity],
         source_plate: Plate,
@@ -102,12 +87,15 @@ def to_wells(
     return (source_wells, dest_wells)
 
 
-def assign_wells(
+def update_plates(
         plate: Plate, wells: List[Well], offset: int = 0
 ) -> Dict[str, str]:
     """
     Modifies plate in place by assigning wells to plate.array. Returns a python dict
     representing a "name_map" to be used
+
+
+    TODO: change "offset" to an optional well_dict parameter
     """
     if (n_assign := len(wells)) > (n_plate := prod(plate.shape)) - offset:
         raise ValueError(
@@ -165,8 +153,7 @@ def make_echo_prot(
                 dest_wells.append(dest_loc)
                 src_wells.append(src_loc)
 
-                if (
-                        avail := src_well.available_vol) >= amt:  # there's enough volume
+                if (avail := src_well.available_vol) >= amt:  # there's enough volume
                     sat = True
                     # do transfer
                     xfer = amt
@@ -224,10 +211,11 @@ def make_experiment(
         conditions: List[Condition],
         src_plate: Plate, dest_plate: Plate,
         src_plate_offset: int = 0
-) -> Experiment:
+) -> ExperimentDesign:
     reagents = calc_reagents(conditions)
 
-    src_wells, dest_wells = to_wells(conditions, reagents, src_plate, dest_plate)
+    src_wells, dest_wells = assign_reagents_to_wells(conditions, reagents,
+                                                     src_plate, dest_plate)
 
     name_map = assign_wells(dest_plate, dest_wells)
     _ = assign_wells(src_plate, src_wells, src_plate_offset)

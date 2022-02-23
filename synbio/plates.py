@@ -1,20 +1,17 @@
 import itertools
 from dataclasses import dataclass
-from datetime import date
 from math import prod
 from typing import Dict, List, Optional, Tuple, TypeVar
 
 import numpy as np
-import pandas as pd
 import pint
 
-from synbio.reagents import Mixture, Reagent
+from synbio.reagents import Reagent
 from synbio.units import unit_registry as u
 
 __all__ = [
     # Dataclasses
     "Well", "Plate",
-    "Condition", "Experiment",
     # Functions
     "make_96_well",
     "make_384_well", "make_384_ldv_well",
@@ -33,6 +30,10 @@ class Well:
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}" \
+               f"('{self.name}', {self.volume})"
 
     @property
     def volume(self) -> pint.Quantity:
@@ -226,26 +227,6 @@ class Plate:
 
 PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], str)
 
-
-@dataclass
-class Condition:
-    name: str
-    content: Mixture
-    replicates: int = 3
-    volume: pint.Quantity = 1 * u.uL
-
-
-@dataclass
-class Experiment:
-    name: str
-    source_plate: Plate
-    dest_plate: Plate
-    conditions: List[Condition]
-    name_map: Dict[str, str]
-    data: pd.DataFrame = None
-    date: date = date.today()
-
-
 # Functions
 def make_96_well(name: Optional[str] = None) -> Plate:
     if name is None:
@@ -289,3 +270,4 @@ def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
     dead_vol = 1 * u.uL
 
     return Plate(name, shape, max_vol, dead_vol)
+
