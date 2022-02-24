@@ -1,13 +1,18 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List
 
 __all__ = [
     # dataclasses
-    "Reagent", "Mixture",
+    "Reagent", "Mixture", "ReagentRegistry",
+    # functions
+    "mixtures_from_recipes",
     # constants
-    "PURE"
+    "pure_registry", "PURE"
 ]
 
+"""
+TODO: make ReagentsRegistry class to track reagents during experiment
+"""
 
 @dataclass
 class Reagent:
@@ -62,15 +67,49 @@ class Mixture(Reagent):
         }
         return f'{cls_}(name="{name}", recipe="{rcp}")'
 
+
+    @property
+    def reagents(self) -> List[Reagent]:
+        return [r for r in self.recipe.keys()]
+
+
+class ReagentRegistry(dict):
+    @property
+    def reagents(self) -> List[Reagent]:
+        return [r for r in self.values()]
+
+    def add_by_name(self, names: "str|List[str]") -> "self":
+        """
+        updates self in place from list of new reagent names. returns self
+        """
+        if not isinstance(names, list):
+            names = [names]
+
+        new_dict = {name: Reagent(name) for name in names}
+        self.update(new_dict)
+
+        return self
+
+
+def mixtures_from_recipes(
+        recipe_dict: Dict[str, Dict[Reagent, int]]
+) -> Dict[str, Mixture]:
+    return {
+        name: Mixture(name=name, recipe=rec)
+        for name, rec in recipe_dict.items()
+    }
+
+
 # Constants
-pure_reagents = {
-    name: Reagent(name)
-    for name in "Sol-A Sol-B DNA RNase-Inh H20".split()
-}
+pure_registry = (ReagentRegistry()
+                 .add_by_name(
+                    "Sol-A Sol-B DNA RNase-Inh H20".split()
+                ))
+
 PURE = Mixture(name="PURE", recipe={
-    pure_reagents['Sol-A']: 4,
-    pure_reagents['Sol-B']: 3,
-    pure_reagents['DNA']: 1,
-    pure_reagents['RNase-Inh']: 1,
-    pure_reagents['H20']: 1
+    pure_registry['Sol-A']: 4,
+    pure_registry['Sol-B']: 3,
+    pure_registry['DNA']: 1,
+    pure_registry['RNase-Inh']: 1,
+    pure_registry['H20']: 1
 })

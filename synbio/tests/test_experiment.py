@@ -1,16 +1,12 @@
 from synbio.reagents import *
+from synbio.experiment import *
 
-class TestReagentRegistry:
-    def test_add_by_name(self):
+class TestExperiment:
+    def test_add_conditions(self):
         # define reagents
         r = pure_registry
         r.add_by_name("QD")
-        r.add_by_name("test1 test2".split())
 
-class TestMixture:
-    def test_mixture_from_recipes(self):
-        r = pure_registry
-        r.add_by_name("QD")
         # define mixtures
         pos_recipe = dict(PURE.recipe)
 
@@ -23,3 +19,9 @@ class TestMixture:
             "QD": r["QD"].recipe
         })
 
+        # make experiment object
+        exp = Experiment("test_experiment", r)
+
+        # define experimental conditions
+        exp.add_conditions(mixtures, replicates=3) # only defining one
+        # optional parameter

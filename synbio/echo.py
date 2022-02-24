@@ -24,14 +24,29 @@ __all__ = [
     # dataclasses
     "EchoExperiment",
     # functions
-    "calc_reagents", "assign_reagents_to_wells", "update_plates",
+    "assign_reagents_to_wells", "update_plates",
     "make_echo_prot", "make_experiment"
 ]
 @dataclass
-class EchoExperiment:
-    "TODO: inherit from base Experiment class; add plates as subfield; add repr"
-    pass
+class EchoExperiment(Experiment):
+    src_plate: Plate = None
+    dest_plate: Plate = None
 
+    def assign_plates(self):
+        ""
+        """
+        TODO: this
+        
+        1. calculate total quantities of each reagent
+        2. assign wells to each reagent (src_plate)
+        3. assign wells for each condition (dest_plate)
+        4. update / generate plate objects
+        """
+        pass
+
+    def generate_protocol(self):
+        """TODO: this"""
+        pass
 
 def assign_reagents_to_wells(
         conditions: List[Condition],
@@ -55,34 +70,29 @@ def assign_reagents_to_wells(
     ]
 
     # source to wells
-    def fill_source_wells(reagents: Dict[Reagent, pint.Quantity],
-                          source_plate: Plate) -> List[Well]:
-        svols = source_plate.well_volumes
-        num_wells = {
-            reg: ceil(quant / svols['working_vol'])
-            # number of working volumes required
-            for reg, quant in reagents.items()
-        }
+    svols = source_plate.well_volumes
+    num_wells = {
+        reg: ceil(quant / svols['working_vol'])
+        # number of working volumes required
+        for reg, quant in reagents.items()
+    }
 
-        well_vols = {
-            reg: [
-                Well(
-                    name=f"source_{reg.name}_{i + 1}", content=reg,
-                    max_vol=(mv := svols['max_vol']),
-                    dead_vol=(dv := svols['dead_vol']),
+    well_vols = {
+        reg: [
+            Well(
+                name=f"source_{reg.name}_{i + 1}", content=reg,
+                max_vol=(mv := svols['max_vol']),
+                dead_vol=(dv := svols['dead_vol']),
 
-                    vol=(mv if i != (n - 1)
-                         else reagents[reg] - svols['working_vol'] * (
-                                n - 1) + dv)
+                vol=(mv if i != (n - 1)
+                     else reagents[reg] - svols['working_vol'] * (
+                            n - 1) + dv)
 
-                ) for i in range(n)
-            ] for reg, n in num_wells.items()
-        }
+            ) for i in range(n)
+        ] for reg, n in num_wells.items()
+    }
 
-        source_wells = [w for r, wells in well_vols.items() for w in wells]
-        return source_wells
-
-    source_wells = fill_source_wells(reagents, source_plate)
+    source_wells = [w for r, wells in well_vols.items() for w in wells]
 
     return (source_wells, dest_wells)
 
@@ -206,20 +216,25 @@ def make_echo_prot(
 
     return df
 
+"""
+TODO: make this a class method for EchoExperiment; make standalone function 
+that calls EchoExperiment under the hood.
+"""
 def make_experiment(
         name: str,
         conditions: List[Condition],
         src_plate: Plate, dest_plate: Plate,
         src_plate_offset: int = 0
-) -> ExperimentDesign:
+) -> EchoExperiment:
     reagents = calc_reagents(conditions)
 
     src_wells, dest_wells = assign_reagents_to_wells(conditions, reagents,
                                                      src_plate, dest_plate)
 
-    name_map = assign_wells(dest_plate, dest_wells)
-    _ = assign_wells(src_plate, src_wells, src_plate_offset)
+    name_map = update_plates(dest_plate, dest_wells)
+    _ = update_plates(src_plate, src_wells, src_plate_offset)
 
+    # TODO: make this return an EchoExperiment object
     return Experiment(
         name=name, source_plate=src_plate, dest_plate=dest_plate,
         conditions=conditions, name_map=name_map, data=None, date=date.today()
