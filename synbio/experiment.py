@@ -1,12 +1,12 @@
 from typing import List, Dict
 from datetime import date
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import reduce
 
 import pint
 
 from synbio.units import unit_registry as u
-from synbio.reagents import Mixture, Reagent
+from synbio.reagents import Reagent
 
 __all__ = [
     # Dataclasses
@@ -21,10 +21,6 @@ class Condition:
     volume: pint.Quantity = 10 * u.uL
 
 
-    def __post_init__(self):
-        if not self._check_registry():
-            raise ValueError("Content not found in ReagentRegistry")
-
     @property
     def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
         recipe = self.content.recipe
@@ -37,66 +33,36 @@ class Condition:
             for reagent, num in recipe.items()
         }
 
-    def _check_registry(self) -> bool:
-        if isinstance(self.content, Mixture):
-            chk = all([
-                r in self.reagent_registry.reagents
-                for r in self.content.reagents
-            ])
-
-
-        else:
-            chk = self.content in self.reagent_registry
-
-        return chk
-
 
 class Data: pass
 
-@dataclass
 class Experiment:
-    name: str
-    conditions: List[Condition] = field(default_factory=list)
-    data: Data = Data()
-    meta: dict = field(default_factory=dict)
+    def __init__(
+            self, name: str,
+            conditions: List[Condition] = None,
+            data: Data = None,
+            meta: dict = None
+    ):
+        today = date.today()
+        if meta is None:
+            meta = {}
 
-    def __post_init__(self):
-        self._check_conditions()
+        self.name = name
+        self.conditions = conditions
+        self.data = data
+        self.meta = meta
 
-        self.meta["date"] = date.today()
-
-
-    def add_conditions(
-            self, contents: Dict[str, Reagent],
-            **cond_kwargs
-            #replicates: int = None, volume: pint.Quantity = None
-    ) -> "self":
-        self.conditions = [
-            Condition(
-                name=name, content=cont,
-                reagent_registry=self.reagent_registry,
-                **cond_kwargs
-
-            ) for name, cont in contents.items()
-        ]
-
-        self._check_conditions()
-        return self
-
-    def _check_conditions(self) -> None:
-        if self.conditions is not None:
-            all_same_registry = all(
-                cond.reagent_registry == self.reagent_registry
-                for cond in self.conditions
-            )
-        else:
-            all_same_registry = True
-
-        if not all_same_registry:
-            raise ValueError("Conditions using multiple registries")
+    @property
+    def reagents(self):
+        return {
+            reagent
+            for cond in self.conditions
+            for reagent in cond.content.recipe.keys()
+        }
 
 
 
+    @property
     def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
         # list of dicts describing reagents for each condition
         adj_recipes = [c.reagent_volumes for c in self.conditions]
@@ -110,3 +76,18 @@ class Experiment:
 
         return reduce(merge_dict, adj_recipes)
 
+
+    def add_conditions(
+            self, contents: Dict[str, Reagent],
+            **cond_kwargs
+    ) -> "self":
+        """of dubious use, and questionable validity"""
+        self.conditions = [
+            Condition(
+                name=name, content=cont,
+                **cond_kwargs
+
+            ) for name, cont in contents.items()
+        ]
+
+        return self
