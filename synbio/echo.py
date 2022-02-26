@@ -13,7 +13,7 @@ import pint
 from synbio.plates import *
 from synbio.reagents import *
 from synbio.experiment import *
-from synbio.platereader import PlateExperiment
+from synbio.platereader import PlateReaderExperiment
 
 """
 TODO:
@@ -26,7 +26,11 @@ __all__ = [
     "EchoExperiment",
 ]
 @dataclass
-class EchoExperiment(PlateExperiment):
+class EchoExperiment(PlateReaderExperiment):
+    """
+    self.src_plate: Plate = None
+    self.dest_plate: Plate = None
+    """
     src_plate: Plate = None
     dest_plate: Plate = None
 

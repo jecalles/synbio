@@ -1,24 +1,22 @@
 from typing import List, Dict
 from datetime import date
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import reduce
 
 import pint
 
 from synbio.units import unit_registry as u
-from synbio.reagents import Mixture, Reagent, ReagentRegistry
+from synbio.reagents import Mixture, Reagent
 
 __all__ = [
     # Dataclasses
     "Condition", "Experiment", "Data"
 ]
 
-
 @dataclass
 class Condition:
     name: str
     content: Reagent
-    reagent_registry: ReagentRegistry
     replicates: int = 3
     volume: pint.Quantity = 10 * u.uL
 
@@ -53,15 +51,19 @@ class Condition:
         return chk
 
 
+class Data: pass
+
 @dataclass
 class Experiment:
     name: str
-    reagent_registry: ReagentRegistry
-    conditions: List[Condition] = None
-    date: date = date.today()
+    conditions: List[Condition] = field(default_factory=list)
+    data: Data = Data()
+    meta: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self._check_conditions()
+
+        self.meta["date"] = date.today()
 
 
     def add_conditions(
@@ -108,4 +110,3 @@ class Experiment:
 
         return reduce(merge_dict, adj_recipes)
 
-class Data: pass
