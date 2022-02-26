@@ -10,7 +10,7 @@ from synbio.reagents import Mixture, Reagent, ReagentRegistry
 
 __all__ = [
     # Dataclasses
-    "Condition", "Experiment",
+    "Condition", "Experiment", "Data"
 ]
 
 
@@ -107,3 +107,5 @@ class Experiment:
             return dict3
 
         return reduce(merge_dict, adj_recipes)
+
+class Data: pass
