@@ -1,7 +1,6 @@
 import re
 from copy import deepcopy
 from datetime import date
-from functools import reduce
 from itertools import islice
 from math import ceil, prod
 from typing import Dict, List, Tuple
@@ -14,40 +13,39 @@ import pint
 from synbio.plates import *
 from synbio.reagents import *
 from synbio.experiment import *
+from synbio.platereader import PlateExperiment
 
 """
 TODO:
-- EchoExperiment
-- read current workflow; propose refactor
+[] Sort out Experiment inheritance tree (branch Experiment)
+[] Sort out PlateReaderExperiment
+[] Sort out EchoExperiment
 """
 __all__ = [
     # dataclasses
     "EchoExperiment",
-    # functions
-    "assign_reagents_to_wells", "update_plates",
-    "make_echo_prot", "make_experiment"
 ]
 @dataclass
-class EchoExperiment(Experiment):
+class EchoExperiment(PlateExperiment):
     src_plate: Plate = None
     dest_plate: Plate = None
-
-    def assign_plates(self):
-        ""
-        """
-        TODO: this
-        
-        1. calculate total quantities of each reagent
-        2. assign wells to each reagent (src_plate)
-        3. assign wells for each condition (dest_plate)
-        4. update / generate plate objects
-        """
-        pass
 
     def generate_protocol(self):
         """TODO: this"""
         pass
 
+
+
+"""QUARANTINE ZONE
+
+Old code
+
+Manifest = [
+    # functions
+    "assign_reagents_to_wells", "update_plates",
+    "make_echo_prot", "make_experiment"
+]
+"""
 def assign_reagents_to_wells(
         conditions: List[Condition],
         reagents: Dict[Reagent, pint.Quantity],
@@ -219,6 +217,7 @@ def make_echo_prot(
 """
 TODO: make this a class method for EchoExperiment; make standalone function 
 that calls EchoExperiment under the hood.
+
 """
 def make_experiment(
         name: str,
