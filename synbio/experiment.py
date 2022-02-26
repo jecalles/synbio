@@ -44,9 +44,9 @@ class Experiment:
             data: Data = None,
             meta: dict = None
     ):
-        today = date.today()
         if meta is None:
             meta = {}
+        meta['date'] = date.today()
 
         self.name = name
         self.conditions = conditions
