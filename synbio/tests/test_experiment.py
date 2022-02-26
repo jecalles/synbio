@@ -4,8 +4,7 @@ from synbio.experiment import *
 class TestExperiment:
     def test_add_conditions(self):
         # define reagents
-        r = pure_registry
-        r.add_by_name("QD")
+        r = PURE_reagents
 
         # define mixtures
         pos_recipe = dict(PURE.recipe)
@@ -13,10 +12,9 @@ class TestExperiment:
         neg_recipe = dict(PURE.recipe)
         neg_recipe.update({r["H20"]: 2, r["DNA"]: 0})
 
-        mixtures = mixtures_from_recipes({
+        mixtures = mixture_from_recipes({
             "pos": pos_recipe,
             "neg": neg_recipe,
-            "QD": r["QD"].recipe
         })
 
         # make experiment object
