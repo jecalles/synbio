@@ -13,26 +13,39 @@ import pint
 from synbio.plates import *
 from synbio.reagents import *
 from synbio.experiment import *
-from synbio.platereader import PlateReaderExperiment
+from synbio.platereader import *
 
 """
 TODO:
-[] Sort out Experiment inheritance tree (branch Experiment)
-[] Sort out PlateReaderExperiment
+[x] Sort out Experiment inheritance tree (branch Experiment)
+[x] Sort out PlateReaderExperiment
 [] Sort out EchoExperiment
 """
 __all__ = [
     # dataclasses
-    "EchoExperiment",
+    "EchoProtocol", "EchoExperiment"
 ]
+
 @dataclass
+class EchoProtocol:
+    src_plate: Plate = None
+    dest_plate: Plate = None
+
+
 class EchoExperiment(PlateReaderExperiment):
     """
     self.src_plate: Plate = None
     self.dest_plate: Plate = None
     """
-    src_plate: Plate = None
-    dest_plate: Plate = None
+    def __init__(
+        self, protocol: EchoProtocol = None,
+        *plate_args, **plate_kwargs,
+    ):
+        super().__init__(*plate_args, **plate_kwargs)
+
+        if protocol is None:
+            protocol =  self.generate_protocol()
+        self.protocol = protocol
 
     def generate_protocol(self):
         """TODO: this"""

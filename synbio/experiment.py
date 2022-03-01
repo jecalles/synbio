@@ -1,51 +1,56 @@
-from typing import List, Dict
+from typing import List, Any
 from datetime import date
-from dataclasses import dataclass
-from functools import reduce
 
-import pint
-
-from synbio.units import unit_registry as u
-from synbio.reagents import Reagent
+from synbio.interfaces import HashableMixin
 
 __all__ = [
     # Dataclasses
     "Condition", "Experiment", "Data"
 ]
 
-@dataclass
-class Condition:
-    name: str
-    content: Reagent
-    replicates: int = 3
-    volume: pint.Quantity = 10 * u.uL
+class Condition(HashableMixin):
+    def _comparables(self) -> List[str]:
+        return list(self.variables.keys())
+
+
+    def __repr__(self) -> str:
+        class_name = str(self.__class__.__name__)
+        var_string = " ".join(f"{k}={v}" for k, v in self.variables.items())
+        return f"{class_name}({var_string})"
 
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
-        recipe = self.content.recipe
-
-        total = sum(recipe.values())
-        vol_factor = self.volume / total * self.replicates
-
+    def variables(self) -> dict:
         return {
-            reagent: num * vol_factor
-            for reagent, num in recipe.items()
+            k: v for k, v in self.__dict__.items()
+            if k[0] != "_"  # at the moment, this is all the filtering we're
+            # doing
         }
+
+    @variables.setter
+    def variables(self, new_dict: dict):
+        self.__dict__.update(new_dict)
+
 
 
 class Data: pass
 
 class Experiment:
     def __init__(
-            self, name: str,
+            self, name: str = None,
             conditions: List[Condition] = None,
-            data: Data = None,
+            data: Any = None,
             meta: dict = None
     ):
         today = date.today()
+
+        if name is None:
+            name = str(today)
+
         if meta is None:
             meta = {}
+        meta["date"] = today
+
 
         self.name = name
         self.conditions = conditions
@@ -53,41 +58,8 @@ class Experiment:
         self.meta = meta
 
     @property
-    def reagents(self):
+    def variables(self):
         return {
-            reagent
-            for cond in self.conditions
-            for reagent in cond.content.recipe.keys()
+            var for condition in self.conditions
+            for var in condition.variables
         }
-
-
-
-    @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
-        # list of dicts describing reagents for each condition
-        adj_recipes = [c.reagent_volumes for c in self.conditions]
-
-        def merge_dict(dict1, dict2):
-            dict3 = {**dict1, **dict2}
-            for key, value in dict3.items():
-                if key in dict1 and key in dict2:
-                    dict3[key] = dict1[key] + dict2[key]
-            return dict3
-
-        return reduce(merge_dict, adj_recipes)
-
-
-    def add_conditions(
-            self, contents: Dict[str, Reagent],
-            **cond_kwargs
-    ) -> "self":
-        """of dubious use, and questionable validity"""
-        self.conditions = [
-            Condition(
-                name=name, content=cont,
-                **cond_kwargs
-
-            ) for name, cont in contents.items()
-        ]
-
-        return self
