@@ -1,9 +1,11 @@
 import itertools
 from dataclasses import dataclass
+from itertools import count
 from math import prod
 from typing import Dict, List, Optional, Tuple, TypeVar
 
 import numpy as np
+import pandas as pd
 import pint
 
 from synbio.reagents import Reagent
@@ -224,8 +226,38 @@ class Plate:
     def get_col_names(num_cols: int) -> List[str]:
         return list(str(i + 1) for i in range(num_cols))
 
+    def load_plate_map(self, filepath: str) -> None:
+        df = pd.read_csv(filepath)
+        index = df.values[:, 0]
+        name_dataframe = df.set_index(index).drop("Rows/Cols", axis=1)
+
+        reagents = {
+            name: Reagent(name)
+            for row in name_dataframe.values
+            for name in row
+            if name != "-"
+        }
+
+        counters = {
+            name: count(1)
+            for name in reagents.keys()
+        }
+
+        # Reassign wells
+        for i, row in enumerate(name_dataframe):
+            for j, name in enumerate(row):
+                if name == "-":
+                    continue
+                reagent = reagents[name]
+
+                well = self.array[i, j]
+                well.content = reagent
+                well.volume = 0
+                well.name = f"{name}_{next(counters[name])}"
+
 
 PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], str)
+
 
 # Functions
 def make_96_well(name: Optional[str] = None) -> Plate:
@@ -270,4 +302,3 @@ def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
     dead_vol = 1 * u.uL
 
     return Plate(name, shape, max_vol, dead_vol)
-

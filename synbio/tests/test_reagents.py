@@ -1,5 +1,6 @@
 from synbio.reagents import *
 
+
 class TestMixture:
     def test_mixture_from_recipes(self):
         r = PURE_reagents
@@ -13,4 +14,3 @@ class TestMixture:
             "pos": pos_recipe,
             "neg": neg_recipe,
         })
-

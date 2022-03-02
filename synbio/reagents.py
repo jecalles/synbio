@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Dict, List
 
 __all__ = [
@@ -60,6 +59,7 @@ class Mixture(Reagent):
     """
     old repr for Mixture. more detailed, but leads to clutter when printing
     """
+
     #     cls_ = self.__class__.__name__
     #     name = self.name
     #     rcp = {
@@ -68,11 +68,9 @@ class Mixture(Reagent):
     #     }
     #     return f'{cls_}(name="{name}", recipe="{rcp}")'
 
-
     @property
     def reagents(self) -> List[Reagent]:
         return [r for r in self.recipe.keys()]
-
 
 
 def mixture_from_recipes(
