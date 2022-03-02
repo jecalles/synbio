@@ -244,7 +244,7 @@ class Plate:
         }
 
         # Reassign wells
-        for i, row in enumerate(name_dataframe):
+        for i, row in enumerate(name_dataframe.values):
             for j, name in enumerate(row):
                 if name == "-":
                     continue
