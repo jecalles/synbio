@@ -1,5 +1,5 @@
-from typing import List, Any
 from datetime import date
+from typing import Any, List
 
 from synbio.interfaces import HashableMixin
 
@@ -8,16 +8,15 @@ __all__ = [
     "Condition", "Experiment", "Data"
 ]
 
+
 class Condition(HashableMixin):
     def _comparables(self) -> List[str]:
         return list(self.variables.keys())
-
 
     def __repr__(self) -> str:
         class_name = str(self.__class__.__name__)
         var_string = " ".join(f"{k}={v}" for k, v in self.variables.items())
         return f"{class_name}({var_string})"
-
 
     @property
     def variables(self) -> dict:
@@ -32,8 +31,8 @@ class Condition(HashableMixin):
         self.__dict__.update(new_dict)
 
 
-
 class Data: pass
+
 
 class Experiment:
     def __init__(
@@ -50,7 +49,6 @@ class Experiment:
         if meta is None:
             meta = {}
         meta["date"] = today
-
 
         self.name = name
         self.conditions = conditions

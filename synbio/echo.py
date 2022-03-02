@@ -1,19 +1,17 @@
 import re
 from copy import deepcopy
+from dataclasses import dataclass
 from datetime import date
 from itertools import islice
 from math import ceil, prod
-from typing import Dict, List, Tuple
-from dataclasses import dataclass
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
-import pint
 
-from synbio.plates import *
-from synbio.reagents import *
 from synbio.experiment import *
 from synbio.platereader import *
+from synbio.plates import *
 
 """
 TODO:
@@ -26,31 +24,33 @@ __all__ = [
     "EchoProtocol", "EchoExperiment"
 ]
 
+
 @dataclass
 class EchoProtocol:
-    src_plate: Plate = None
-    dest_plate: Plate = None
+    src_plate: Plate = make_384_ldv_well()
+    dest_plate: Plate = make_96_well()
+    protocol: pd.DataFrame = None
+
+    def to_csv(self, filename: str) -> None:
+        self.protocol.to_csv(filename)
 
 
 class EchoExperiment(PlateReaderExperiment):
-    """
-    self.src_plate: Plate = None
-    self.dest_plate: Plate = None
-    """
     def __init__(
-        self, protocol: EchoProtocol = None,
-        *plate_args, **plate_kwargs,
+            self, protocol: EchoProtocol = None,
+            *plate_args, **plate_kwargs,
     ):
         super().__init__(*plate_args, **plate_kwargs)
 
         if protocol is None:
-            protocol =  self.generate_protocol()
+            protocol = self.generate_protocol()
         self.protocol = protocol
 
-    def generate_protocol(self):
-        """TODO: this"""
-        pass
-
+    def generate_protocol(
+            self, src_filepath: str, dest_filepath: str,
+            cond_name_map: Callable[[str, Plate], PlateReaderCondition],
+    ) -> EchoProtocol:
+        return EchoProtocol()
 
 
 """QUARANTINE ZONE
@@ -63,33 +63,18 @@ Manifest = [
     "make_echo_prot", "make_experiment"
 ]
 """
+
+
 def assign_reagents_to_wells(
-        conditions: List[Condition],
-        reagents: Dict[Reagent, pint.Quantity],
+        exp: PlateReaderExperiment,
         source_plate: Plate,
-        destination_plate: Plate
 ) -> Tuple[List[Well], List[Well]]:
-    # destination to wells
-    dvols = destination_plate.well_volumes
-
-    dest_wells = [
-        Well(
-            name=f"dest_{cond.name}_{i}",
-            content=cond.content,
-            max_vol=dvols['max_vol'], dead_vol=dvols['dead_vol'],
-
-            vol=cond.volume
-        )
-        for cond in conditions
-        for i in range(cond.replicates)
-    ]
-
     # source to wells
     svols = source_plate.well_volumes
     num_wells = {
         reg: ceil(quant / svols['working_vol'])
         # number of working volumes required
-        for reg, quant in reagents.items()
+        for reg, quant in exp.reagent_volumes.items()
     }
 
     well_vols = {
@@ -100,8 +85,8 @@ def assign_reagents_to_wells(
                 dead_vol=(dv := svols['dead_vol']),
 
                 vol=(mv if i != (n - 1)
-                     else reagents[reg] - svols['working_vol'] * (
-                            n - 1) + dv)
+                     else reg - svols['working_vol'] * (
+                        n - 1) + dv)
 
             ) for i in range(n)
         ] for reg, n in num_wells.items()
@@ -178,7 +163,8 @@ def make_echo_prot(
                 dest_wells.append(dest_loc)
                 src_wells.append(src_loc)
 
-                if (avail := src_well.available_vol) >= amt:  # there's enough volume
+                if (
+                avail := src_well.available_vol) >= amt:  # there's enough volume
                     sat = True
                     # do transfer
                     xfer = amt
@@ -231,11 +217,14 @@ def make_echo_prot(
 
     return df
 
+
 """
 TODO: make this a class method for EchoExperiment; make standalone function 
 that calls EchoExperiment under the hood.
 
 """
+
+
 def make_experiment(
         name: str,
         conditions: List[Condition],

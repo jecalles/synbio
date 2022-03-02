@@ -1,5 +1,6 @@
-from synbio.reagents import *
 from synbio.experiment import *
+from synbio.reagents import *
+
 
 class TestExperiment:
     def test_add_conditions(self):
@@ -21,5 +22,5 @@ class TestExperiment:
         exp = Experiment("test_experiment", r)
 
         # define experimental conditions
-        exp.add_conditions(mixtures, replicates=3) # only defining one
+        exp.add_conditions(mixtures, replicates=3)  # only defining one
         # optional parameter
