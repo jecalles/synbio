@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Dict, List
 
 __all__ = [
@@ -11,15 +10,16 @@ __all__ = [
 ]
 
 
-@dataclass
 class Reagent:
-    name: str
-
-    def __post_init__(self):
+    def __init__(self, name: str):
+        self.name = name
         self._recipe = None
 
     def __hash__(self):
         return hash((self.name, self._recipe))
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}('{self.name}')"
 
     @property
     def recipe(self) -> Dict['OwnType', float]:
@@ -55,15 +55,18 @@ class Mixture(Reagent):
         super().__init__(name)
         self._recipe = recipe
 
-    def __repr__(self) -> str:
-        cls_ = self.__class__.__name__
-        name = self.name
-        rcp = {
-            rgnt.name: amt
-            for rgnt, amt in self.recipe.items()
-        }
-        return f'{cls_}(name="{name}", recipe="{rcp}")'
+    # def __repr__(self) -> str:
+    """
+    old repr for Mixture. more detailed, but leads to clutter when printing
+    """
 
+    #     cls_ = self.__class__.__name__
+    #     name = self.name
+    #     rcp = {
+    #         rgnt.name: amt
+    #         for rgnt, amt in self.recipe.items()
+    #     }
+    #     return f'{cls_}(name="{name}", recipe="{rcp}")'
 
     @property
     def reagents(self) -> List[Reagent]:

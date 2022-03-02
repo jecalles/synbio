@@ -79,8 +79,8 @@ class HashableMixin(ComparableMixin):
     >>> class Foo(HashableMixin):
     >>>     def __init__(self, a, b, c):
     >>>         self.val_a = a
-    >>>         self.val_c = c
     >>>         self.val_b = b
+    >>>         self.val_c = c
     >>>
     >>>     def _comparables(self):
     >>>         return ['val_a', 'val_b']
