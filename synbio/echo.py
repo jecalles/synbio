@@ -1,13 +1,11 @@
-import re
-from copy import deepcopy
 from dataclasses import dataclass
-from datetime import date
-from itertools import islice
-from math import ceil, prod
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Tuple, Dict
 
+import pint
+import numpy as np
 import pandas as pd
 
+from synbio.reagents import Reagent
 from synbio.platereader import *
 from synbio.plates import *
 
@@ -39,16 +37,13 @@ class EchoProtocol:
     def generate_protocol(self) -> pd.DataFrame:
         pass
 
-    def check_protocol(self) -> bool:
-        pass
-
     def to_csv(self, filename: str) -> None:
         self.protocol.to_csv(filename)
 
 
 class EchoExperiment(PlateReaderExperiment):
     def __init__(
-            self, protocol: EchoProtocol = None,
+            self, protocol: EchoProtocol = EchoProtocol(),
             *plate_args, **plate_kwargs,
     ):
         super().__init__(*plate_args, **plate_kwargs)
@@ -59,16 +54,42 @@ class EchoExperiment(PlateReaderExperiment):
     def from_plate_map(
         cls, src_plate_filepath: str, dest_plate_filepath: str,
         cond_name_map: Callable[[str, Plate], PlateReaderCondition],
-        plate: Plate = make_96_well()
+        src_plate: Plate = make_384_ldv_well()
     ) -> "OwnType":
-        conditions, dest_plate = load_plate_map(dest_plate_filepath)
-        src_plate = Plate.load_plate_map(src_plate_filepath)
+        conditions, dest_plate = load_plate_map(dest_plate_filepath, cond_name_map)
+        src_plate.load_plate_map(src_plate_filepath)
         protocol = EchoProtocol(src_plate, dest_plate)
 
         return cls(conditions=conditions, protocol=protocol)
 
 
-    def simulate(self) -> ???:
+    def calc_src_wells(
+            self, plate: Plate = None
+    ) -> Dict[Reagent, Tuple[int, pint.Quantity]]:
+        if plate is None:
+            plate = self.protocol.src_plate
+
+        working_vol = plate.well_volumes["working_vol"]
+
+        num_wells = {
+            rg: np.ceil((vol / working_vol).magnitude)
+            for rg, vol in self.reagent_volumes.items()
+        }
+        dead_vol = plate.well_volumes["dead_vol"]
+        vol_per_well = {
+            rg: np.round(
+                (vol / num_wells[rg]) + dead_vol,
+                decimals=1
+            )
+            for rg, vol in self.reagent_volumes.items()
+        }
+        return {
+            rg: (num_wells[rg], vol_per_well[rg])
+            for rg in self.reagents.values()
+        }
+
+
+    def simulate(self) -> bool:
         """ The idea is to get some sense of what an experiment is going to
         look like"""
         pass
@@ -86,165 +107,165 @@ Manifest = [
 """
 
 
-def assign_reagents_to_wells(
-        exp: PlateReaderExperiment,
-        source_plate: Plate,
-) -> Tuple[List[Well], List[Well]]:
-    # source to wells
-    svols = source_plate.well_volumes
-    num_wells = {
-        reg: ceil(quant / svols['working_vol'])
-        # number of working volumes required
-        for reg, quant in exp.reagent_volumes.items()
-    }
+# def assign_reagents_to_wells(
+#         exp: PlateReaderExperiment,
+#         source_plate: Plate,
+# ) -> Tuple[List[Well], List[Well]]:
+#     # source to wells
+#     svols = source_plate.well_volumes
+#     num_wells = {
+#         reg: ceil(quant / svols['working_vol'])
+#         # number of working volumes required
+#         for reg, quant in exp.reagent_volumes.items()
+#     }
+#
+#     well_vols = {
+#         reg: [
+#             Well(
+#                 name=f"source_{reg.name}_{i + 1}", content=reg,
+#                 max_vol=(mv := svols['max_vol']),
+#                 dead_vol=(dv := svols['dead_vol']),
+#
+#                 vol=(mv if i != (n - 1)
+#                      else reg - svols['working_vol'] * (
+#                         n - 1) + dv)
+#
+#             ) for i in range(n)
+#         ] for reg, n in num_wells.items()
+#     }
+#
+#     source_wells = [w for r, wells in well_vols.items() for w in wells]
+#
+#     return (source_wells, dest_wells)
+#
 
-    well_vols = {
-        reg: [
-            Well(
-                name=f"source_{reg.name}_{i + 1}", content=reg,
-                max_vol=(mv := svols['max_vol']),
-                dead_vol=(dv := svols['dead_vol']),
-
-                vol=(mv if i != (n - 1)
-                     else reg - svols['working_vol'] * (
-                        n - 1) + dv)
-
-            ) for i in range(n)
-        ] for reg, n in num_wells.items()
-    }
-
-    source_wells = [w for r, wells in well_vols.items() for w in wells]
-
-    return (source_wells, dest_wells)
-
-
-def update_plates(
-        plate: Plate, wells: List[Well], offset: int = 0
-) -> Dict[str, str]:
-    """
-    Modifies plate in place by assigning wells to plate.array. Returns a python dict
-    representing a "name_map" to be used
-
-
-    TODO: change "offset" to an optional well_dict parameter
-    """
-    if (n_assign := len(wells)) > (n_plate := prod(plate.shape)) - offset:
-        raise ValueError(
-            f"cannot assign {n_assign} wells to {n_plate} well plate!")
-
-    well_names = islice(plate.dict, offset, None)
-
-    well_dict = {
-        name: well
-        for name, well in zip(well_names, wells)
-    }
-    plate.dict = well_dict
-
-    return {name: well.name for name, well in well_dict.items()}
-
-
-def make_echo_prot(
-        source: Plate, destination: Plate,
-        filename: str = None
-) -> pd.DataFrame:
-    # first, make copies of src_plate and destinatino plate
-    src_plate = deepcopy(source)
-    dest_plate = deepcopy(destination)
-
-    src_wells = []
-    dest_wells = []
-    xfer_vols = []
-
-    # find src_plate wells w/ reagent
-    reagents = {
-        rgnt
-        for well in dest_plate.full_wells.values()
-        for rgnt in well.recipe.keys()
-    }
-    src_rgnt_map = {
-        rgnt: [
-            well_loc
-            for well_loc, well in src_plate.full_wells.items()
-            if well.content == rgnt
-        ] for rgnt in reagents
-    }
-
-    for dest_loc, dest_well in dest_plate.full_wells.items():
-        for rgnt, amt in dest_well.recipe.items():
-            # get list of source_well locations for given rgnt
-            rgnt_src_locs = src_rgnt_map[rgnt]
-            rgnt_src_locs.sort(reverse=True)
-
-            # pop off wells until dest_well is satisfied
-            sat = False
-            while sat is not True:
-                src_loc = rgnt_src_locs.pop()
-                src_well = src_plate.dict[src_loc]
-
-                dest_wells.append(dest_loc)
-                src_wells.append(src_loc)
-
-                if (
-                avail := src_well.available_vol) >= amt:  # there's enough volume
-                    sat = True
-                    # do transfer
-                    xfer = amt
-                    src_well.volume -= amt
-                    # return well to rgnt_src_locs
-                    rgnt_src_locs.append(src_loc)
-                else:  # not enough volume
-                    # transfer what you can and adjust amt required
-                    xfer = avail
-                    amt -= xfer
-
-                # do transfer
-                xfer_vols.append(xfer)
-
-            # update source_reagent_map[rgnt]
-            src_rgnt_map[rgnt] = rgnt_src_locs
-
-    # massage xfer volumes
-    xfer_vols = [
-        np.round(q.to('nL').magnitude, decimals=4)
-        for q in xfer_vols
-    ]
-    num_xfer = len(xfer_vols)
-    # write protocol to pd.DataFrame
-    protocol = {
-        'Source plate name': [1 for _ in range(num_xfer)],
-        'Source well': src_wells,
-        'Destination plate name': [1 for _ in range(num_xfer)],
-        'Destination well': dest_wells,
-        'XferVol': xfer_vols
-    }
-
-    def src_sort_key(col: pd.Series) -> List[Tuple[str, int]]:
-        r = re.compile(r"\d")
-        searches = [r.search(loc) for loc in col]
-        ixs = [hit.start() for hit in searches]
-        return [
-            (loc[:ix], int(loc[ix:]))
-            for loc, ix in zip(col, ixs)
-        ]
-
-    df = (pd.DataFrame
-          .from_dict(protocol)
-          .sort_values(by="Source well", key=src_sort_key))
-    df = df[df['XferVol'] > 0]
-
-    # optionally write file to filename
-    if filename is not None:
-        df.to_csv(filename)
-
-    return df
-
-
-"""
-TODO: make this a class method for EchoExperiment; make standalone function 
-that calls EchoExperiment under the hood.
-
-"""
-
+# def update_plates(
+#         plate: Plate, wells: List[Well], offset: int = 0
+# ) -> Dict[str, str]:
+#     """
+#     Modifies plate in place by assigning wells to plate.array. Returns a python dict
+#     representing a "name_map" to be used
+#
+#
+#     TODO: change "offset" to an optional well_dict parameter
+#     """
+#     if (n_assign := len(wells)) > (n_plate := prod(plate.shape)) - offset:
+#         raise ValueError(
+#             f"cannot assign {n_assign} wells to {n_plate} well plate!")
+#
+#     well_names = islice(plate.dict, offset, None)
+#
+#     well_dict = {
+#         name: well
+#         for name, well in zip(well_names, wells)
+#     }
+#     plate.dict = well_dict
+#
+#     return {name: well.name for name, well in well_dict.items()}
+#
+#
+# def make_echo_prot(
+#         source: Plate, destination: Plate,
+#         filename: str = None
+# ) -> pd.DataFrame:
+#     # first, make copies of src_plate and destinatino plate
+#     src_plate = deepcopy(source)
+#     dest_plate = deepcopy(destination)
+#
+#     src_wells = []
+#     dest_wells = []
+#     xfer_vols = []
+#
+#     # find src_plate wells w/ reagent
+#     reagents = {
+#         rgnt
+#         for well in dest_plate.full_wells.values()
+#         for rgnt in well.recipe.keys()
+#     }
+#     src_rgnt_map = {
+#         rgnt: [
+#             well_loc
+#             for well_loc, well in src_plate.full_wells.items()
+#             if well.content == rgnt
+#         ] for rgnt in reagents
+#     }
+#
+#     for dest_loc, dest_well in dest_plate.full_wells.items():
+#         for rgnt, amt in dest_well.recipe.items():
+#             # get list of source_well locations for given rgnt
+#             rgnt_src_locs = src_rgnt_map[rgnt]
+#             rgnt_src_locs.sort(reverse=True)
+#
+#             # pop off wells until dest_well is satisfied
+#             sat = False
+#             while sat is not True:
+#                 src_loc = rgnt_src_locs.pop()
+#                 src_well = src_plate.dict[src_loc]
+#
+#                 dest_wells.append(dest_loc)
+#                 src_wells.append(src_loc)
+#
+#                 if (
+#                 avail := src_well.available_vol) >= amt:  # there's enough volume
+#                     sat = True
+#                     # do transfer
+#                     xfer = amt
+#                     src_well.volume -= amt
+#                     # return well to rgnt_src_locs
+#                     rgnt_src_locs.append(src_loc)
+#                 else:  # not enough volume
+#                     # transfer what you can and adjust amt required
+#                     xfer = avail
+#                     amt -= xfer
+#
+#                 # do transfer
+#                 xfer_vols.append(xfer)
+#
+#             # update source_reagent_map[rgnt]
+#             src_rgnt_map[rgnt] = rgnt_src_locs
+#
+#     # massage xfer volumes
+#     xfer_vols = [
+#         np.round(q.to('nL').magnitude, decimals=4)
+#         for q in xfer_vols
+#     ]
+#     num_xfer = len(xfer_vols)
+#     # write protocol to pd.DataFrame
+#     protocol = {
+#         'Source plate name': [1 for _ in range(num_xfer)],
+#         'Source well': src_wells,
+#         'Destination plate name': [1 for _ in range(num_xfer)],
+#         'Destination well': dest_wells,
+#         'XferVol': xfer_vols
+#     }
+#
+#     def src_sort_key(col: pd.Series) -> List[Tuple[str, int]]:
+#         r = re.compile(r"\d")
+#         searches = [r.search(loc) for loc in col]
+#         ixs = [hit.start() for hit in searches]
+#         return [
+#             (loc[:ix], int(loc[ix:]))
+#             for loc, ix in zip(col, ixs)
+#         ]
+#
+#     df = (pd.DataFrame
+#           .from_dict(protocol)
+#           .sort_values(by="Source well", key=src_sort_key))
+#     df = df[df['XferVol'] > 0]
+#
+#     # optionally write file to filename
+#     if filename is not None:
+#         df.to_csv(filename)
+#
+#     return df
+#
+#
+# """
+# TODO: make this a class method for EchoExperiment; make standalone function
+# that calls EchoExperiment under the hood.
+#
+# """
+#
 
 # def make_experiment(
 #         name: str,

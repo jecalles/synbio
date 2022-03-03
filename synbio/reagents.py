@@ -1,5 +1,7 @@
 from typing import Dict, List
 
+from synbio.interfaces import HashableMixin
+
 __all__ = [
     # dataclasses
     "Reagent", "Mixture",
@@ -10,13 +12,16 @@ __all__ = [
 ]
 
 
-class Reagent:
+class Reagent(HashableMixin):
     def __init__(self, name: str):
         self.name = name
         self._recipe = None
 
-    def __hash__(self):
-        return hash((self.name, self._recipe))
+    def _comparables(self) -> List[str]:
+        return ["name"]
+
+    # def __hash__(self):
+    #     return hash((self.name, self._recipe))
 
     def __repr__(self):
         return f"{self.__class__.__name__}('{self.name}')"

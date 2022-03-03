@@ -206,6 +206,26 @@ class Plate:
             if name not in empty
         }
 
+    @property
+    def _full_wells(self) -> Dict[str, Well]:
+        """
+        Alternate to self.full_wells. Returns any Wells with nonzero
+        Returns
+        -------
+
+        """
+        empty_reagent = {well.content for well in self.empty_wells.values()}
+
+        if len(empty_reagent) != 1:
+            raise AttributeError(f"There isn't a unique null reagent ("
+                                 f"empty_reagents={empty_reagent})")
+
+        return {
+            name: well
+            for name, well in self.dict.items()
+            if well.content not in empty_reagent
+        }
+
     @staticmethod
     def get_row_names(num_rows: int) -> List[str]:
 
@@ -225,6 +245,7 @@ class Plate:
     @staticmethod
     def get_col_names(num_cols: int) -> List[str]:
         return list(str(i + 1) for i in range(num_cols))
+
 
     def load_plate_map(self, filepath: str) -> None:
         df = pd.read_csv(filepath)
@@ -252,7 +273,6 @@ class Plate:
 
                 well = self.array[i, j]
                 well.content = reagent
-                well.volume = 0
                 well.name = f"{name}_{next(counters[name])}"
 
 

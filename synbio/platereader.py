@@ -17,12 +17,17 @@ __all__ = [
 ]
 
 
-@dataclass
 class PlateReaderCondition(Condition):
-    content: Reagent = None
-    volume: pint.Quantity = 10 * u.uL
-    replicate: int = 3
-    plate: Plate = field(default=None, repr=False)
+    def __init__(
+            self, content: Reagent = None,
+            volume: pint.Quantity = 10 * u.uL,
+            replicate: int = 3,
+            plate: Plate = None
+    ):
+        self.content = content
+        self.volume = volume
+        self.replicate = replicate
+        self.plate = plate
 
     @property
     def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
