@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import reduce
 from itertools import count
 from typing import Callable, Dict, List, Tuple
@@ -84,7 +84,7 @@ class PlateReaderExperiment(Experiment):
 
     @property
     def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
-        # list of dicts describing reagents for each condition
+        # list of dicts describing contents for each condition
         adj_recipes = [c.reagent_volumes for c in self.conditions]
 
         def merge_dict(dict1, dict2):

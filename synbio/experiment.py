@@ -1,15 +1,13 @@
 from datetime import date
 from typing import Any, List
 
-from synbio.interfaces import HashableMixin
-
 __all__ = [
     # Dataclasses
     "Condition", "Experiment", "Data"
 ]
 
 
-class Condition(HashableMixin):
+class Condition:
     def _comparables(self) -> List[str]:
         return list(self.variables.keys())
 

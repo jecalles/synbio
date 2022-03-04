@@ -1,7 +1,5 @@
 from typing import Dict, List
 
-from synbio.interfaces import HashableMixin
-
 __all__ = [
     # dataclasses
     "Reagent", "Mixture",
@@ -12,16 +10,20 @@ __all__ = [
 ]
 
 
-class Reagent(HashableMixin):
-    def __init__(self, name: str):
+class Reagent:
+    def __init__(self, name: str = None):
         self.name = name
         self._recipe = None
 
-    def _comparables(self) -> List[str]:
-        return ["name"]
+    def __eq__(self, other):
+        return all(
+            (self.name == other.name,
+             self._recipe == other._recipe)
+        )
 
-    # def __hash__(self):
-    #     return hash((self.name, self._recipe))
+    def __hash__(self):
+        recipe = self._recipe if self._recipe is not None else {}
+        return hash((self.name, *recipe))
 
     def __repr__(self):
         return f"{self.__class__.__name__}('{self.name}')"
@@ -29,7 +31,7 @@ class Reagent(HashableMixin):
     @property
     def recipe(self) -> Dict['OwnType', float]:
         """
-        A "recipe" is a dictionary that maps component reagents to their
+        A "recipe" is a dictionary that maps component contents to their
         relative ratios in the resulting Mixture. Pure Reagents
         return {self: 1}. All units are nondimensional.
         """
@@ -43,7 +45,7 @@ class Reagent(HashableMixin):
 
 class Mixture(Reagent):
     """
-    Mixtures represent combinations of reagents (simple or mixtures
+    Mixtures represent combinations of contents (simple or mixtures
     themselves). amounts in each recipe represent "parts" and not absolute
     volumes, e.g.,
 

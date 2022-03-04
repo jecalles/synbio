@@ -40,6 +40,11 @@ class Polymer(IPolymer):
     def __str__(self) -> str:
         return self.seq
 
+    def __hash__(self) -> int:
+        return hash(
+            (self.__class__, self.seq)
+        )
+
     def __eq__(self, other: SeqType) -> bool:
         return str(self).casefold() == str(other).casefold()
 
@@ -67,9 +72,6 @@ class Polymer(IPolymer):
         seqlist.insert(key, self._seq_check(value))
         self.seq = ''.join(seqlist)
 
-    def _comparables(self) -> List[str]:
-        return ['seq']
-
     def _seq_check(self, value: SeqType) -> str:
         """
         A private method used to check that the characters of a given input
@@ -96,25 +98,6 @@ class Polymer(IPolymer):
                 f"input value not in {self.__class__.__name__} alphabet")
 
         return seq
-
-    @abstractmethod
-    def alphabet(self) -> List[str]:
-        """
-        A function prototype that returns a list of characters
-        representing valid inputs for a given Polymer subclass. Implement this
-        method in order to inherit from Polymer.
-
-        E.g.,
-
-        >>> class XNA(Polymer):
-        >>>     def alphabet(self):
-        >>>         return ["X", "Y", "W", "Z"]
-
-        >>> XNA("XXYYZZ")
-        XNA(XXYYZZ)
-        >>> XNA("AATTCCGG")#raises ValueError("input value not in XNA alphabet")
-        """
-        raise NotImplementedError
 
 
 class NucleicAcid(Polymer):
