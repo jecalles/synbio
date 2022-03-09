@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Dict, Tuple, List
 import re
 
@@ -16,7 +16,7 @@ TODO:
 [x] Sort out Experiment inheritance tree (branch Experiment)
 [x] Sort out PlateReaderExperiment
 [x] Sort out EchoExperiment
-[ ] Sort out EchoProtocol.generate_protocol()
+[x] Sort out EchoProtocol.generate_protocol()
 [ ] Sort out EchoProtocol.check_protocol()
 [ ] Sort out EchoExperiment.simulate()
 """
@@ -30,7 +30,7 @@ __all__ = [
 class EchoProtocol:
     src_plate: Plate = make_384_ldv_well()
     dest_plate: Plate = make_96_well()
-    dataframe: pd.DataFrame = None
+    dataframe: pd.DataFrame = field(default=None, repr=False)
 
     def __post_init__(self):
         if (self.dataframe is None) and (len(self.dest_plate.full_wells) > 0):
@@ -42,6 +42,11 @@ class EchoProtocol:
         if not self.check_protocol():
             raise ValueError("source plate doesn't have enough material to "
                              "populate destination plate")
+        # first, store well volumes for source plate
+        src_well_vols = {
+            loc: well.volume
+            for loc, well in self.src_plate.dict.items()
+        }
         # initialize containers for columns of protocol
         src_wells = []
         dest_wells = []
@@ -111,29 +116,55 @@ class EchoProtocol:
               .sort_values(by="Source well", key=src_sort_key))
         df = df[df['XferVol'] > 0]  # ignore tranfer instructions w/ zero vol
 
+        # finally, reset source plate well volumes
+        for loc, well in self.src_plate.dict.items():
+            well.volume = src_well_vols[loc]
+
         return df
 
     def check_protocol(self) -> bool:
-        full_src_wells = len(self.src_plate.full_wells)
-        full_dest_wells = len(self.dest_plate.full_wells)
+        def check_plates(self) -> bool:
+            full_src_wells = len(self.src_plate.full_wells)
+            full_dest_wells = len(self.dest_plate.full_wells)
 
-        if full_src_wells == 0:
-            if full_dest_wells == 0:
-                return True
+            if full_src_wells == 0:
+                if full_dest_wells == 0:
+                    return True
+                else:
+                    return False
             else:
-                return False
-        else:
-            avail_vols = {
-                rgt: sum(
-                    well.available_vol for well in well_list
-                ) for rgt, well_list in self.src_plate.wells_by_content.items()
-            }
-            req_vols = self.dest_plate.reagent_volumes
+                avail_vols = {
+                    rgt: sum(
+                        well.available_vol for well in well_list
+                    ) for rgt, well_list in self.src_plate.wells_by_content.items()
+                }
+                req_vols = self.dest_plate.reagent_volumes
 
-            return all(
-                avail_vols[rgt] >= req_vols[rgt]
-                for rgt in self.dest_plate.reagents
-            )
+                return all(
+                    avail_vols[rgt] >= req_vols[rgt]
+                    for rgt in self.dest_plate.reagents
+                )
+        def check_dataframe(self) -> bool:
+            # dereference attributes for convenience
+            src = self.src_plate
+            dest = self.dest_plate
+            df = self.dataframe
+
+            # check dest_plate is satisfied by dataframe
+            for content, well_list in dest.wells_by_content.items():
+                well_xfer_vols: List[Tuple[pint.Quantity, pint.Quantity]] = [
+                    (well.volume,
+                     df[df["Destination well"] == well.location]["XferVol"].sum() * u.nL)
+                    for well in well_list
+                ]
+                close_list = [np.isclose(well_vol, xfer_vol) for
+                              well_vol, xfer_vol in
+                              well_xfer_vols]
+                if not all(close_list):
+                    raise ValueError(f"dest_well: {content} has wells not "
+                                     f"close to spec")
+
+            # check src_plate is satisfied by dataframe
 
 
     def to_csv(self, filename: str) -> None:

@@ -1,5 +1,5 @@
 import itertools
-from functools import reduce
+from functools import reduce, cached_property
 from dataclasses import dataclass
 from itertools import count
 from math import prod
@@ -120,7 +120,7 @@ class Plate:
             )
         self.array = array
 
-        self._full_wells = self.__full_wells()
+        # self._full_wells = self.__full_wells()
 
 
     def __repr__(self) -> str:
@@ -194,19 +194,20 @@ class Plate:
             )
 
     @property
-    def contents(self) -> Set[Reagent]:
+    def contents(self) -> Dict[str, Reagent]:
         return {
-            well.content
+            well.content.name: well.content
             for well in self._full_wells.values()
         }
 
 
     @property
     def wells_by_content(self) -> Dict[str, List[Well]]:
-        d = {rgt: [] for rgt in self.contents}
+        contents = set(self.contents.values())
+        d = {rgt: [] for rgt in contents}
 
         for well in self.dict.values():
-            if well.content in self.contents:
+            if well.content in contents:
                 d[well.content].append(well)
 
         return d
@@ -227,7 +228,7 @@ class Plate:
         """
         return {
             rgt
-            for content in self.contents
+            for content in self.contents.values()
             for rgt in content.recipe.keys()
         }
 
@@ -273,7 +274,8 @@ class Plate:
             if name not in empty
         }
 
-    def __full_wells(self) -> Dict[str, Well]:
+    @cached_property
+    def _full_wells(self) -> Dict[str, Well]:
         """
         Alternate to self.full_wells. Returns any Wells with nonzero
         contents. Will return wells with well.volume == 0 if well.content !=
@@ -333,7 +335,7 @@ class Plate:
                 well.content = reagent
                 well.name = f"{name}_{next(counters[name])}"
 
-        self._full_wells = self.__full_wells()
+        # self._full_wells = self.__full_wells()
 
 PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], str)
 
