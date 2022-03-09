@@ -11,12 +11,22 @@ __all__ = [
 
 
 class Reagent:
-    def __init__(self, name: str):
+    def __init__(self, name: str = None):
         self.name = name
         self._recipe = None
 
+    def __eq__(self, other):
+        return all(
+            (self.name == other.name,
+             self._recipe == other._recipe)
+        )
+
     def __hash__(self):
-        return hash((self.name, self._recipe))
+        recipe = self._recipe if self._recipe is not None else {}
+        return hash((self.name, *recipe))
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}('{self.name}')"
 
     def __repr__(self):
         return f"{self.__class__.__name__}('{self.name}')"
@@ -24,7 +34,7 @@ class Reagent:
     @property
     def recipe(self) -> Dict['OwnType', float]:
         """
-        A "recipe" is a dictionary that maps component reagents to their
+        A "recipe" is a dictionary that maps component contents to their
         relative ratios in the resulting Mixture. Pure Reagents
         return {self: 1}. All units are nondimensional.
         """
@@ -38,7 +48,7 @@ class Reagent:
 
 class Mixture(Reagent):
     """
-    Mixtures represent combinations of reagents (simple or mixtures
+    Mixtures represent combinations of contents (simple or mixtures
     themselves). amounts in each recipe represent "parts" and not absolute
     volumes, e.g.,
 

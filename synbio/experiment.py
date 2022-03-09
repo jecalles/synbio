@@ -9,7 +9,7 @@ __all__ = [
 ]
 
 
-class Condition(HashableMixin):
+class Condition:
     def _comparables(self) -> List[str]:
         return list(self.variables.keys())
 

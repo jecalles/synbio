@@ -1,8 +1,9 @@
 import itertools
+from functools import reduce, cached_property
 from dataclasses import dataclass
 from itertools import count
 from math import prod
-from typing import Dict, List, Optional, Tuple, TypeVar
+from typing import Set, Dict, List, Optional, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -27,8 +28,10 @@ class Well:
     content: Reagent
     max_vol: pint.Quantity
     dead_vol: pint.Quantity
+    location: str = None
 
     vol: pint.Quantity = 0 * u.uL
+
 
     def __str__(self):
         return self.name
@@ -77,15 +80,16 @@ class Well:
         )
 
     @property
-    def recipe(self) -> Dict[Reagent, pint.Quantity]:
-        rec = self.content.recipe
+    def reagents(self) -> Set[Reagent]:
+        return {rgt for rgt in self.content.recipe.keys()}
 
-        total = sum(rec.values())
-        vol_factor = self.volume / total
 
+    @property
+    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+        vol_factor = self.volume / sum(self.content.recipe.values())
         return {
-            reagent: np.round(num * vol_factor, decimals=4)
-            for reagent, num in rec.items()
+            rgt: num * vol_factor
+            for rgt, num in self.content.recipe.items()
         }
 
 
@@ -109,11 +113,15 @@ class Plate:
         for well_name, (i, j) in self.name_map.items():
             array[i][j] = Well(
                 name=well_name,
-                content=Reagent("empty"),
+                content=Reagent(),
                 max_vol=max_vol,
-                dead_vol=dead_vol
+                dead_vol=dead_vol,
+                location=f"{rows[i]}{cols[j]}"
             )
         self.array = array
+
+        # self._full_wells = self.__full_wells()
+
 
     def __repr__(self) -> str:
         cls_ = self.__class__.__name__
@@ -186,6 +194,66 @@ class Plate:
             )
 
     @property
+    def contents(self) -> Dict[str, Reagent]:
+        return {
+            well.content.name: well.content
+            for well in self._full_wells.values()
+        }
+
+
+    @property
+    def wells_by_content(self) -> Dict[str, List[Well]]:
+        contents = set(self.contents.values())
+        d = {rgt: [] for rgt in contents}
+
+        for well in self.dict.values():
+            if well.content in contents:
+                d[well.content].append(well)
+
+        return d
+
+    @property
+    def content_volumes(self) -> Dict[Reagent, pint.Quantity]:
+        return {
+            rgt: sum(
+                well.volume for well in well_list
+            ) for rgt, well_list in self.wells_by_content.items()
+        }
+
+    @property
+    def reagents(self) -> Set[Reagent]:
+        """
+        differs from self.contents, in as much as it separates Mixtures
+        into the Reagents that compose them
+        """
+        return {
+            rgt
+            for content in self.contents.values()
+            for rgt in content.recipe.keys()
+        }
+
+    @property
+    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+        def merge_dict(dict1, dict2):
+            dict3 = {**dict1, **dict2}
+            for key, value in dict3.items():
+                if key in dict1 and key in dict2:
+                    dict3[key] = dict1[key] + dict2[key]
+            return dict3
+
+
+        rgt_vols_list_by_content = {
+            content: [well.reagent_volumes for well in well_list]
+            for content, well_list in self.wells_by_content.items()
+        }
+        rgt_vols_by_content = {
+            content: reduce(merge_dict, rgt_vol_dict_list)
+            for content, rgt_vol_dict_list in rgt_vols_list_by_content.items()
+        }
+        return reduce(merge_dict, rgt_vols_by_content.values(), {})
+
+
+    @property
     def num_wells(self) -> int:
         return prod(self.shape)
 
@@ -204,6 +272,19 @@ class Plate:
             name: well
             for name, well in self.dict.items()
             if name not in empty
+        }
+
+    @cached_property
+    def _full_wells(self) -> Dict[str, Well]:
+        """
+        Alternate to self.full_wells. Returns any Wells with nonzero
+        contents. Will return wells with well.volume == 0 if well.content !=
+        Reagent()
+        """
+        return {
+            name: well
+            for name, well in self.dict.items()
+            if well.content != Reagent()
         }
 
     @staticmethod
@@ -252,7 +333,6 @@ class Plate:
 
                 well = self.array[i, j]
                 well.content = reagent
-                well.volume = 0
                 well.name = f"{name}_{next(counters[name])}"
 
 

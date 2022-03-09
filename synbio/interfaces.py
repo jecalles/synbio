@@ -9,7 +9,7 @@ __all__ = [
     # wrappers
     "compare_same_type",
     # mixins
-    "ComparableMixin", "HashableMixin",
+    "ComparableMixin",
     # annotations
     "ILocation", "IPart", "IPolymer", "LocationType", "IndexType", "SeqType",
 ]
@@ -71,60 +71,53 @@ class ComparableMixin:
         )
 
 
-class HashableMixin(ComparableMixin):
-    """
-    A Mixin class that extends ComparableMixin to provide both equality and
-    hash methods, given a class attribute _comparables
-
-    >>> class Foo(HashableMixin):
-    >>>     def __init__(self, a, b, c):
-    >>>         self.val_a = a
-    >>>         self.val_b = b
-    >>>         self.val_c = c
-    >>>
-    >>>     def _comparables(self):
-    >>>         return ['val_a', 'val_b']
-
-    >>> alice = Foo(1, 2, "not_compared")
-    >>> bobby = Foo(3, 4, "just_ignored")
-    >>> {foo: foo.val_c for foo in [alice, bobby]} # works!
-    """
-
-    def __hash__(self) -> int:
-        return hash(
-            (getattr(self, comp) for comp in self._comparables())
-        )
-
-
 ################
 #  Interfaces  #
 ################
-class IPolymer(abc.MutableSequence, HashableMixin):
-    def __init__(self, seq: SeqType = '') -> None:
-        self.seq = self._seq_check(seq)
-
+class IPolymer(abc.MutableSequence):
     @abstractmethod
-    def __getitem__(self, key):
+    def __hash__(self):
         raise NotImplementedError
 
-    @abstractmethod
-    def __setitem__(self, key, value):
-        raise NotImplementedError
-
-    @abstractmethod
-    def __delitem__(self, key):
-        raise NotImplementedError
-
-    @abstractmethod
-    def insert(self, key, value):
-        raise NotImplementedError
 
     @abstractmethod
     def _seq_check(self, value: SeqType) -> str:
+        """
+        A private method used to check that the characters of a given input
+        sequence "value" all belong to a given Polymer's alphabet (defined in
+        the alphabet() method).
+
+        Parameters
+        ----------
+        value: sequence to check
+
+        Returns
+        -------
+        True
+            if all characters are part of self.alphabet(), and
+        False
+            otherwise
+        """
         raise NotImplementedError
+
 
     @abstractmethod
     def alphabet(self) -> List[str]:
+        """
+        A function prototype that returns a list of characters
+        representing valid inputs for a given Polymer subclass. Implement this
+        method in order to inherit from Polymer.
+
+        E.g.,
+
+        >>> class XNA(Polymer):
+        >>>     def alphabet(self):
+        >>>         return ["X", "Y", "W", "Z"]
+
+        >>> XNA("XXYYZZ")
+        XNA(XXYYZZ)
+        >>> XNA("AATTCCGG")#raises ValueError("input value not in XNA alphabet")
+        """
         raise NotImplementedError
 
 
@@ -135,9 +128,9 @@ SeqType = TypeVar("SeqType", str, IPolymer)
 class ILocation(ABC, ComparableMixin):
     @abstractmethod
     def __init__(self):
-        start = None
-        end = None
-        strand = None
+        self.start = None
+        self.end = None
+        self.strand = None
 
     @staticmethod
     @abstractmethod
