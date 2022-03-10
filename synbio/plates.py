@@ -1,9 +1,9 @@
 import itertools
-from functools import reduce, cached_property
 from dataclasses import dataclass
+from functools import cached_property, reduce
 from itertools import count
 from math import prod
-from typing import Set, Dict, List, Optional, Tuple, TypeVar
+from typing import Dict, List, Optional, Set, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -31,7 +31,6 @@ class Well:
     location: str = None
 
     vol: pint.Quantity = 0 * u.uL
-
 
     def __str__(self):
         return self.name
@@ -83,7 +82,6 @@ class Well:
     def reagents(self) -> Set[Reagent]:
         return {rgt for rgt in self.content.recipe.keys()}
 
-
     @property
     def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
         vol_factor = self.volume / sum(self.content.recipe.values())
@@ -121,7 +119,6 @@ class Plate:
         self.array = array
 
         # self._full_wells = self.__full_wells()
-
 
     def __repr__(self) -> str:
         cls_ = self.__class__.__name__
@@ -200,9 +197,8 @@ class Plate:
             for well in self._full_wells.values()
         }
 
-
     @property
-    def wells_by_content(self) -> Dict[str, List[Well]]:
+    def wells_by_content(self) -> Dict[Reagent, List[Well]]:
         contents = set(self.contents.values())
         d = {rgt: [] for rgt in contents}
 
@@ -221,13 +217,13 @@ class Plate:
         }
 
     @property
-    def reagents(self) -> Set[Reagent]:
+    def reagents(self) -> Dict[str, Reagent]:
         """
         differs from self.contents, in as much as it separates Mixtures
         into the Reagents that compose them
         """
         return {
-            rgt
+            rgt.name: rgt
             for content in self.contents.values()
             for rgt in content.recipe.keys()
         }
@@ -241,7 +237,6 @@ class Plate:
                     dict3[key] = dict1[key] + dict2[key]
             return dict3
 
-
         rgt_vols_list_by_content = {
             content: [well.reagent_volumes for well in well_list]
             for content, well_list in self.wells_by_content.items()
@@ -251,7 +246,6 @@ class Plate:
             for content, rgt_vol_dict_list in rgt_vols_list_by_content.items()
         }
         return reduce(merge_dict, rgt_vols_by_content.values(), {})
-
 
     @property
     def num_wells(self) -> int:

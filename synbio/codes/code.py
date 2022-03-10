@@ -98,6 +98,7 @@ class Code(dict):
 
         return out
 
+    @property
     def rmap(self) -> Dict[str, Set[str]]:
         """
         A method used to generate the reverse map of a genetic code. Returns an

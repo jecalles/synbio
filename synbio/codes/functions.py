@@ -31,6 +31,6 @@ def get_nonsynonymous_codons(
 
     return [
         max_codon(codon_list, codon_frequency)
-        for aa, codon_list in code.rmap().items()
+        for aa, codon_list in code.rmap.items()
         if aa != code[codon]
     ]

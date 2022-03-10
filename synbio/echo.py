@@ -1,15 +1,15 @@
-from dataclasses import dataclass, field
-from typing import Callable, Dict, Tuple, List
 import re
+from dataclasses import dataclass, field
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
 import pint
 
-from synbio.units import unit_registry as u
 from synbio.platereader import *
 from synbio.plates import *
 from synbio.reagents import Reagent
+from synbio.units import unit_registry as u
 
 """
 TODO:
@@ -22,7 +22,9 @@ TODO:
 """
 __all__ = [
     # dataclasses
-    "EchoProtocol", "EchoExperiment"
+    "EchoProtocol", "EchoExperiment",
+    # functions
+    "calc_src_wells"
 ]
 
 
@@ -34,12 +36,10 @@ class EchoProtocol:
 
     def __post_init__(self):
         if (self.dataframe is None) and (len(self.dest_plate.full_wells) > 0):
-                self.dataframe = self.generate_protocol()
-
+            self.dataframe = self.generate_protocol()
 
     def generate_protocol(self) -> pd.DataFrame:
-        from itertools import count
-        if not self.check_protocol():
+        if not self.check_plates():
             raise ValueError("source plate doesn't have enough material to "
                              "populate destination plate")
         # first, store well volumes for source plate
@@ -66,7 +66,7 @@ class EchoProtocol:
                         src_well = src_wells_for_rgt.pop()
                     except:
                         raise RuntimeError("could not complete assign")
-                    if (avail_vol:= src_well.available_vol) >= rgt_vol:
+                    if (avail_vol := src_well.available_vol) >= rgt_vol:
                         # transfer rgt_vol from src_well to dest_well
                         xfer_vol = rgt_vol
 
@@ -122,53 +122,57 @@ class EchoProtocol:
 
         return df
 
-    def check_protocol(self) -> bool:
-        def check_plates(self) -> bool:
-            full_src_wells = len(self.src_plate.full_wells)
-            full_dest_wells = len(self.dest_plate.full_wells)
+    def check_plates(self) -> bool:
+        full_src_wells = len(self.src_plate.full_wells)
+        full_dest_wells = len(self.dest_plate.full_wells)
 
-            if full_src_wells == 0:
-                if full_dest_wells == 0:
-                    return True
-                else:
-                    return False
+        if full_src_wells == 0:
+            if full_dest_wells == 0:
+                return True
             else:
-                avail_vols = {
-                    rgt: sum(
-                        well.available_vol for well in well_list
-                    ) for rgt, well_list in self.src_plate.wells_by_content.items()
-                }
-                req_vols = self.dest_plate.reagent_volumes
+                return False
+        else:
+            avail_vols = {
+                rgt: sum(
+                    well.available_vol for well in well_list
+                ) for rgt, well_list in
+                self.src_plate.wells_by_content.items()
+            }
+            req_vols = self.dest_plate.reagent_volumes
 
-                return all(
-                    avail_vols[rgt] >= req_vols[rgt]
-                    for rgt in self.dest_plate.reagents
-                )
-        def check_dataframe(self) -> bool:
-            # dereference attributes for convenience
-            src = self.src_plate
-            dest = self.dest_plate
-            df = self.dataframe
+            return all(
+                avail_vols[rgt] >= req_vols[rgt]
+                for rgt in self.dest_plate.reagents.values()
+            )
 
-            # check dest_plate is satisfied by dataframe
-            for content, well_list in dest.wells_by_content.items():
-                well_xfer_vols: List[Tuple[pint.Quantity, pint.Quantity]] = [
-                    (well.volume,
-                     df[df["Destination well"] == well.location]["XferVol"].sum() * u.nL)
-                    for well in well_list
-                ]
-                close_list = [np.isclose(well_vol, xfer_vol) for
-                              well_vol, xfer_vol in
-                              well_xfer_vols]
-                if not all(close_list):
-                    raise ValueError(f"dest_well: {content} has wells not "
-                                     f"close to spec")
+    def check_dataframe(self) -> bool:
+        # dereference attributes for convenience
+        src = self.src_plate
+        dest = self.dest_plate
+        df = self.dataframe
 
-            # check src_plate is satisfied by dataframe
+        # check dest_plate is satisfied by dataframe
+        for content, well_list in dest.wells_by_content.items():
+            well_xfer_vols: List[Tuple[pint.Quantity, pint.Quantity]] = [
+                (well.volume,
+                 df[df["Destination well"] == well.location][
+                     "XferVol"].sum() * u.nL)
+                for well in well_list
+            ]
+            close_list = [np.isclose(well_vol, xfer_vol) for
+                          well_vol, xfer_vol in
+                          well_xfer_vols]
+            if not all(close_list):
+                raise ValueError(f"dest_well: {content} has wells not "
+                                 f"close to spec")
 
+        # check src_plate is satisfied by dataframe
+        raise NotImplementedError("code under construction")
+
+        return True
 
     def to_csv(self, filename: str) -> None:
-        self.protocol.to_csv(filename)
+        self.dataframe.to_csv(filename)
 
 
 class EchoExperiment(PlateReaderExperiment):
@@ -213,35 +217,55 @@ class EchoExperiment(PlateReaderExperiment):
         return exp
 
     def calc_src_wells(
-            self, plate: Plate = None,
-            buffer_vol: pint.Quantity = 0.1 * u.uL
+            self, src_plate: Plate = None,
+            buffer_vol: pint.Quantity = 0.1 * u.uL,
+            vol_tol: int = 2
     ) -> Dict[Reagent, Tuple[int, pint.Quantity]]:
-        if plate is None:
-            plate = self.protocol.src_plate
+        if src_plate is None:
+            src_plate = self.protocol.src_plate
 
-        working_vol = plate.well_volumes["working_vol"]
-        rgt_vols = {
-            rgt: vol + buffer_vol
-            for rgt, vol in self.reagent_volumes.items()
-        }
+        dest_plate = self.protocol.dest_plate
 
-        num_wells = {
-            rg: np.ceil((vol/ working_vol).magnitude)
-            for rg, vol in rgt_vols.items()
-        }
-        dead_vol = plate.well_volumes["dead_vol"]
-        vol_per_well = {
-            rg: np.round(
-                (vol / num_wells[rg]) + dead_vol,
-                decimals=2
-           ) for rg, vol in rgt_vols.items()
-        }
-        return {
-            rg: (num_wells[rg], vol_per_well[rg])
-            for rg in self.reagents.values()
-        }
+        return calc_src_wells(
+            src_plate=src_plate,
+            dest_plate=dest_plate,
+            buffer_vol=buffer_vol, vol_tol=vol_tol
+        )
 
-    def simulate(self) -> bool:
+    def simulate(self) -> None:
         """ The idea is to get some sense of what an experiment is going to
         look like"""
-        return self.protocol.check_protocol()
+        raise NotImplementedError("function not even drafted yet")
+
+
+def calc_src_wells(
+        dest_plate: Plate,
+        src_plate: Plate = None,
+        buffer_vol: pint.Quantity = 0.1 * u.uL,
+        vol_tol: int = 2
+) -> Dict[Reagent, Tuple[int, pint.Quantity]]:
+    if src_plate is None:
+        src_plate = make_384_ldv_well()
+
+    working_vol = src_plate.well_volumes["working_vol"]
+    dead_vol = src_plate.well_volumes["dead_vol"]
+
+    rgt_vols = {
+        rgt: vol + buffer_vol
+        for rgt, vol in dest_plate.reagent_volumes.items()
+    }
+
+    num_wells = {
+        rg: np.ceil((vol / working_vol).magnitude)
+        for rg, vol in rgt_vols.items()
+    }
+    vol_per_well = {
+        rg: np.round(
+            (vol / num_wells[rg]) + dead_vol,
+            decimals=vol_tol
+        ) for rg, vol in rgt_vols.items()
+    }
+    return {
+        rg: (num_wells[rg], vol_per_well[rg])
+        for rg in dest_plate.reagents.values()
+    }

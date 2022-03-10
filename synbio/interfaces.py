@@ -79,7 +79,6 @@ class IPolymer(abc.MutableSequence):
     def __hash__(self):
         raise NotImplementedError
 
-
     @abstractmethod
     def _seq_check(self, value: SeqType) -> str:
         """
@@ -99,7 +98,6 @@ class IPolymer(abc.MutableSequence):
             otherwise
         """
         raise NotImplementedError
-
 
     @abstractmethod
     def alphabet(self) -> List[str]:
