@@ -187,7 +187,7 @@ class EchoExperiment(PlateReaderExperiment):
     def from_plate_map(
             cls, src_plate_filepath: str, dest_plate_filepath: str,
             cond_name_map: Callable[[str, Plate], PlateReaderCondition],
-            src_plate: Plate = make_384_ldv_well()
+            src_plate: Plate = None,
     ) -> "OwnType":
         # load up Experiment
         conditions, dest_plate = load_plate_map(dest_plate_filepath,
@@ -199,7 +199,10 @@ class EchoExperiment(PlateReaderExperiment):
         src_wells_by_reagent = src_plate.wells_by_content
 
         # calculate number of wells and volume required per reagent
-        well_vols = exp.calc_src_wells()
+        well_vols = exp.calc_src_wells(
+            src_plate=src_plate,
+            dest_plate=dest_plate
+        )
 
         # iterate over wells by reagent; check num_wells; update volume
         for rgt, well_list in src_wells_by_reagent.items():
@@ -217,14 +220,17 @@ class EchoExperiment(PlateReaderExperiment):
         return exp
 
     def calc_src_wells(
-            self, src_plate: Plate = None,
+            self,
+            src_plate: Plate = None,
+            dest_plate: Plate = None,
             buffer_vol: pint.Quantity = 0.1 * u.uL,
             vol_tol: int = 2
     ) -> Dict[Reagent, Tuple[int, pint.Quantity]]:
         if src_plate is None:
             src_plate = self.protocol.src_plate
 
-        dest_plate = self.protocol.dest_plate
+        if dest_plate is None:
+            dest_plate = self.protocol.dest_plate
 
         return calc_src_wells(
             src_plate=src_plate,
@@ -245,7 +251,7 @@ def calc_src_wells(
         vol_tol: int = 2
 ) -> Dict[Reagent, Tuple[int, pint.Quantity]]:
     if src_plate is None:
-        src_plate = make_384_ldv_well()
+        src_plate = make_384_well()
 
     working_vol = src_plate.well_volumes["working_vol"]
     dead_vol = src_plate.well_volumes["dead_vol"]
