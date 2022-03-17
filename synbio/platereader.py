@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from functools import reduce
 from itertools import count
 from typing import Callable, Dict, List, Tuple
 
@@ -8,8 +9,8 @@ import pint
 
 from synbio.experiment import Condition, Data, Experiment
 from synbio.plates import Plate, make_96_well
-from synbio.reagents import Reagent
-from synbio.units import unit_registry as u
+from synbio.reagents import Reagent, add_recipes
+from synbio.units import QuantityType, unit_registry as u
 
 __all__ = [
     "PlateReaderCondition", "PlateReaderData", "PlateReaderExperiment",
@@ -30,7 +31,7 @@ class PlateReaderCondition(Condition):
         self.plate = plate
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
         recipe = self.content.recipe
 
         total = sum(recipe.values())
@@ -70,7 +71,7 @@ class PlateReaderExperiment(Experiment):
             cls, filepath: str,
             cond_name_map: Callable[[str, Plate], PlateReaderCondition],
             plate: Plate = make_96_well()
-    ) -> "OwnType":
+    ) -> PlateReaderExperiment:
         conditions, _ = load_plate_map(filepath, cond_name_map, plate)
         return cls(conditions=conditions)
 
@@ -83,18 +84,10 @@ class PlateReaderExperiment(Experiment):
         }
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
         # list of dicts describing contents for each condition
-        adj_recipes = [c.reagent_volumes for c in self.conditions]
-
-        def merge_dict(dict1, dict2):
-            dict3 = {**dict1, **dict2}
-            for key, value in dict3.items():
-                if key in dict1 and key in dict2:
-                    dict3[key] = dict1[key] + dict2[key]
-            return dict3
-
-        return reduce(merge_dict, adj_recipes)
+        recipe_list_by_condition = [c.reagent_volumes for c in self.conditions]
+        return add_recipes(recipe_list_by_condition)
 
 
 def load_plate_map(

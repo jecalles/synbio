@@ -1,10 +1,15 @@
-from typing import Dict, List
+from __future__ import annotations
+
+from functools import reduce
+from typing import Dict, Iterable, List
+
+from synbio.units import QuantityType
 
 __all__ = [
     # dataclasses
     "Reagent", "Mixture",
     # functions
-    "mixture_from_recipes",
+    "mixture_from_recipes", "add_recipes",
     # constants
     "PURE_reagents", "PURE"
 ]
@@ -32,7 +37,7 @@ class Reagent:
         return f"{self.__class__.__name__}('{self.name}')"
 
     @property
-    def recipe(self) -> Dict['OwnType', float]:
+    def recipe(self) -> Dict[Reagent, float]:
         """
         A "recipe" is a dictionary that maps component contents to their
         relative ratios in the resulting Mixture. Pure Reagents
@@ -90,6 +95,17 @@ def mixture_from_recipes(
         name: Mixture(name=name, recipe=rec)
         for name, rec in recipe_dict.items()
     }
+
+
+def add_recipes(recipes: Iterable[Dict[Reagent, QuantityType]]):
+    def merge_dict(dict1, dict2):
+        dict3 = {**dict1, **dict2}
+        for key, value in dict3.items():
+            if key in dict1 and key in dict2:
+                dict3[key] = dict1[key] + dict2[key]
+        return dict3
+
+    return reduce(merge_dict, recipes, {})
 
 
 # Constants

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Tuple
@@ -8,8 +10,8 @@ import pint
 
 from synbio.platereader import *
 from synbio.plates import *
-from synbio.reagents import Reagent
-from synbio.units import unit_registry as u
+from synbio.reagents import Reagent, add_recipes
+from synbio.units import QuantityType, unit_registry as u
 
 """
 TODO:
@@ -30,7 +32,7 @@ __all__ = [
 
 @dataclass
 class EchoProtocol:
-    src_plate: Plate = make_384_ldv_well()
+    src_plate: Plate = make_384_well()
     dest_plate: Plate = make_96_well()
     dataframe: pd.DataFrame = field(default=None, repr=False)
 
@@ -188,7 +190,10 @@ class EchoExperiment(PlateReaderExperiment):
             cls, src_plate_filepath: str, dest_plate_filepath: str,
             cond_name_map: Callable[[str, Plate], PlateReaderCondition],
             src_plate: Plate = None,
-    ) -> "OwnType":
+    ) -> EchoExperiment:
+        # get default src_plate if unspecified
+        if src_plate is None:
+            src_plate = EchoProtocol().src_plate
         # load up Experiment
         conditions, dest_plate = load_plate_map(dest_plate_filepath,
                                                 cond_name_map)
@@ -233,19 +238,14 @@ class EchoExperiment(PlateReaderExperiment):
             dest_plate = self.protocol.dest_plate
 
         return calc_src_wells(
+            reagent_vols=dest_plate.reagent_volumes,
             src_plate=src_plate,
-            dest_plate=dest_plate,
             buffer_vol=buffer_vol, vol_tol=vol_tol
         )
 
-    def simulate(self) -> None:
-        """ The idea is to get some sense of what an experiment is going to
-        look like"""
-        raise NotImplementedError("function not even drafted yet")
-
 
 def calc_src_wells(
-        dest_plate: Plate,
+        reagent_vols: Dict[Reagent, QuantityType],
         src_plate: Plate = None,
         buffer_vol: pint.Quantity = 0.1 * u.uL,
         vol_tol: int = 2
@@ -258,7 +258,7 @@ def calc_src_wells(
 
     rgt_vols = {
         rgt: vol + buffer_vol
-        for rgt, vol in dest_plate.reagent_volumes.items()
+        for rgt, vol in reagent_vols.items()
     }
 
     num_wells = {
@@ -273,5 +273,17 @@ def calc_src_wells(
     }
     return {
         rg: (num_wells[rg], vol_per_well[rg])
-        for rg in dest_plate.reagents.values()
+        for rg in reagent_vols.keys()
     }
+
+
+def simulate(
+        conditions: List[PlateReaderCondition],
+        src_plate: Plate = make_1536_ldv_well()
+) -> Dict[Reagent, QuantityType]:
+    recipes = [
+        cond.reagent_volumes
+        for cond in conditions
+    ]
+    reagent_volumes = add_recipes(recipes)
+    calc_src_wells(reagent_volumes, src_plate)

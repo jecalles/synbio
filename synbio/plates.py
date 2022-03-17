@@ -1,6 +1,6 @@
 import itertools
 from dataclasses import dataclass
-from functools import cached_property, reduce
+from functools import cached_property
 from itertools import count
 from math import prod
 from typing import Dict, List, Optional, Set, Tuple, TypeVar
@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 import pint
 
-from synbio.reagents import Reagent
-from synbio.units import unit_registry as u
+from synbio.reagents import Reagent, add_recipes
+from synbio.units import QuantityType, unit_registry as u
 
 __all__ = [
     # Dataclasses
@@ -83,7 +83,7 @@ class Well:
         return {rgt for rgt in self.content.recipe.keys()}
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
         vol_factor = self.volume / sum(self.content.recipe.values())
         return {
             rgt: num * vol_factor
@@ -150,6 +150,12 @@ class Plate:
 
     @property
     def well_volumes(self) -> Dict[str, pint.Quantity]:
+        """
+        dict attributes
+            'max_vol': maximum volume of well,
+            'dead_vol': volume lost at bottom of well,
+            'working_vol': total useable volume
+        """
         volumes_set = {
             (well.max_vol, well.dead_vol)
             for well in self.dict.values()
@@ -209,7 +215,7 @@ class Plate:
         return d
 
     @property
-    def content_volumes(self) -> Dict[Reagent, pint.Quantity]:
+    def content_volumes(self) -> Dict[Reagent, QuantityType]:
         return {
             rgt: sum(
                 well.volume for well in well_list
@@ -229,23 +235,16 @@ class Plate:
         }
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
-        def merge_dict(dict1, dict2):
-            dict3 = {**dict1, **dict2}
-            for key, value in dict3.items():
-                if key in dict1 and key in dict2:
-                    dict3[key] = dict1[key] + dict2[key]
-            return dict3
-
+    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
         rgt_vols_list_by_content = {
             content: [well.reagent_volumes for well in well_list]
             for content, well_list in self.wells_by_content.items()
         }
         rgt_vols_by_content = {
-            content: reduce(merge_dict, rgt_vol_dict_list)
+            content: add_recipes(rgt_vol_dict_list)
             for content, rgt_vol_dict_list in rgt_vols_list_by_content.items()
         }
-        return reduce(merge_dict, rgt_vols_by_content.values(), {})
+        return add_recipes(rgt_vols_by_content.values())
 
     @property
     def num_wells(self) -> int:
