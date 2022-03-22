@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 import pint
 
-from synbio.platereader import *
-from synbio.plates import *
+from synbio.units import unit_registry as u
 from synbio.reagents import Reagent, add_recipes
-from synbio.units import QuantityType, unit_registry as u
+from synbio.plates import *
+from synbio.platereader import *
 
 """
 TODO:
@@ -189,14 +189,19 @@ class EchoExperiment(PlateReaderExperiment):
     def from_plate_map(
             cls, src_plate_filepath: str, dest_plate_filepath: str,
             cond_name_map: Callable[[str, Plate], PlateReaderCondition],
-            src_plate: Plate = None,
+            src_plate: Plate = None, dest_plate: Plate = None,
     ) -> EchoExperiment:
-        # get default src_plate if unspecified
+        # get default plates if unspecified
         if src_plate is None:
             src_plate = EchoProtocol().src_plate
+        if dest_plate is None:
+            dest_plate = EchoProtocol().dest_plate
         # load up Experiment
-        conditions, dest_plate = load_plate_map(dest_plate_filepath,
-                                                cond_name_map)
+        conditions, dest_plate = load_plate_map(
+            filepath= dest_plate_filepath,
+            cond_name_map=cond_name_map,
+            plate=dest_plate
+        )
         src_plate.load_plate_map(src_plate_filepath)
         exp = cls(conditions=conditions)
 
@@ -245,7 +250,7 @@ class EchoExperiment(PlateReaderExperiment):
 
 
 def calc_src_wells(
-        reagent_vols: Dict[Reagent, QuantityType],
+        reagent_vols: Dict[Reagent, pint.Quantity],
         src_plate: Plate = None,
         buffer_vol: pint.Quantity = 0.1 * u.uL,
         vol_tol: int = 2
@@ -280,10 +285,13 @@ def calc_src_wells(
 def simulate(
         conditions: List[PlateReaderCondition],
         src_plate: Plate = make_1536_ldv_well()
-) -> Dict[Reagent, QuantityType]:
+) -> Dict[Reagent, pint.Quantity]:
     recipes = [
         cond.reagent_volumes
         for cond in conditions
     ]
     reagent_volumes = add_recipes(recipes)
-    calc_src_wells(reagent_volumes, src_plate)
+    return {
+        rgt: quant
+        for rgt, (_, quant) in calc_src_wells(reagent_volumes, src_plate).items()
+    }

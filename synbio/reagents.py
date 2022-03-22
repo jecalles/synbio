@@ -3,13 +3,15 @@ from __future__ import annotations
 from functools import reduce
 from typing import Dict, Iterable, List
 
+import pint
+
 from synbio.units import QuantityType
 
 __all__ = [
     # dataclasses
     "Reagent", "Mixture",
     # functions
-    "mixture_from_recipes", "add_recipes",
+    "mixture_from_recipes", "add_recipes", "calculate_reagent_volumes",
     # constants
     "PURE_reagents", "PURE"
 ]
@@ -106,6 +108,15 @@ def add_recipes(recipes: Iterable[Dict[Reagent, QuantityType]]):
         return dict3
 
     return reduce(merge_dict, recipes, {})
+
+def calculate_reagent_volumes(
+        rgt: Reagent, total_vol: pint.Quantity
+) -> Dict[Reagent, pint.Quantity]:
+    vol_factor = total_vol / sum(rgt.recipe.values())
+    return {
+        rgt: num * vol_factor
+        for rgt, num in rgt.recipe.items()
+    }
 
 
 # Constants

@@ -9,8 +9,8 @@ import pint
 
 from synbio.experiment import Condition, Data, Experiment
 from synbio.plates import Plate, make_96_well
-from synbio.reagents import Reagent, add_recipes
-from synbio.units import QuantityType, unit_registry as u
+from synbio.reagents import Reagent, add_recipes, calculate_reagent_volumes
+from synbio.units import unit_registry as u
 
 __all__ = [
     "PlateReaderCondition", "PlateReaderData", "PlateReaderExperiment",
@@ -31,16 +31,19 @@ class PlateReaderCondition(Condition):
         self.plate = plate
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
-        recipe = self.content.recipe
-
-        total = sum(recipe.values())
-        vol_factor = self.volume / total * self.replicate
-
-        return {
-            reagent: num * vol_factor
-            for reagent, num in recipe.items()
-        }
+    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+        # PREVIOUS IMPLEMENTATION
+        # recipe = self.content.recipe
+        #
+        # total = sum(recipe.values())
+        # vol_factor = self.volume / total * self.replicate
+        #
+        # return {
+        #     reagent: num * vol_factor
+        #     for reagent, num in recipe.items()
+        # }
+        total_vol = self.volume * self.replicate
+        return calculate_reagent_volumes(self.content, total_vol)
 
 
 @dataclass
@@ -84,10 +87,12 @@ class PlateReaderExperiment(Experiment):
         }
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
+    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
         # list of dicts describing contents for each condition
-        recipe_list_by_condition = [c.reagent_volumes for c in self.conditions]
-        return add_recipes(recipe_list_by_condition)
+        recipe_list: List[Dict[Reagent, pint.Quantity]] = [
+            c.reagent_volumes for c in self.conditions
+        ]
+        return add_recipes(recipe_list)
 
 
 def load_plate_map(

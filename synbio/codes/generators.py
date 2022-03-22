@@ -10,7 +10,7 @@ def red20() -> Iterable[Code]:
     A generator that randomly generates a stream of RED20 codes as python
     dictionaries without yielding repeated codes
     """
-    rmap = Code().rmap()
+    rmap = Code().rmap
     cache = set()
 
     while True:

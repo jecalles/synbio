@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 import pint
 
-from synbio.reagents import Reagent, add_recipes
-from synbio.units import QuantityType, unit_registry as u
+from synbio.reagents import Reagent, add_recipes, calculate_reagent_volumes
+from synbio.units import unit_registry as u
 
 __all__ = [
     # Dataclasses
@@ -83,12 +83,14 @@ class Well:
         return {rgt for rgt in self.content.recipe.keys()}
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
-        vol_factor = self.volume / sum(self.content.recipe.values())
-        return {
-            rgt: num * vol_factor
-            for rgt, num in self.content.recipe.items()
-        }
+    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+        # PREVIOUS IMPLEMENTATION
+        # vol_factor = self.volume / sum(self.content.recipe.values())
+        # return {
+        #     rgt: num * vol_factor
+        #     for rgt, num in self.content.recipe.items()
+        # }
+        return calculate_reagent_volumes(self.content, self.volume)
 
 
 class Plate:
@@ -215,7 +217,7 @@ class Plate:
         return d
 
     @property
-    def content_volumes(self) -> Dict[Reagent, QuantityType]:
+    def content_volumes(self) -> Dict[Reagent, pint.Quantity]:
         return {
             rgt: sum(
                 well.volume for well in well_list
@@ -235,16 +237,21 @@ class Plate:
         }
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, QuantityType]:
-        rgt_vols_list_by_content = {
-            content: [well.reagent_volumes for well in well_list]
-            for content, well_list in self.wells_by_content.items()
-        }
-        rgt_vols_by_content = {
-            content: add_recipes(rgt_vol_dict_list)
-            for content, rgt_vol_dict_list in rgt_vols_list_by_content.items()
-        }
-        return add_recipes(rgt_vols_by_content.values())
+    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+        # rgt_vols_list_by_content = {
+        #     content: [well.reagent_volumes for well in well_list]
+        #     for content, well_list in self.wells_by_content.items()
+        # }
+        # rgt_vols_by_content = {
+        #     content: add_recipes(rgt_vol_dict_list)
+        #     for content, rgt_vol_dict_list in rgt_vols_list_by_content.items()
+        # }
+        # return add_recipes(rgt_vols_by_content.values())
+        recipe_list: List[Dict[Reagent, pint.Quantity]] = [
+            well.reagent_volumes
+            for well in self.full_wells.values()
+        ]
+        return add_recipes(recipe_list)
 
     @property
     def num_wells(self) -> int:

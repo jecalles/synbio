@@ -6,7 +6,7 @@ from synbio.polymers import SeqType
 
 def get_synonymous_codons(codon: SeqType, code: Code) -> Set[str]:
     codon = str(codon)
-    return code.rmap()[code[codon]]
+    return code.rmap[code[codon]]
 
 
 def get_nonsynonymous_codons(
