@@ -9,18 +9,31 @@ from synbio.units import QuantityType
 
 __all__ = [
     # dataclasses
-    "Reagent", "Mixture",
+    "Reagent",
     # functions
-    "mixture_from_recipes", "add_recipes", "calculate_reagent_volumes",
+    "add_recipes", "calculate_reagent_volumes",
     # constants
     "PURE_reagents", "PURE"
 ]
 
 
 class Reagent:
-    def __init__(self, name: str = None):
+    """
+    Mixtures can be made that represent combinations of contents (simple
+    reagents or mixtures of reagents themselves). amounts in each recipe
+    represent "parts" and not absolute volumes, e.g.,
+
+    PURE.recipe = {
+        'Sol A'     : 4,
+        'Sol B'     : 3,
+        'DNA'       : 1,
+        'RNase Inh' : 1,
+        'H20'       : 1,
+    }
+    """
+    def __init__(self, name: str, recipe: Dict[Reagent, float] = None):
         self.name = name
-        self._recipe = None
+        self._recipe = recipe
 
     def __eq__(self, other):
         return all(
@@ -36,7 +49,7 @@ class Reagent:
         return f"{self.__class__.__name__}('{self.name}')"
 
     def __add__(self, other):
-        re
+        pass
 
     @property
     def recipe(self) -> Dict[Reagent, float]:
@@ -52,51 +65,9 @@ class Reagent:
 
         return rec
 
-
-class Mixture(Reagent):
-    """
-    Mixtures represent combinations of contents (simple or mixtures
-    themselves). amounts in each recipe represent "parts" and not absolute
-    volumes, e.g.,
-
-    PURE.recipe = {
-        'Sol A'     : 4,
-        'Sol B'     : 3,
-        'DNA'       : 1,
-        'RNase Inh' : 1,
-        'H20'       : 1,
-    }
-    """
-
-    def __init__(self, name: str, recipe: Dict[Reagent, float]):
-        super().__init__(name)
-        self._recipe = recipe
-
-    # def __repr__(self) -> str:
-    """
-    old repr for Mixture. more detailed, but leads to clutter when printing
-    """
-
-    #     cls_ = self.__class__.__name__
-    #     name = self.name
-    #     rcp = {
-    #         rgnt.name: amt
-    #         for rgnt, amt in self.recipe.items()
-    #     }
-    #     return f'{cls_}(name="{name}", recipe="{rcp}")'
-
     @property
     def reagents(self) -> List[Reagent]:
         return [r for r in self.recipe.keys()]
-
-
-def mixture_from_recipes(
-        recipe_dict: Dict[str, Dict[Reagent, int]]
-) -> Dict[str, Mixture]:
-    return {
-        name: Mixture(name=name, recipe=rec)
-        for name, rec in recipe_dict.items()
-    }
 
 
 def add_recipes(recipes: Iterable[Dict[Reagent, QuantityType]]):
@@ -125,7 +96,7 @@ PURE_reagents = {
     for name in "Sol-A Sol-B DNA RNase-Inh H20".split()
 }
 
-PURE = Mixture(name="PURE", recipe={
+PURE = Reagent(name="PURE", recipe={
     PURE_reagents['Sol-A']: 4,
     PURE_reagents['Sol-B']: 3,
     PURE_reagents['DNA']: 1,
