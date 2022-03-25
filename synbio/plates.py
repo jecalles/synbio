@@ -18,7 +18,8 @@ __all__ = [
     # Functions
     "make_96_well",
     "make_384_well", "make_384_ldv_well",
-    "make_1536_ldv_well"
+    "make_1536_ldv_well",
+    "make_plate_like"
 ]
 
 
@@ -32,12 +33,13 @@ class Well:
 
     vol: pint.Quantity = 0 * u.uL
 
-    def __str__(self):
-        return self.name
-
     def __repr__(self):
-        return f"{self.__class__.__name__}" \
-               f"('{self.name}', {self.volume})"
+        if self.location is None:
+            var_str = f"('{self.name}', {self.volume})"
+        else:
+            var_str = f" @ {self.location}('{self.name}', {self.volume})"
+
+        return f"{self.__class__.__name__}{var_str}"
 
     @property
     def volume(self) -> pint.Quantity:
@@ -92,6 +94,7 @@ class Well:
         # }
         return calculate_reagent_volumes(self.content, self.volume)
 
+PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], int, str)
 
 class Plate:
     def __init__(
@@ -132,6 +135,35 @@ class Plate:
 
         return f'{cls_}(name="{name}", shape={shp}, {n_full} full wells, ' \
                f'max_vol={vols["max_vol"]}), dead_vol={vols["dead_vol"]})'
+
+    def __getitem__(self, key: PlateLocationType):
+        if isinstance(key, str):
+            val = self.dict[key]
+        elif isinstance(key, tuple):
+            i, j = key
+            val = self.array[i, j]
+        elif isinstance(key, int):
+            val = self.array[key]
+
+        else:
+            raise TypeError(f"key is not a str, int or tuple of int")
+
+        return val
+
+    def __setitem__(self, key: PlateLocationType, value: Well):
+        if not isinstance(value, Well):
+            raise TypeError(f"value is not a Well")
+        if isinstance(key, str):
+            well = self.dict[key]
+        elif isinstance(key, tuple):
+            i, j = key
+            well = self.array[i, j]
+        else:
+            raise TypeError(f"key is not a str or tuple of int")
+
+        well.name = value.name
+        well.content = value.content
+        well.volume = value.volume
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -307,17 +339,23 @@ class Plate:
     def get_col_names(num_cols: int) -> List[str]:
         return list(str(i + 1) for i in range(num_cols))
 
-    def load_plate_map(self, filepath: str) -> None:
+    def load_plate_map(
+            self,
+            filepath: str,
+            reagents: Dict[str, Reagent] = None
+    ) -> None:
         df = pd.read_csv(filepath)
         index = df.values[:, 0]
         name_dataframe = df.set_index(index).drop("Rows/Cols", axis=1)
 
-        reagents = {
-            name: Reagent(name)
-            for row in name_dataframe.values
-            for name in row
-            if name != "-"
-        }
+
+        if reagents is None:
+            reagents = {
+                name: Reagent(name)
+                for row in name_dataframe.values
+                for name in row
+                if name != "-"
+            }
 
         counters = {
             name: count(1)
@@ -336,7 +374,6 @@ class Plate:
                 well.name = f"{name}_{next(counters[name])}"
 
 
-PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], str)
 
 
 # Functions
@@ -382,3 +419,20 @@ def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
     dead_vol = 1 * u.uL
 
     return Plate(name, shape, max_vol, dead_vol)
+
+def make_plate_like(plate: Plate, name=None) -> Plate:
+    if name is None:
+        name = f"like_{plate.name}"
+    return Plate(
+        name=name,
+        shape=plate.shape,
+        dead_vol=plate.well_volumes["dead_vol"],
+        max_vol = plate.well_volumes["max_vol"]
+    )
+
+
+def diff_plates(plate1: Plate, plate2: Plate) -> Plate:
+    if not plate1.shape == plate2.shape:
+        raise ValueError("compared plates must have the same shape")
+    if not plate1.well_volumes == plate2.well_volumes:
+        raise ValueError("compared plates must have the same well volumes")

@@ -27,6 +27,15 @@ class TestPlates:
             dead_vol=dead_vol
         )
 
+    def test___getitem__(self):
+        # TODO: write
+        pass
+
+
+    def test___setitem__(self):
+        # TODO: write
+        pass
+
     def test_dict(self):
         # TODO: write
         # getter

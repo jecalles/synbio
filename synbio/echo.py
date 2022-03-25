@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Iterable
 
 import numpy as np
 import pandas as pd
 import pint
 
 from synbio.units import unit_registry as u
-from synbio.reagents import Reagent, add_recipes
+from synbio.reagents import Reagent, Mixture, add_recipes
 from synbio.plates import *
 from synbio.platereader import *
 
@@ -26,7 +26,7 @@ __all__ = [
     # dataclasses
     "EchoProtocol", "EchoExperiment",
     # functions
-    "calc_src_wells"
+    "calc_src_wells", "remove_reagents_from_plate"
 ]
 
 
@@ -295,3 +295,63 @@ def simulate(
         rgt: quant
         for rgt, (_, quant) in calc_src_wells(reagent_volumes, src_plate).items()
     }
+
+def remove_reagents_from_plate(
+    plate: Plate,
+    rgts_to_drop: Iterable[Reagent]
+) -> Tuple[Plate, Dict[Reagent, pint.Quantity]]:
+    rgts_to_drop = set(rgts_to_drop) # cast to set for speed
+
+    # initialize return variables
+    new_plate = make_plate_like(plate, f"intermediate_of_{plate.name}")
+    dropped_reagents = {
+        rgt: 0*u.uL
+        for rgt in rgts_to_drop
+    }
+
+    for content, well_list in plate.wells_by_content.items():
+        # make updated content for each well
+        name_addendum = ' '.join(
+            f"d{rgt.name}"
+            for rgt in rgts_to_drop if rgt in content.recipe
+        )
+        new_content_name = f"{content.name}_{name_addendum}"
+        old_recipe = content.recipe
+        new_recipe = {
+            rgt: vol
+            for rgt, vol in old_recipe.items()
+            if rgt not in rgts_to_drop
+        }
+        if isinstance(content, Reagent):
+            new_content = Reagent()
+        else:
+            new_content = Mixture(
+                name=new_content_name,
+                recipe=new_recipe
+            )
+
+        # update each well
+        for old_well in well_list:
+            # get change in volume by reagent
+            dVol_by_reagent = {
+                rgt: vol
+                for rgt, vol in old_well.reagent_volumes.items()
+                if rgt in rgts_to_drop
+            }
+            dVol = sum(dVol_by_reagent.values()) # abs val; sub from new_well
+            new_vol = old_well.volume - dVol
+
+            # get new well name
+            new_well_name = f"{old_well.name} {name_addendum}"
+
+            # update well on new_plate
+            new_well = new_plate[old_well.location]
+            new_well.name = new_well_name
+            new_well.content = new_content
+            new_well.volume = new_vol
+
+            # update dropped_reagents
+            dropped_reagents = add_recipes([dropped_reagents, dVol_by_reagent])
+
+
+    return new_plate, dropped_reagents

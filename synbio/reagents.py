@@ -35,6 +35,9 @@ class Reagent:
     def __repr__(self):
         return f"{self.__class__.__name__}('{self.name}')"
 
+    def __add__(self, other):
+        re
+
     @property
     def recipe(self) -> Dict[Reagent, float]:
         """
