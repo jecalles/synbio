@@ -1,3 +1,5 @@
+class TestNotImplemented(BaseException): pass
+
 def raises(callable, args, kwargs):
     """
     A function that returns whatever exception is raised by a Callable. Returns None if no exception is raised

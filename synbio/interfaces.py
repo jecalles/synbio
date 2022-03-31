@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import abc
 from functools import wraps
-from typing import List, TypeVar
+from typing import List, Union
 
 __all__ = [
     # wrappers
@@ -119,7 +119,7 @@ class IPolymer(abc.MutableSequence):
         raise NotImplementedError
 
 
-SeqType = TypeVar("SeqType", str, IPolymer)
+SeqType = Union[str, IPolymer]
 
 
 # annotations
@@ -155,8 +155,8 @@ class ILocation(ABC, ComparableMixin):
         raise NotImplementedError
 
 
-LocationType = TypeVar("LocationType", int, slice, ILocation, List[ILocation])
-IndexType = TypeVar("IndexType", str, LocationType)
+LocationType = Union[int, slice, ILocation, List[ILocation]]
+IndexType = Union[str, LocationType]
 
 
 class IPart(ABC, ComparableMixin):

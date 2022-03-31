@@ -1,5 +1,6 @@
 import itertools
 from typing import Dict, List, Union
+from collections import UserDict
 
 from synbio.interfaces import LocationType, SeqType
 
@@ -28,7 +29,7 @@ __all__ = [
     "get_codons", "reverse_complement", "is_palindrome", "find_subseq",
     "all_single_mutations", "mutation_pairs",
     # python stuff
-    "get_class_name"
+    "get_class_name",
 ]
 
 ###############

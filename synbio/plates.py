@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from itertools import count
 from math import prod
-from typing import Dict, List, Optional, Set, Tuple, TypeVar
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -94,7 +94,7 @@ class Well:
         # }
         return calculate_reagent_volumes(self.content, self.volume)
 
-PlateLocationType = TypeVar("PlateLocationType", Tuple[int, int], int, str)
+PlateLocationType = Union[Tuple[int, int], int, str]
 
 class Plate:
     def __init__(

@@ -42,5 +42,4 @@ class TestLibrary:
         )
 
     def test_variance(self):
-        # TODO: write this test
-        pass
+        raise testutils.TestNotImplemented

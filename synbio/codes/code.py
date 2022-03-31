@@ -1,7 +1,7 @@
 # TODO: refactor code, now that utils has been split up
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Set, TypeVar
+from typing import Dict, List, Optional, Set, Union
 
 from synbio import utils
 from synbio.codes import utils as codeutils
@@ -23,7 +23,7 @@ class Code(dict):
         'RANDOM': codeutils.random_code()
     }
 
-    def __init__(self, code: Optional[CodeType] = None) -> None:
+    def __init__(self, code: CodeType = None) -> None:
         """Automatically loads object with a Code and a
         comparison function between amino acids "ordering". bool norm is used
         to tell dict_to_graph whether or not to set node values based on
@@ -191,4 +191,4 @@ class Code(dict):
         return self.reverse_translate(protein)
 
 
-CodeType = TypeVar("CodeType", Dict[str, str], Code)
+CodeType = Union[Dict[SeqType, SeqType], Code]
