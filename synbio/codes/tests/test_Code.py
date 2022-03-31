@@ -1,10 +1,18 @@
 from synbio.codes import Code
-
+import synbio.tests.utils as testutils
 
 class TestCode:
-    # TODO: write tests for all methods
+    def test___init__(self):
+        raise testutils.TestNotImplemented
 
-    def test_init(self):
-        # TODO: this test is kinda wimpy; beef it up
-        standard_code = Code()
-        print(standard_code)
+    def test_rmap(self):
+        raise testutils.TestNotImplemented
+
+    def test_translate(self):
+        raise testutils.TestNotImplemented
+
+    def test_reverse_translate(self):
+        raise testutils.TestNotImplemented
+
+    def test_recode(self):
+        raise testutils.TestNotImplemented

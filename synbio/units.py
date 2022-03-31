@@ -1,8 +1,8 @@
-from typing import TypeVar
+from typing import Union
 
 import pint
 
 __all__ = ["unit_registry", "QuantityType"]
 
 unit_registry = pint.UnitRegistry()
-QuantityType = TypeVar("QuantityType", int, float, pint.Quantity)
+QuantityType = Union[int, float, pint.Quantity]

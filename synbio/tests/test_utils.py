@@ -1,10 +1,26 @@
 # TODO: write test code for utils functions
 from synbio.utils import *
+import synbio.tests.utils as testutils
 
+__all__ = [
+    #############
+    # functions #
+    #############
+    # biology stuff
+    "get_codons", "reverse_complement", "is_palindrome", "find_subseq",
+    "all_single_mutations", "mutation_pairs",
+    # python stuff
+    "get_class_name"
+]
 
-def test_utils():
-    pass
+def test_get_codons():
+    raise testutils.TestNotImplemented
 
+def test_reverse_complement():
+    raise testutils.TestNotImplemented
+
+def test_is_palindrome():
+    raise testutils.TestNotImplemented
 
 def test_find_subseq():
     seq_to_search = "xxXatATaTxXatatxx"
@@ -16,3 +32,13 @@ def test_find_subseq():
     ]
     subseqs = [seq_to_search[ix] for ix in subseq_ix]
     assert subseqs == ['atAT', 'ATaT', 'atat']
+
+def test_all_single_mutations():
+    raise testutils.TestNotImplemented
+
+def test_mutation_pairs():
+    raise testutils.TestNotImplemented
+
+def test_get_class_name():
+    raise testutils.TestNotImplemented
+

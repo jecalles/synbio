@@ -1,16 +1,6 @@
 from synbio.plates import *
 from synbio.units import unit_registry as u
-
-
-class TestWell:
-    def test_init(self):
-        pass
-
-    def test_volume(self):
-        # getter
-
-        # setter
-        pass
+import synbio.tests.utils as testutils
 
 
 class TestPlates:
@@ -28,20 +18,16 @@ class TestPlates:
         )
 
     def test___getitem__(self):
-        # TODO: write
-        pass
-
+        raise testutils.TestNotImplemented
 
     def test___setitem__(self):
-        # TODO: write
-        pass
+        raise testutils.TestNotImplemented
 
-    def test_dict(self):
-        # TODO: write
-        # getter
+    def test___add__(self):
+        raise testutils.TestNotImplemented
 
-        # setter
-        pass
+    def test___sub__(self):
+        raise testutils.TestNotImplemented
 
     def test_well_volumes(self):
         plate = make_384_ldv_well()

@@ -9,7 +9,7 @@ import pandas as pd
 import pint
 
 from synbio.units import unit_registry as u
-from synbio.reagents import Reagent, Mixture, add_recipes
+from synbio.reagents import Reagent, Mixture, add_recipes, RecipeType
 from synbio.plates import *
 from synbio.platereader import *
 
