@@ -122,6 +122,32 @@ class TestRecipe:
             "D": (1/3)*3 + (1/3)*(1/2)*2 + 1
         })
 
+    def test_get_reagents(self):
+        new_rgts = {
+            name: Reagent(name)
+            for name in "A B C D".split()
+        }
+        test_mix = Mixture("test_mix",{
+            "A": 2,
+            "B": 3,
+            Mixture("C+D", {"C": 2, "D": 1}): 3,
+            # should not need normalization
+            Mixture("A+'C+D'", {"A": 1, "C+D": 1}): 2,
+            "D": 1
+        })
+        pure = reagent_registry["PURE"]
+        assert get_reagents([test_mix, pure]) == {
+            reagent_registry["Sol-A"],
+            reagent_registry["Sol-B"],
+            reagent_registry["H20"],
+            reagent_registry["DNA"],
+            reagent_registry["RNase-Inh"],
+            reagent_registry["A"],
+            reagent_registry["B"],
+            reagent_registry["C"],
+            reagent_registry["D"],
+        }
+
 class TestMixture:
     pass
 

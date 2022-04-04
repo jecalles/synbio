@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 import itertools
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import count
 from math import prod
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import pint
 
-from synbio.reagents import Reagent, add_recipes, calculate_reagent_volumes
+from synbio.reagents import *
 from synbio.units import unit_registry as u
 
 __all__ = [
@@ -26,11 +28,11 @@ __all__ = [
 @dataclass
 class Well:
     name: str
-    content: Reagent
     max_vol: pint.Quantity
     dead_vol: pint.Quantity
-    location: str = None
 
+    content: Reagent = None
+    location: str = None
     vol: pint.Quantity = 0 * u.uL
 
     def __repr__(self):
@@ -82,7 +84,7 @@ class Well:
 
     @property
     def reagents(self) -> Set[Reagent]:
-        return {rgt for rgt in self.content.recipe.keys()}
+        return get_reagents([self.content])
 
     @property
     def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
@@ -94,7 +96,9 @@ class Well:
         # }
         return calculate_reagent_volumes(self.content, self.volume)
 
-PlateLocationType = Union[Tuple[int, int], int, str]
+
+PlateLocationType = Union[Tuple[int, int], str]
+
 
 class Plate:
     def __init__(
@@ -116,7 +120,6 @@ class Plate:
         for well_name, (i, j) in self.name_map.items():
             array[i][j] = Well(
                 name=well_name,
-                content=Reagent(),
                 max_vol=max_vol,
                 dead_vol=dead_vol,
                 location=f"{rows[i]}{cols[j]}"
@@ -164,6 +167,36 @@ class Plate:
         well.name = value.name
         well.content = value.content
         well.volume = value.volume
+
+    def __add__(self, other: Plate) -> Plate:
+        new_plate = make_plate_like(self, f"{self.name} + {other.name}")
+        for loc in other.name_map:
+            this_well = self[loc]
+            that_well = other[loc]
+            new_well = new_plate[loc]
+
+            match this_well.content is None, that_well.content is None:
+                case _, True:
+                    pass
+                case True, False:
+                    new_well.name = that_well.name
+                    new_well.content = that_well.content
+                    new_well.volume = that_well.volume
+                case False, False:
+                    new_well.name += f" + {that_well.name}"
+                    new_well.content = Mixture(
+                        name=new_well.name,
+                        recipe=Recipe({
+                            this_well.content: 1,
+                            that_well.content: 1
+                        })
+                    )
+                    new_well.volume += that_well.volume
+        return new_plate
+
+
+    def __sub__(self, other: Plate) -> Plate:
+        raise NotImplementedError
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -264,8 +297,7 @@ class Plate:
         """
         return {
             rgt.name: rgt
-            for content in self.contents.values()
-            for rgt in content.recipe.keys()
+            for rgt in get_reagents(self.contents.values())
         }
 
     @property
@@ -348,7 +380,6 @@ class Plate:
         index = df.values[:, 0]
         name_dataframe = df.set_index(index).drop("Rows/Cols", axis=1)
 
-
         if reagents is None:
             reagents = {
                 name: Reagent(name)
@@ -373,7 +404,18 @@ class Plate:
                 well.content = reagent
                 well.name = f"{name}_{next(counters[name])}"
 
-
+    def fill_wells(
+            self,
+            content: Reagent,
+            vol: pint.Quantity,
+            locations: Iterable[PlateLocationType]
+    ) -> None:
+        for loc in locations:
+            well = self[loc]
+            well.name = content.name
+            well.content = content
+            well.volume = vol
+        return
 
 
 # Functions
@@ -420,6 +462,7 @@ def make_1536_ldv_well(name: Optional[str] = None) -> Plate:
 
     return Plate(name, shape, max_vol, dead_vol)
 
+
 def make_plate_like(plate: Plate, name=None) -> Plate:
     if name is None:
         name = f"like_{plate.name}"
@@ -427,7 +470,7 @@ def make_plate_like(plate: Plate, name=None) -> Plate:
         name=name,
         shape=plate.shape,
         dead_vol=plate.well_volumes["dead_vol"],
-        max_vol = plate.well_volumes["max_vol"]
+        max_vol=plate.well_volumes["max_vol"]
     )
 
 
@@ -436,3 +479,44 @@ def diff_plates(plate1: Plate, plate2: Plate) -> Plate:
         raise ValueError("compared plates must have the same shape")
     if not plate1.well_volumes == plate2.well_volumes:
         raise ValueError("compared plates must have the same well volumes")
+
+    raise NotImplementedError("still under construction (use __sub__)")
+
+if __name__ == "__main__":
+    from synbio.reagents import reagent_registry as r
+    shape = (3, 4)  # not a real plate
+    max_vol = 30 * u.uL
+    dead_vol = 5 * u.uL
+
+    test1 = Plate(
+        name="test_plate1",
+        shape=shape,
+        max_vol=max_vol,
+        dead_vol=dead_vol
+    )
+    test1.fill_wells(r["H20"], 10 * u.uL, ["A1", (1, 2), "C4"])
+    test2 = Plate(
+        name="test_plate2",
+        shape=shape,
+        max_vol=max_vol,
+        dead_vol=dead_vol
+    )
+    test2.fill_wells(r["PURE"], 10 * u.uL, ["C1", (1, 2), "A4"])
+
+    res = test1 + test2
+
+    pure_h20 = r["PURE"].recipe * 10 * u.uL + Recipe({r["H20"]: 10 * u.uL})
+    assert res["B3"].content.recipe == pure_h20
+    assert res["B3"].volume == 20 * u.uL
+
+    assert res["A1"].content == r["H20"]
+    assert res["A1"].volume == 10 * u.uL
+
+    assert res["C4"].content == r["H20"]
+    assert res["C4"].volume == 10 * u.uL
+
+    assert res["A4"].content == r["PURE"]
+    assert res["A4"].volume == 10 * u.uL
+
+    assert res["C1"].content == r["PURE"]
+    assert res["C1"].volume == 10 * u.uL

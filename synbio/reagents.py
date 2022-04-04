@@ -4,8 +4,8 @@ import logging
 from collections import UserDict
 from typing import Callable, Dict, Iterable, List, Set, Union
 
-import pint
 import numpy as np
+import pint
 
 from synbio.units import QuantityType
 
@@ -14,7 +14,7 @@ __all__ = [
     "Reagent", "Recipe", "RecipeType",
     "Mixture",
     # functions
-    "add_recipes", "calculate_reagent_volumes",
+    "add_recipes", "calculate_reagent_volumes", "get_reagents",
     # constants
     "reagent_registry", "PURE_reagents", "PURE",
 ]
@@ -194,10 +194,12 @@ class Recipe(UserDict):
         })
 
     def __eq__(self, other: RecipeType):
-        same_rgts = self.keys() == other.keys()
+        this_flat = self.flat
+        that_flat = other.flat
+        same_rgts = this_flat.keys() == that_flat.keys()
         quants = [
-            (self[rgt], other[rgt])
-            for rgt in self.keys()
+            (this_flat[rgt], that_flat[rgt])
+            for rgt in this_flat.keys()
         ]
         close_quants = np.allclose(*zip(*quants))
         return same_rgts and close_quants
@@ -277,10 +279,26 @@ def add_recipes(recipes: Iterable[RecipeType]):
 
 
 def calculate_reagent_volumes(
-        mix: Mixture, total_vol: pint.Quantity
-) -> RecipeType:
+        rgt: Reagent, total_vol: pint.Quantity
+) -> Dict[Reagent, pint.Quantity]:
     """this needs to recursively walk the mixture tree"""
-    raise NotImplementedError("under construction")
+    if isinstance(rgt, Mixture):
+        rcp = rgt.recipe
+    else:
+        rcp = Recipe({rgt: 1})
+
+    return rcp * total_vol
+
+
+def get_reagents(reagents: Iterable[Reagent]) -> Set[Reagent]:
+    """Function that flattens a list of Reagents (can include mixtures) to
+    extract all unique Reagents in recipe"""
+    simple_reagents = {rgt for rgt in reagents if type(rgt) == Reagent}
+    subcomponents = {
+        sub for rgt in reagents if isinstance(rgt, Mixture)
+        for sub in rgt.recipe.flat.keys()
+    }
+    return simple_reagents.union(subcomponents)
 
 
 # Constants
@@ -306,8 +324,8 @@ if __name__ == "__main__":
         "A": 2,
         "B": 3,
         Mixture("C+D", {"C": 2, "D": 1}): 3,
-        Mixture("A+'C+D'", {"A": 1, "C+D":1}): 2,
-        "D":1
+        Mixture("A+'C+D'", {"A": 1, "C+D": 1}): 2,
+        "D": 1
     })
     flat = test_recipe.flat
     assert flat == Recipe({
