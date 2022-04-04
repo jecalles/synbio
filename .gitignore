@@ -7,3 +7,4 @@ build/
 synbio_tooling.egg-info
 pyproject.toml
 sandbox/
+.python-version
