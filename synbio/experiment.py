@@ -8,9 +8,6 @@ __all__ = [
 
 
 class Condition:
-    def _comparables(self) -> List[str]:
-        return list(self.variables.keys())
-
     def __repr__(self) -> str:
         class_name = str(self.__class__.__name__)
         var_string = " ".join(f"{k}={v}" for k, v in self.variables.items())

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import count
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, List, Tuple, Set
 
 import pandas as pd
 import pint
 
 from synbio.experiment import Condition, Data, Experiment
 from synbio.plates import Plate, make_96_well
-from synbio.reagents import Reagent, add_recipes, calculate_reagent_volumes
+from synbio.reagents import *
 from synbio.units import unit_registry as u
 
 __all__ = [
@@ -31,7 +31,7 @@ class PlateReaderCondition(Condition):
         self.plate = plate
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+    def reagent_volumes(self) -> Recipe:
         # PREVIOUS IMPLEMENTATION
         # recipe = self.content.recipe
         #
@@ -79,17 +79,17 @@ class PlateReaderExperiment(Experiment):
         return cls(conditions=conditions)
 
     @property
-    def reagents(self):
-        return {
-            reagent.name: reagent
+    def reagents(self) -> Set[Reagent]:
+        return set(
+            reagent
             for cond in self.conditions
-            for reagent in cond.content.recipe.keys()
-        }
+            for reagent in flatten_reagents(cond.content)
+        )
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+    def reagent_volumes(self) -> Recipe:
         # list of dicts describing contents for each condition
-        recipe_list: List[Dict[Reagent, pint.Quantity]] = [
+        recipe_list: List[Recipe] = [
             c.reagent_volumes for c in self.conditions
         ]
         return add_recipes(recipe_list)

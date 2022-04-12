@@ -14,7 +14,7 @@ __all__ = [
     "Reagent", "Recipe", "RecipeType",
     "Mixture",
     # functions
-    "add_recipes", "calculate_reagent_volumes", "get_reagents",
+    "add_recipes", "calculate_reagent_volumes", "flatten_reagents", "get_recipe",
     # constants
     "reagent_registry", "PURE_reagents", "PURE",
 ]
@@ -71,7 +71,7 @@ class Reagent:
         'Sol B'     : 3,
         'DNA'       : 1,
         'RNase Inh' : 1,
-        'H20'       : 1,
+        'H2O'       : 1,
     }
     """
 
@@ -222,7 +222,7 @@ class Recipe(UserDict):
         complex_reagents = [
             rcp
             for mix, quant in self.items() if type(mix) == Mixture
-            for rcp in (quant * mix.recipe.normalized)._flatten()
+            for rcp in (mix.recipe.normalized * quant)._flatten()
         ]
         return [simple_reagents] + complex_reagents
 
@@ -267,44 +267,54 @@ class Mixture(Reagent):
 
 
 def add_recipes(recipes: Iterable[RecipeType]):
-    # def merge_dict(dict1: dict, dict2: dict) -> dict:
-    #     dict3 = {**dict1, **dict2}
-    #     for key, value in dict3.items():
-    #         if key in dict1 and key in dict2:
-    #             dict3[key] = dict1[key] + dict2[key]
-    #     return dict3
-
-    # return reduce(merge_dict, recipes, {})
-    return sum(recipes)
-
+    return sum(recipes, {})
 
 def calculate_reagent_volumes(
-        rgt: Reagent, total_vol: pint.Quantity
-) -> Dict[Reagent, pint.Quantity]:
+        rgt: Reagent, total_vol: pint.Quantity, flat: bool = True
+) -> Recipe:
     """this needs to recursively walk the mixture tree"""
     if isinstance(rgt, Mixture):
-        rcp = rgt.recipe
+        raw_rcp = rgt.recipe.flat if flat else rgt.recipe
+        rcp = raw_rcp.normalized
     else:
         rcp = Recipe({rgt: 1})
 
     return rcp * total_vol
 
 
-def get_reagents(reagents: Iterable[Reagent]) -> Set[Reagent]:
+def flatten_reagents(
+        reagents: Iterable[Reagent],
+) -> Set[Reagent]:
     """Function that flattens a list of Reagents (can include mixtures) to
     extract all unique Reagents in recipe"""
-    simple_reagents = {rgt for rgt in reagents if type(rgt) == Reagent}
-    subcomponents = {
+
+    # handle None input
+    reagents = [] if reagents is None else reagents
+
+    # extract Reagents
+    simple_reagents = set(rgt for rgt in reagents if type(rgt) == Reagent)
+
+    # flatten recipes for
+    subcomponents = set(
         sub for rgt in reagents if isinstance(rgt, Mixture)
         for sub in rgt.recipe.flat.keys()
-    }
-    return simple_reagents.union(subcomponents)
+    )
+    return {*simple_reagents, *subcomponents}
+
+def get_recipe(reagent: Reagent, flat: bool = False) -> Recipe:
+    if isinstance(reagent, Mixture):
+        rcp = reagent.recipe.flat if flat else reagent.recipe
+    elif type(reagent) == Reagent:
+        rcp = Recipe({reagent: 1})
+    else:
+        raise TypeError(f"{reagent} is not a Reagent")
+    return rcp
 
 
 # Constants
 PURE_reagents = {
     name: Reagent(name)
-    for name in "Sol-A Sol-B DNA RNase-Inh H20".split()
+    for name in "Sol-A Sol-B DNA RNase-Inh H2O".split()
 }
 
 PURE = Mixture(name="PURE", recipe={
@@ -312,7 +322,7 @@ PURE = Mixture(name="PURE", recipe={
     'Sol-B': 3,
     'DNA': 1,
     'RNase-Inh': 1,
-    'H20': 1
+    'H2O': 1
 })
 
 if __name__ == "__main__":

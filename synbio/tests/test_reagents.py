@@ -40,7 +40,7 @@ class TestRecipe:
 
         QD_1in10 = Recipe({
             Reagent("QD"): 1,   # test Reagent init in Recipe definition
-            "H20": 9            # test str key access for existing reagent
+            "H2O": 9            # test str key access for existing reagent
         })
         added = pure.recipe + QD_1in10
         assert added == Recipe({
@@ -48,10 +48,10 @@ class TestRecipe:
             'Sol-B': 3,
             dna: 1,             # check reagent input
             'RNase-Inh': 1,
-            'H20': 10,
+            'H2O': 10,
             'QD': 1
         })
-        assert added == pure.recipe + {"QD":1, "H20": 9} # check dict add
+        assert added == pure.recipe + {"QD":1, "H2O": 9} # check dict add
 
     def test___sub__(self):
         pure: Mixture = reagent_registry["PURE"]
@@ -64,9 +64,9 @@ class TestRecipe:
             'tRNA':1,
             'DNA': 1,
             'RNase-Inh': 1,
-            'H20': 1,
+            'H2O': 1,
         })
-        assert pure.recipe - {"H20": 2} == Recipe({
+        assert pure.recipe - {"H2O": 2} == Recipe({
             'Sol-A': 4,
             'Sol-B': 3,
             'DNA': 1,
@@ -79,7 +79,7 @@ class TestRecipe:
             'Sol-A': 10,
             'Sol-B': 7.5,
             'DNA': 2.5,
-            'H20': 2.5,
+            'H2O': 2.5,
             'RNase-Inh': 2.5
         })
 
@@ -89,7 +89,7 @@ class TestRecipe:
             'Sol-A': 0.04,
             'Sol-B': 0.03,
             'DNA': 0.01,
-            'H20': 0.01,
+            'H2O': 0.01,
             'RNase-Inh': 0.01
         })
 
@@ -99,7 +99,7 @@ class TestRecipe:
             'Sol-A': 0.4,
             'Sol-B': 0.3,
             'DNA': 0.1,
-            'H20': 0.1,
+            'H2O': 0.1,
             'RNase-Inh': 0.1
         })
 
@@ -136,10 +136,10 @@ class TestRecipe:
             "D": 1
         })
         pure = reagent_registry["PURE"]
-        assert get_reagents([test_mix, pure]) == {
+        assert flatten_reagents([test_mix, pure]) == {
             reagent_registry["Sol-A"],
             reagent_registry["Sol-B"],
-            reagent_registry["H20"],
+            reagent_registry["H2O"],
             reagent_registry["DNA"],
             reagent_registry["RNase-Inh"],
             reagent_registry["A"],

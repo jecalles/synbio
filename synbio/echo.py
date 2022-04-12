@@ -9,7 +9,7 @@ import pandas as pd
 import pint
 
 from synbio.units import unit_registry as u
-from synbio.reagents import Reagent, Mixture, add_recipes, RecipeType
+from synbio.reagents import *
 from synbio.plates import *
 from synbio.platereader import *
 
@@ -56,9 +56,12 @@ class EchoProtocol:
 
         # loop over destination plate; assign transfer events
         for dest_loc, dest_well in self.dest_plate.full_wells.items():
-            for rgt, rgt_vol in dest_well.reagent_volumes.items():
+            well_recipe = get_recipe(dest_well.content).normalized
+            for rgt, rgt_frac in well_recipe.items():
                 # satisfy volume reqs for each reagent in dest_plate
                 sat = False
+
+                rgt_vol = rgt_frac * dest_well.volume
                 while not sat:
                     src_wells_for_rgt = [
                         well for well in self.src_plate.wells_by_content[rgt]
@@ -134,17 +137,18 @@ class EchoProtocol:
             else:
                 return False
         else:
-            avail_vols = {
+            avail_vols_nested = Recipe({
                 rgt: sum(
                     well.available_vol for well in well_list
                 ) for rgt, well_list in
                 self.src_plate.wells_by_content.items()
-            }
+            })
+            avail_vols = avail_vols_nested.flat
             req_vols = self.dest_plate.reagent_volumes
 
             return all(
                 avail_vols[rgt] >= req_vols[rgt]
-                for rgt in self.dest_plate.reagents.values()
+                for rgt in self.dest_plate.reagents
             )
 
     def check_dataframe(self) -> bool:
@@ -171,8 +175,6 @@ class EchoProtocol:
         # check src_plate is satisfied by dataframe
         raise NotImplementedError("code under construction")
 
-        return True
-
     def to_csv(self, filename: str) -> None:
         self.dataframe.to_csv(filename)
 
@@ -190,6 +192,7 @@ class EchoExperiment(PlateReaderExperiment):
             cls, src_plate_filepath: str, dest_plate_filepath: str,
             cond_name_map: Callable[[str, Plate], PlateReaderCondition],
             src_plate: Plate = None, dest_plate: Plate = None,
+            reagent_vols: RecipeType = None
     ) -> EchoExperiment:
         # get default plates if unspecified
         if src_plate is None:
@@ -202,7 +205,12 @@ class EchoExperiment(PlateReaderExperiment):
             cond_name_map=cond_name_map,
             plate=dest_plate
         )
-        src_plate.load_plate_map(src_plate_filepath)
+        # src_plate.load_plate_map(src_plate_filepath)
+        _, src_plate = load_plate_map(
+            filepath=src_plate_filepath,
+            cond_name_map=cond_name_map,
+            plate=src_plate
+        )
         exp = cls(conditions=conditions)
 
         # get source wells by reagent
@@ -211,7 +219,8 @@ class EchoExperiment(PlateReaderExperiment):
         # calculate number of wells and volume required per reagent
         well_vols = exp.calc_src_wells(
             src_plate=src_plate,
-            dest_plate=dest_plate
+            dest_plate=dest_plate,
+            reagent_vols=reagent_vols
         )
 
         # iterate over wells by reagent; check num_wells; update volume
@@ -233,6 +242,7 @@ class EchoExperiment(PlateReaderExperiment):
             self,
             src_plate: Plate = None,
             dest_plate: Plate = None,
+            reagent_vols: RecipeType = None,
             buffer_vol: pint.Quantity = 0.1 * u.uL,
             vol_tol: int = 2
     ) -> Dict[Reagent, Tuple[int, pint.Quantity]]:
@@ -242,15 +252,18 @@ class EchoExperiment(PlateReaderExperiment):
         if dest_plate is None:
             dest_plate = self.protocol.dest_plate
 
+        if reagent_vols is None:
+            reagent_vols = dest_plate.reagent_volumes
+
         return calc_src_wells(
-            reagent_vols=dest_plate.reagent_volumes,
+            reagent_vols=reagent_vols,
             src_plate=src_plate,
             buffer_vol=buffer_vol, vol_tol=vol_tol
         )
 
 
 def calc_src_wells(
-        reagent_vols: Dict[Reagent, pint.Quantity],
+        reagent_vols: RecipeType,
         src_plate: Plate = None,
         buffer_vol: pint.Quantity = 0.1 * u.uL,
         vol_tol: int = 2
@@ -313,10 +326,10 @@ def remove_reagents_from_plate(
         # make updated content for each well
         name_addendum = ' '.join(
             f"d{rgt.name}"
-            for rgt in rgts_to_drop if rgt in content.recipe
+            for rgt in rgts_to_drop if rgt in get_recipe(content, flat=True)
         )
         new_content_name = f"{content.name}_{name_addendum}"
-        old_recipe = content.recipe
+        old_recipe = get_recipe(content, flat=True)
         new_recipe = {
             rgt: vol
             for rgt, vol in old_recipe.items()

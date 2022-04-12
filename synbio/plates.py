@@ -84,16 +84,10 @@ class Well:
 
     @property
     def reagents(self) -> Set[Reagent]:
-        return get_reagents([self.content])
+        return flatten_reagents([self.content])
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
-        # PREVIOUS IMPLEMENTATION
-        # vol_factor = self.volume / sum(self.content.recipe.values())
-        # return {
-        #     rgt: num * vol_factor
-        #     for rgt, num in self.content.recipe.items()
-        # }
+    def reagent_volumes(self) -> Recipe:
         return calculate_reagent_volumes(self.content, self.volume)
 
 
@@ -264,15 +258,16 @@ class Plate:
             )
 
     @property
-    def contents(self) -> Dict[str, Reagent]:
-        return {
-            well.content.name: well.content
+    def contents(self) -> Set[Reagent]:
+        return set(
+            well.content
             for well in self._full_wells.values()
-        }
+        )
+
 
     @property
     def wells_by_content(self) -> Dict[Reagent, List[Well]]:
-        contents = set(self.contents.values())
+        contents = self.contents
         d = {rgt: [] for rgt in contents}
 
         for well in self.dict.values():
@@ -290,18 +285,16 @@ class Plate:
         }
 
     @property
-    def reagents(self) -> Dict[str, Reagent]:
+    def reagents(self) -> Set[Reagent]:
         """
         differs from self.contents, in as much as it separates Mixtures
         into the Reagents that compose them
         """
-        return {
-            rgt.name: rgt
-            for rgt in get_reagents(self.contents.values())
-        }
+        return set(flatten_reagents(self.contents))
+
 
     @property
-    def reagent_volumes(self) -> Dict[Reagent, pint.Quantity]:
+    def reagent_volumes(self) -> Recipe:
         # rgt_vols_list_by_content = {
         #     content: [well.reagent_volumes for well in well_list]
         #     for content, well_list in self.wells_by_content.items()
@@ -311,7 +304,7 @@ class Plate:
         #     for content, rgt_vol_dict_list in rgt_vols_list_by_content.items()
         # }
         # return add_recipes(rgt_vols_by_content.values())
-        recipe_list: List[Dict[Reagent, pint.Quantity]] = [
+        recipe_list: List[Recipe] = [
             well.reagent_volumes
             for well in self.full_wells.values()
         ]
@@ -348,7 +341,7 @@ class Plate:
         return {
             name: well
             for name, well in self.dict.items()
-            if well.content != Reagent()
+            if well.content is not None
         }
 
     @staticmethod
@@ -483,40 +476,41 @@ def diff_plates(plate1: Plate, plate2: Plate) -> Plate:
     raise NotImplementedError("still under construction (use __sub__)")
 
 if __name__ == "__main__":
-    from synbio.reagents import reagent_registry as r
-    shape = (3, 4)  # not a real plate
-    max_vol = 30 * u.uL
-    dead_vol = 5 * u.uL
-
-    test1 = Plate(
-        name="test_plate1",
-        shape=shape,
-        max_vol=max_vol,
-        dead_vol=dead_vol
-    )
-    test1.fill_wells(r["H20"], 10 * u.uL, ["A1", (1, 2), "C4"])
-    test2 = Plate(
-        name="test_plate2",
-        shape=shape,
-        max_vol=max_vol,
-        dead_vol=dead_vol
-    )
-    test2.fill_wells(r["PURE"], 10 * u.uL, ["C1", (1, 2), "A4"])
-
-    res = test1 + test2
-
-    pure_h20 = r["PURE"].recipe * 10 * u.uL + Recipe({r["H20"]: 10 * u.uL})
-    assert res["B3"].content.recipe == pure_h20
-    assert res["B3"].volume == 20 * u.uL
-
-    assert res["A1"].content == r["H20"]
-    assert res["A1"].volume == 10 * u.uL
-
-    assert res["C4"].content == r["H20"]
-    assert res["C4"].volume == 10 * u.uL
-
-    assert res["A4"].content == r["PURE"]
-    assert res["A4"].volume == 10 * u.uL
-
-    assert res["C1"].content == r["PURE"]
-    assert res["C1"].volume == 10 * u.uL
+    pass
+# from synbio.reagents import reagent_registry as r
+# shape = (3, 4)  # not a real plate
+# max_vol = 30 * u.uL
+# dead_vol = 5 * u.uL
+#
+# test1 = Plate(
+#     name="test_plate1",
+#     shape=shape,
+#     max_vol=max_vol,
+#     dead_vol=dead_vol
+# )
+# test1.fill_wells(r["H2O"], 10 * u.uL, ["A1", (1, 2), "C4"])
+# test2 = Plate(
+#     name="test_plate2",
+#     shape=shape,
+#     max_vol=max_vol,
+#     dead_vol=dead_vol
+# )
+# test2.fill_wells(r["PURE"], 10 * u.uL, ["C1", (1, 2), "A4"])
+#
+# res = test1 + test2
+#
+# pure_H2O = r["PURE"].recipe * 10 * u.uL + Recipe({r["H2O"]: 10 * u.uL})
+# assert res["B3"].content.recipe == pure_H2O
+# assert res["B3"].volume == 20 * u.uL
+#
+# assert res["A1"].content == r["H2O"]
+# assert res["A1"].volume == 10 * u.uL
+#
+# assert res["C4"].content == r["H2O"]
+# assert res["C4"].volume == 10 * u.uL
+#
+# assert res["A4"].content == r["PURE"]
+# assert res["A4"].volume == 10 * u.uL
+#
+# assert res["C1"].content == r["PURE"]
+# assert res["C1"].volume == 10 * u.uL

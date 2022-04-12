@@ -44,9 +44,9 @@ class TestPlates:
     def test___add__(self):
         """
         test1 = [
-            [H20, xxx, xxx, xxx],
-            [xxx, xxx, H20, xxx],
-            [xxx, xxx, xxx, H20],
+            [H2O, xxx, xxx, xxx],
+            [xxx, xxx, H2O, xxx],
+            [xxx, xxx, xxx, H2O],
         ]
         test2 = [
             [xxx,  xxx, xxx,  PURE],
@@ -55,9 +55,9 @@ class TestPlates:
         ]
 
         test1 + test 2 = [
-            [H20,  xxx, xxx,      PURE],
-            [xxx,  xxx, PURE+H20, xxx],
-            [PURE, xxx, xxx,      H20],
+            [H2O,  xxx, xxx,      PURE],
+            [xxx,  xxx, PURE+H2O, xxx],
+            [PURE, xxx, xxx,      H2O],
         ]
 
         """
@@ -71,7 +71,7 @@ class TestPlates:
             max_vol=max_vol,
             dead_vol=dead_vol
         )
-        test1.fill_wells(r["H20"], 10 * u.uL, ["A1", (1, 2), "C4"])
+        test1.fill_wells(r["H2O"], 10 * u.uL, ["A1", (1, 2), "C4"])
         test2 = Plate(
             name="test_plate2",
             shape=shape,
@@ -82,14 +82,14 @@ class TestPlates:
 
         res = test1 + test2
 
-        pure_h20 = r["PURE"].recipe * 10 * u.uL + Recipe({r["H20"]: 10 * u.uL})
-        assert res["B3"].content.recipe == pure_h20
+        pure_H2O = (r["PURE"].recipe * 10 * u.uL) + Recipe({r["H2O"]: 10 * u.uL})
+        assert res["B3"].content.recipe == pure_H2O
         assert res["B3"].volume == 20 * u.uL
 
-        assert res["A1"].content == r["H20"]
+        assert res["A1"].content == r["H2O"]
         assert res["A1"].volume == 10 * u.uL
 
-        assert res["C4"].content == r["H20"]
+        assert res["C4"].content == r["H2O"]
         assert res["C4"].volume == 10 * u.uL
 
         assert res["A4"].content == r["PURE"]
